@@ -25,6 +25,9 @@ class ObjDict(dict):
         else:
             raise AttributeError("No such attribute: "+name)
 
+class WiseGuyError(Exception):
+    pass
+
 class CRISP:
     '''
     This is a class for CRISP data cubes to make it easy to plot and obtain spectral line profiles from the data.
@@ -234,3 +237,38 @@ class CRISP:
                     return self.unit_conversion(self.unit_conversion(coord, unit_to="pix", centre=True), unit_to="megameter", centre=False)
                 elif coord.unit == "megameter":
                     return coord
+
+    def intensity_vector(self, coord, line, pol=False, centre=False):
+        '''
+        A class method for returning the intensity vector of a given pixel.
+
+        Parameters
+        ----------
+        coord : astropy.unit.quantity.Quantity
+            The coordinate to give the intensity vector for.
+        line : str
+            The line to get the intensity vector for. Can be "ca" or "ha".
+        pol : bool, optional
+            Whether or not to return the polarimetric intensity vector. Default is False.
+        centre : bool, optional
+            Whether or not to calculate the pixel in arcseconds with respect to the pointing e.g. in the helioprojective frame.
+        '''
+
+        if line == "ha" and pol:
+            raise WiseGuyError("Tryin' to be a wise guy, eh?")
+
+        coord = self.unit_conversion(coord, unit_to="pix", centre=centre)
+
+        if line.lower() == "ca":
+            if not pol:
+                if len(self.ca.data.shape) == 4:
+                    return self.ca.data[0, :, *coord]
+                else:
+                    return self.ca.data[:, *coord]
+            else:
+                if len(self.ca.data.shape) == 4:
+                    return self.ca.data[:, :, *coord]
+                else:
+                    raise WiseGuyError("Tryin' to be a wise guy, eh?")
+        elif line.lower() == "ha":
+            return self.ha.data[:, *coord]
