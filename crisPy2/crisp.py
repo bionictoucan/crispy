@@ -49,6 +49,7 @@ class CRISP:
                     except KeyError:
                         self.ca_wvls = fits.open(files)[1].data << u.Angstrom
                     self.px_res = self.ca.header["CDELT1"] << u.arcsec / u.pixel
+                    self.pointing
                 else:
                     self.ha = fits.open(files)[0]
                     try:
@@ -160,32 +161,44 @@ class CRISP:
                 return f"CRISP observation from {date} {time} UTC with measurements taken in the element {el_1} angstroms with {samp_wvl_1} wavelengths sampled and with heliocentric coordinates at the centre of the image ({pointing[0]},{pointing[1]}) in arcseconds. All Stokes parameters present in these observations."
 
     def unit_conversion(self, coord, unit_to, centre=False):
-       '''
-       A method to convert unit coordinates between pixel number, arcsecond (either absolute or relative to pointing) and megametre.
+        '''
+        A method to convert unit coordinates between pixel number, arcsecond (either absolute or relative to pointing) and megametre.
 
-       Parameters
-       ----------
-       coord : tuple or list of astropy.Quantities
-           The coordinate to be transformed.
-       unit_to : str
-           The coordinate system to convert to.
-       centre : bool, optional
-           Whether or not to calculate the pixel in arcseconds with respect to the pointing e.g. in the helioprojective frame.
-       '''
+        Parameters
+        ----------
+        coord : tuple or list of astropy.Quantities
+            The coordinate to be transformed.
+        unit_to : str
+            The coordinate system to convert to.
+        centre : bool, optional
+            Whether or not to calculate the pixel in arcseconds with respect to the pointing e.g. in the helioprojective frame.
+        '''
 
-       if not centre:
-           if unit_to == "pix":
-               if coord.unit == "pix":
-                   return coord
-               elif coord.unit == "arcsec":
-                   return np.round(coord / self.px_res)
-               elif coord.unit == "megameter":
-                   return np.round((coord * self.ang_sun / self.mm_sun) / self.px_res) 
-           elif unit_to == "arcsec":
-               if coord.unit == "pix":
-                   return coord * self.px_res
-               elif coord.unit == "arcsec":
-                   return coord
-               elif coord.unit == "megameter":
-                   return coord * (self.ang_sun / self.mm_sun)
-           elif unit_to == "Mm":
+        if not centre:
+            if unit_to == "pix":
+                if coord.unit == "pix":
+                    return coord
+                elif coord.unit == "arcsec":
+                    return np.round(coord / self.px_res)
+                elif coord.unit == "megameter":
+                    return np.round((coord * self.ang_sun / self.mm_sun) / self.px_res) 
+            elif unit_to == "arcsec":
+                if coord.unit == "pix":
+                    return coord * self.px_res
+                elif coord.unit == "arcsec":
+                    return coord
+                elif coord.unit == "megameter":
+                    return coord * (self.ang_sun / self.mm_sun)
+            elif unit_to == "Mm":
+                if coord.unit == "pix":
+                    return (coord * self.px_res) * self.mm_sun / self.ang_sun
+                elif coord.unit == "arcsec":
+                    return coord * self.mm_sun / self.ang_sun
+                elif coord.unit == "megameter":
+                    return coord
+        else:
+            if unit_to == "pix":
+                if coord.unit == "pix":
+                    return coord
+                elif coord.unit == "arcsec":
+                    return 
