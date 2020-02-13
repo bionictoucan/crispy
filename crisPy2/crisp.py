@@ -49,7 +49,8 @@ class CRISP:
                     except KeyError:
                         self.ca_wvls = fits.open(files)[1].data << u.Angstrom
                     self.px_res = self.ca.header["CDELT1"] << u.arcsec / u.pixel
-                    self.pointing
+                    self.pointing = (self.ca.header["CRVAL2"], self.ca.header["CRVAL1"]) << u.arcsec
+                    self.mid = (self.ca.header["NAXIS2"] // 2, self.ca.header["NAXIS1"] // 2) << u.pixel
                 else:
                     self.ha = fits.open(files)[0]
                     try:
@@ -57,6 +58,8 @@ class CRISP:
                     except KeyError:
                         self.ha_wvls = fits.open(files)[1].data << u.Angstrom
                     self.px_res = self.ha.header["CDELT1"] << u.arcsec / u.pixel
+                    self.pointing = (self.ha.header["CRVAL2"], self.ha.header["CRVAL1"]) << u.arcsec
+                    self.mid = (self.ha.header["NAXIS2"] // 2, self.ha.header["NAXIS1"] // 2) << u.pixel
             elif ".h5" or ".hdf5" in files:
                 if "ca" in files:
                     ca = h5py.File(files, "r")
@@ -65,6 +68,8 @@ class CRISP:
                     self.ca["header"] = yaml.load(ca["header"][0], Loader=yaml.Loader)
                     self.ca_wvls = self.ca.header["spect_pos"] << u.Angstrom
                     self.px_res = self.ca.header["pixel_scale"] << u.arcsec / u.pixel
+                    self.pointing = (self.ca.header["crval"][-2], self.ca.header["crval"][-1]) << u.arcsec
+                    self.mid = (self.ca.header["dimensions"][-2] // 2, self.ca.header["dimensions"][-1] // 2) << u.pixel
                 else:
                     ha = h5py.File(files, "r")
                     self.ha = ObjDict({})
@@ -72,6 +77,8 @@ class CRISP:
                     self.ha["header"] = yaml.load(ha["header"][0], Loader=yaml.Loader)
                     self.ha_wvls = self.ha.header["spect_pos"] << u.Angstrom
                     self.px_res = self.ha.header["pixel_scale"] << u.arcsec / u.pixel
+                    self.pointing = (self.ha.header["crval"][-2], self.ha.header["crval"][-1]) << u.arcsec
+                    self.mid = (self.ha.header["dimensions"][-2] // 2, self.ha.header["dimensions"][-1]) << u.pixel
         else:
             for f in files:
                 if ".fits" in f:
@@ -82,6 +89,8 @@ class CRISP:
                         except KeyError:
                             self.ca_wvls = fits.open(f)[1].data << u.Angstrom
                         self.px_res = self.ca.header["CDELT1"] << u.arcsec / u.pixel
+                        self.pointing = (self.ca.header["CRVAL2"], self.ca.header["CRVAL1"]) << u.arcsec
+                        self.mid = (self.ca.header["NAXIS2"] // 2, self.ca.header["NAXIS1"] // 2) << u.pixel
                     else:
                         self.ha = fits.open(f)[0]
                         try:
@@ -96,6 +105,8 @@ class CRISP:
                         self.ca["header"] = yaml.load(ca["header"][0], Loader=yaml.Loader)
                         self.ca_wvls = self.ca.header["spect_pos"] << u.Angstrom
                         self.px_res = self.ca.header["pixel_scale"] << u.arcsec / u.pixel
+                        self.pointing = (self.ca.header["crval"][-2], self.ca.header["crval"][-1]) << u.arcsec
+                        self.mid = (self.ca.header["dimensions"][-2] // 2, self.ca.header["dimensions"][-1] // 2) << u.pixel
                     else:
                         ha = h5py.File(f, "r")
                         self.ha = ObjDict({})
@@ -166,7 +177,7 @@ class CRISP:
 
         Parameters
         ----------
-        coord : tuple or list of astropy.Quantities
+        coord : astropy.units.quantity.Quantity
             The coordinate to be transformed.
         unit_to : str
             The coordinate system to convert to.
@@ -197,8 +208,13 @@ class CRISP:
                 elif coord.unit == "megameter":
                     return coord
         else:
+            # N.B. the conversions which take into account the centre pixel in the helioprojective coordinate frame assume that the given coordinate is in (y, x) format, whereas the other conversions can be done either way round e.g. (y, x) or (x, y)
             if unit_to == "pix":
                 if coord.unit == "pix":
                     return coord
                 elif coord.unit == "arcsec":
-                    return 
+                    px_diff = np.round((coord - self.pointing) / self.px_res)
+                    return self.mid + px_diff
+                elif coord.unit == "megameter":
+                    return self.unit_conversion(coord, unit_to="pix", centre=False)
+            elif unit_to == "arcsec":
