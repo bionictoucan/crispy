@@ -218,3 +218,19 @@ class CRISP:
                 elif coord.unit == "megameter":
                     return self.unit_conversion(coord, unit_to="pix", centre=False)
             elif unit_to == "arcsec":
+                if coord.unit == "pix":
+                    return ((coord - self.mid) * self.px_res) + self.pointing
+                elif coord.unit == "arcsec":
+                    # N.B. the assumption here is that you will only use this if you want to convert from arcseconds to helioprojective coordinate frame
+                    return (coord - (self.mid * self.px_res) + self.pointing)
+                elif coord.unit == "megameter":
+                    # this code is really fucking bad but I couldn't be bothered doing it properly so
+                    return self.unit_conversion(self.unit_conversion(coord, unit_to="pix", centre=False), unit_to="arcsec", centre=True)
+            elif unit_to == "megameter":
+                if coord.unit == "pix":
+                    return self.unit_conversion(coords, unit_to="pix", centre=False)
+                elif coord.unit == "arcsec":
+                    # ditto for this one
+                    return self.unit_conversion(self.unit_conversion(coord, unit_to="pix", centre=True), unit_to="megameter", centre=False)
+                elif coord.unit == "megameter":
+                    return coord
