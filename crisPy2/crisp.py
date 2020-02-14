@@ -4,6 +4,10 @@ from matplotlib import patches
 import os, h5py, yaml
 import astropy.units as u
 from astropy.io import fits
+from astropy.coordinates import SkyCoord
+from sunpy.coordinates import Helioprojective
+from sunpy.time import parse_time
+from sunpy.physics.differential_rotation import solar_rotate_coordinate
 
 class ObjDict(dict):
     '''
@@ -272,3 +276,8 @@ class CRISP:
                     raise WiseGuyError("Tryin' to be a wise guy, eh?")
         elif line.lower() == "ha":
             return self.ha.data[:, *coord]
+
+    def coalign(self):
+        '''
+        A class method to coalign the calcium and hydrogen images as they are slightly offset with respect to one another.
+        '''
