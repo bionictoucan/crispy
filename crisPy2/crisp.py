@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import patches
-import os, h5py, yaml
+import os, h5py, yaml, html
 import astropy.units as u
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
@@ -266,16 +266,16 @@ class CRISP:
         if line.lower() == "ca":
             if not pol:
                 if len(self.ca.data.shape) == 4:
-                    return self.ca.data[0, :, coord[0].value, coord[1].value]
+                    return self.ca.data[0, :, int(coord[0].value), int(coord[1].value)]
                 else:
-                    return self.ca.data[:, coord[0].value, coord[1].value]
+                    return self.ca.data[:, int(coord[0].value), int(coord[1].value)]
             else:
                 if len(self.ca.data.shape) == 4:
-                    return self.ca.data[:, :, coord[0].value, coord[1].value]
+                    return self.ca.data[:, :, int(coord[0].value), int(coord[1].value)]
                 else:
                     raise WiseGuyError("Tryin' to be a wise guy, eh?")
         elif line.lower() == "ha":
-            return self.ha.data[:, coord[0].value, coord[1].value]
+            return self.ha.data[:, int(coord[0].value), int(coord[1].value)]
 
     def coalign(self):
         '''
@@ -293,3 +293,163 @@ class CRISP:
 
         diff = [(new_c.Ty - c.Ty).value, (new_c.Tx - c.Tx).value] << u.arcsec
         return diff / self.px_res
+
+    def plot_spectrum(self, coord, line, centre=False, d=False):
+        '''
+        A class method to take a coordinate on the plot and plot the spectral line of that particular location with intensities given in data numbers [DNs] not real units.
+
+        Parameters
+        ----------
+        coord : astropy.unit.quantity.Quantity
+            The coordinates of the point that the user wants the spectral line from.
+        line : str
+            The line to plot. Can be "both", "ca" or "ha".
+        centre : bool, optional
+            Whether or not to calculate the pixel in arcseconds with respect to the pointing e.g. in the helioprojective frame. Default is False.
+        d : bool, optional
+            Whether or not to use Delta lambda for the x-axis. Default is False.
+        '''
+
+        coord = self.unit_conversion(coord, unit_to="pix", centre=centre)
+        l = html.unescape("&lambda;")
+        aa = html.unescape("&#8491;")
+        D = html.unescape(("&Delta;"))
+        a = html.unescape("&alpha;")
+
+        if line == "both":
+            if not d:
+                fig = plt.figure()
+                ax1 = fig.add_subplot(1,2,1)
+                if len(self.ca.data.shape) == 4:
+                    ax1.plot(self.ca_wvls, self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
+                else:
+                    ax1.plot(self.ca_wvls, self.ca.data[:, int(coord[0].value), int(coord[1].value)])
+                ax1.set_title(f"Ca II {l}8542")
+                ax1.set_ylabel("Intensity [DNs]")
+                ax1.set_xlabel(f"{l} [{aa}]")
+                
+                ax2 = fig.add_subplot(1,2,2)
+                ax2.plot(self.ha_wvls, self.ha.data[:, int(coord[0].value), int(coord[1].value)])
+                ax2.set_title(f"H{a} {l}6563")
+                ax2.set_ylabel("Intensity [DNs]")
+                ax2.set_xlabel(f"{l} [{aa}]")
+                fig.show()
+            else:
+                fig = plt.figure()
+                ax1 = fig.add_subplot(1,2,1)
+                if len(self.ca.data.shape) == 4:
+                    ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
+                else:
+                    ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, int(coord[0].value), int(coord[1].value)])
+                ax1.set_title(f"Ca II {l}8542")
+                ax1.set_ylabel("Intensity [DNs]")
+                ax1.set_xlabel(f"{D} {l} [{aa}]")
+                
+                ax2 = fig.add_subplot(1,2,2)
+                ax2.plot(self.ha_wvls - np.median(self.ha_wvls), self.ha.data[:, int(coord[0].value), int(coord[1].value)])
+                ax2.set_title(f"H{a} {l}6563")
+                ax2.set_ylabel("Intensity [DNs]")
+                ax2.set_xlabel(f"{D} {l} [{aa}]")
+                fig.show()
+        elif line == "ca":
+            if not d:
+                fig = plt.figure()
+                ax1 = fig.gca()
+                if len(self.ca.data.shape) == 4:
+                    ax1.plot(self.ca_wvls, self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
+                else:
+                    ax1.plot(self.ca_wvls, self.ca.data[:, int(coord[0].value), int(coord[1].value)])
+                ax1.set_title(f"Ca II {l}8542")
+                ax1.set_ylabel("Intensity [DNs]")
+                ax1.set_xlabel(f"{l} [{aa}]")
+                fig.show()
+            else:
+                fig = plt.figure()
+                ax1 = fig.gca()
+                if len(self.ca.data.shape) == 4:
+                    ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
+                else:
+                    ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, int(coord[0].value), int(coord[1].value)])
+                ax1.set_title(f"Ca II {l}8542")
+                ax1.set_ylabel("Intensity [DNs]")
+                ax1.set_xlabel(f"{D} {l} [{aa}]")
+                fig.show()
+        elif line == "ha":
+            if not d:                
+                fig = plt.figure()
+                ax1 = fig.gca()
+                ax1.plot(self.ha_wvls, self.ha.data[:, int(coord[0].value), int(coord[1].value)])
+                ax1.set_title(f"H{a} {l}6563")
+                ax1.set_ylabel("Intensity [DNs]")
+                ax1.set_xlabel(f"{l} [{aa}]")
+                fig.show()
+            else:
+                fig = plt.figure()
+                ax1 = fig.gca()
+                ax1.plot(self.ha_wvls - np.median(self.ha_wvls), self.ha.data[:, int(coord[0].value), int(coord[1].value)])
+                ax1.set_title(f"H{a} {l}6563")
+                ax1.set_ylabel("Intensity [DNs]")
+                ax1.set_xlabel(f"{D} {l} [{aa}]")
+                fig.show()
+
+    def plot_stokes(self, coord, stokes, centre=False, d=False):
+        '''
+        A class method to take a coordinate on the plot and plot the Stokes profile of that particular location with intensities given in data numbers [DNs] not real units.
+
+        Parameters
+        ----------
+        coord : astropy.unit.quantity.Quantity
+            The coordinates of the point that the user wants the spectral line from.
+        stokes : str
+            The stokes profile to plot. Can be "all", "I", "Q", "U", "V" or "IV".
+        centre : bool, optional
+            Whether or not to calculate the pixel in arcseconds with respect to the pointing e.g. in the helioprojective frame. Default is False.
+        d : bool, optional
+            Whether or not to use Delta lambda for the x-axis. Default is False.
+        '''
+
+        coord = self.unit_conversion(coord, unit_to="pix", centre=centre)
+        l = html.unescape("&lambda;")
+        aa = html.unescape("&#8491;")
+        D = html.unescape(("&Delta;"))
+
+        if stokes == "all":
+            if not d:
+                fig = plt.figure()
+                ax1 = fig.add_subplot(2,2,1)
+                ax1.plot(self.ca_wvls, self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
+                ax1.set_ylabel("I [DNs]")
+                ax1.set_xlabel(f"{l} [{aa}]")
+                ax2 = fig.add_subplot(2,2,2)
+                ax2.plot(self.ca_wvls, self.ca.data[1, :, int(coord[0].value), int(coord[1].value)])
+                ax2.set_ylabel("Q [DNs]")
+                ax2.set_xlabel(f"{l} [{aa}]")
+                ax3 = fig.add_subplot(2,2,3)
+                ax3.plot(self.ca_wvls, self.ca.data[2, :, int(coord[0].value), int(coord[1].value)])
+                ax3.set_ylabel("U [DNs]")
+                ax3.set_xlabel(f"{l} [{aa}]")
+                ax4 = fig.add_subplot(2,2,4)
+                ax4.plot(self.ca_wvls, self.ca.data[3, :, int(coord[0].value), int(coord[1].value)])
+                ax4.set_ylabel("V [DNs]")
+                ax4.set_xlabel(f"{l} [{aa}]")
+                fig.show()
+            else:
+                fig = plt.figure()
+                ax1 = fig.add_subplot(2,2,1)
+                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
+                ax1.set_ylabel("I [DNs]")
+                ax1.set_xlabel(f"{D} {l} [{aa}]")
+                ax2 = fig.add_subplot(2,2,2)
+                ax2.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[1, :, int(coord[0].value), int(coord[1].value)])
+                ax2.set_ylabel("Q [DNs]")
+                ax2.set_xlabel(f"{D} {l} [{aa}]")
+                ax3 = fig.add_subplot(2,2,3)
+                ax3.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[2, :, int(coord[0].value), int(coord[1].value)])
+                ax3.set_ylabel("U [DNs]")
+                ax3.set_xlabel(f"{D} {l} [{aa}]")
+                ax4 = fig.add_subplot(2,2,4)
+                ax4.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[3, :, int(coord[0].value), int(coord[1].value)])
+                ax4.set_ylabel("V [DNs]")
+                ax4.set_xlabel(f"{D} {l} [{aa}]")
+                fig.show()
+        elif stokes == "I":
