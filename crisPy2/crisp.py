@@ -266,18 +266,30 @@ class CRISP:
         if line.lower() == "ca":
             if not pol:
                 if len(self.ca.data.shape) == 4:
-                    return self.ca.data[0, :, *coord]
+                    return self.ca.data[0, :, coord[0].value, coord[1].value]
                 else:
-                    return self.ca.data[:, *coord]
+                    return self.ca.data[:, coord[0].value, coord[1].value]
             else:
                 if len(self.ca.data.shape) == 4:
-                    return self.ca.data[:, :, *coord]
+                    return self.ca.data[:, :, coord[0].value, coord[1].value]
                 else:
                     raise WiseGuyError("Tryin' to be a wise guy, eh?")
         elif line.lower() == "ha":
-            return self.ha.data[:, *coord]
+            return self.ha.data[:, coord[0].value, coord[1].value]
 
     def coalign(self):
         '''
-        A class method to coalign the calcium and hydrogen images as they are slightly offset with respect to one another.
+        A class method to coalign the calcium and hydrogen images as they are slightly offset with respect to one another. This can be used as an error in the pointing/position information.
         '''
+        try:
+            start_time = parse_time(self.ha.header["DATE-AVG"])
+            end_time = parse_time(self.ca.header["DATE-AVG"])
+        except KeyError:
+            start_time = parse_time(self.ha.header["date-obs"] + " " + self.ha.header["time-obs"])
+            end_time = parse_time(self.ca.header["date-obs"] + " " + self.ca.header["time-obs"])
+
+        c = SkyCoord(self.pointing[1], self.pointing[0], obstime=start_time, observer="earth", frame=Helioprojective)
+        new_c = solar_rotate_coordinate(c, time=end_time)
+
+        diff = [(new_c.Ty - c.Ty).value, (new_c.Tx - c.Tx).value] << u.arcsec
+        return diff / self.px_res
