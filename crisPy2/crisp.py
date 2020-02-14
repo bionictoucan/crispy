@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord
 from sunpy.coordinates import Helioprojective
 from sunpy.time import parse_time
 from sunpy.physics.differential_rotation import solar_rotate_coordinate
-from .utils import *
+from utils import *
 
 class CRISP:
     '''
@@ -511,3 +511,5 @@ class CRISP:
                 ax2 = fig.add_subplot(1,2,2)
                 ax2.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 3, int(coord[0].value), int(coord[1].value)])
                 fig.show()
+
+    def intensity_map(self, line, frame, ca_wvl_idx=None, ha_wvl_idx=None):
