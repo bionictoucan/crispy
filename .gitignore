@@ -1,2 +1,3 @@
 .vscode/settings.json
-crisPy2/__pycache__/
+/crisPy2/__pycache__/
+/examples/
