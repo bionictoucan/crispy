@@ -273,6 +273,7 @@ class CRISP:
         return diff / self.px_res
 
     def plot_spectrum(self, coord, line, centre=False, d=False):
+        # TODO: Add grid to plot and inward ticks.
         '''
         A class method to take a coordinate on the plot and plot the spectral line of that particular location with intensities given in data numbers [DNs] not real units.
 
@@ -371,6 +372,7 @@ class CRISP:
                 fig.show()
 
     def plot_stokes(self, coord, stokes, centre=False, d=False):
+        # TODO: Add grid for plots and ticks facing inwards.
         '''
         A class method to take a coordinate on the plot and plot the Stokes profile of that particular location with intensities given in data numbers [DNs] not real units.
 
@@ -540,8 +542,8 @@ class CRISP:
             fig = plt.figure()
             ca_ax = fig.add_subplot(1,2,1)
             ha_ax = fig.add_subplot(1,2,2)
-            ca_ax.set_title(f"Ca II {l}8542, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls)))
-            ha_ax.set_title(f"H{a} {l}6563, {D} {l} = "+str(self.ha_wvls[ha_wvl_idx] - np.median(self.ha_wvls)))
+            ca_ax.set_title(f"Ca II {l}8542, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls))+f"{aa}")
+            ha_ax.set_title(f"H{a} {l}6563, {D} {l} = "+str(self.ha_wvls[ha_wvl_idx] - np.median(self.ha_wvls))+f"{aa}")
             ha_ax.tick_params(labelleft=False)
             if frame == "pix":
                 if len(self.ca.data.shape) == 4:
@@ -588,7 +590,7 @@ class CRISP:
         elif line == "ca":
             fig = plt.figure()
             ca_ax = fig.add_subplot(1,1,1)
-            ca_ax.set_title(f"Ca II {l}8542, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls)))
+            ca_ax.set_title(f"Ca II {l}8542, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls))+f"{aa}")
             if frame == "pix":
                 if len(self.ca.data.shape) == 4:
                     ca_ax.imshow(self.ca.data[ca_wvl_idx,0], cmap="greys_r", origin="lower")
@@ -623,7 +625,7 @@ class CRISP:
         elif line == "ha":
             fig = plt.figure()
             ha_ax = fig.add_subplot(1,1,1)
-            ha_ax.set_title(f"H{a} {l}6563, {D} {l} = "+str(self.ha_wvls[ha_wvl_idx] - np.median(self.ha_wvls)))
+            ha_ax.set_title(f"H{a} {l}6563, {D} {l} = "+str(self.ha_wvls[ha_wvl_idx] - np.median(self.ha_wvls))+f"{aa}")
             if frame == "pix":
                 ha_ax.imshow(self.ha.data[ha_wvl_idx], cmap="Greys_r", origin="lower")
                 ha_ax.set_ylabel("y [pixels]")
@@ -643,3 +645,179 @@ class CRISP:
                 ha_ax.imshow(self.ha.data[ha_wvl_idx], cmap="Greys_r", origin="lower", extent=[0, ha_tr[1], 0, ha_tr[0]])
                 ha_ax.set_ylabel("Helioprojective-y [arcsec]")
                 ha_ax.set_xlabel("Helioprojective-x [arcsec]")
+    def stokes_map(self, stokes, frame, wvl_idx):
+        '''
+        A class method to plot the Stokes maps of the CRISP data.
+
+        Parameters
+        ----------
+        stokes : str
+            Which Stokes to plot maps for. Can be "all", "I", "Q", "U", "V" or "IV".
+        frame : str
+            Which frame to plot the maps in. Can be "pix", "arcsec", "megameter" or "helioprojective".
+        wvl_idx : int
+            Which wavelength to plot the maps in.
+        '''
+
+        l = html.unescape("&lambda;")
+        a = html.unescape("&alpha;")
+        aa = html.unescape("&#8491;")
+        D = html.unescape("&Delta;")
+        
+        if stokes == "all":
+            fig = plt.figure()
+            I_ax = fig.add_subplot(2,2,1)
+            Q_ax = fig.add_subplot(2,2,2)
+            U_ax = fig.add_subplot(2,2,3)
+            V_ax = fig.add_subplot(2,2,4)
+            I_ax.set_title(f"I, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls))+f"{aa}")
+            Q_ax.set_title(f"Q, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls))+f"{aa}")
+            U_ax.set_title(f"U, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls))+f"{aa}")
+            V_ax.set_title(f"V, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls))+f"{aa}")
+            I_ax.tick_params(labelbottom=False)
+            Q_ax.tick_params(labelbottom=False, labelleft=False)
+            V_ax.tick_params(labelleft=False)
+            if frame == "pix":
+                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0)
+                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max())
+                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max())
+                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max())
+                I_ax.set_ylabel("y [pixels]")
+                U_ax.set_ylabel("y [pixels]")
+                U_ax.set_xlabel("x [pixels]")
+                V_ax.set_xlabel("x [pixels]")
+            elif frame == "arcsec":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec")
+                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
+                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                I_ax.set_ylabel("y [arcsec]")
+                U_ax.set_ylabel("y [arcsec]")
+                U_ax.set_xlabel("x [arcsec]")
+                V_ax.set_xlabel("x [arcsec]")
+            elif frame == "megameter":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="megameter")
+                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
+                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                I_ax.set_ylabel("y [Mm]")
+                U_ax.set_ylabel("y [Mm]")
+                U_ax.set_xlabel("x [Mm]")
+                V_ax.set_xlabel("x [Mm]")
+            elif frame == "helioprojective":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec", centre=True)
+                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
+                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                I_ax.set_ylabel("Helioprojective-y [arcsec]")
+                U_ax.set_ylabel("Helioprojective-y [arcsec]")
+                U_ax.set_xlabel("Helioprojective-x [arcsec]")
+                V_ax.set_xlabel("Helioprojective-x [arcsec]")
+        elif stokes == "I":
+            self.intensity_map(line="ca", frame=frame, ca_wvl_idx=wvl_idx)
+        elif stokes == "Q":
+            fig = plt.figure()
+            Q_ax = fig.add_subplot(1,1,1)
+            Q_ax.set_title(f"Q, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls))+f"{aa}")
+            if frame == "pix":
+                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max())
+                Q_ax.set_ylabel("y [pixels]")
+                Q_ax.set_xlabel("x [pixels]")
+            elif frame == "arcsec":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec")
+                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                Q_ax.set_ylabel("y [arcsec]")
+                Q_ax.set_xlabel("x [arcsec]")
+            elif frame == "megameter":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="megameter")
+                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                Q_ax.set_ylabel("y [Mm]")
+                Q_ax.set_xlabel("x [Mm]")
+            elif frame == "helioprojective":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec", centre=True)
+                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                Q_ax.set_ylabel("Helioprojective-y [arcsec]")
+                Q_ax.set_xlabel("Helioprojective-x [arcsec]")
+        elif stokes == "U":
+            fig = plt.figure()
+            U_ax = fig.add_subplot(1,1,1)
+            U_ax.set_title(f"U, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls))+f"{aa}")
+            if frame == "pix":
+                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max())
+                U_ax.set_ylabel("y [pixels]")
+                U_ax.set_xlabel("x [pixels]")
+            elif frame == "arcsec":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec")
+                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                U_ax.set_ylabel("y [arcsec]")
+                U_ax.set_xlabel("x [arcsec]")
+            elif frame == "megameter":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="megameter")
+                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                U_ax.set_ylabel("y [Mm]")
+                U_ax.set_xlabel("x [Mm]")
+            elif frame == "helioprojective":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec", centre=True)
+                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                U_ax.set_ylabel("Helioprojective-y [arcsec]")
+                U_ax.set_xlabel("Helioprojective-x [arcsec]")
+        elif stokes == "V":
+            fig = plt.figure()
+            V_ax = fig.add_subplot(1,1,1)
+            V_ax.set_title(f"V, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls))+f"{aa}")
+            if frame == "pix":
+                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max())
+                V_ax.set_ylabel("y [pixels]")
+                V_ax.set_xlabel("x [pixels]")
+            elif frame == "arcsec":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec")
+                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                V_ax.set_ylabel("y [arcsec]")
+                V_ax.set_xlabel("x [arcsec]")
+            elif frame == "megameter":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="megameter")
+                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                V_ax.set_ylabel("y [Mm]")
+                V_ax.set_xlabel("x [Mm]")
+            elif frame == "helioprojective":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec", centre=True)
+                V_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                V_ax.set_ylabel("Helioprojective-y [arcsec]")
+                V_ax.set_xlabel("Helioprojective-x [arcsec]")
+        elif stokes == "IV":
+            fig = plt.figure()
+            I_ax = fig.add_subplot(1,2,1)
+            V_ax = fig.add_subplot(1,2,2)
+            I_ax.set_title(f"I, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls))+f"{aa}")
+            V_ax.set_title(f"V, {D} {l} = "+str(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls))+f"{aa}")
+            V_ax.tick_params(labelleft=False)
+            if frame == "pix":
+                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0)
+                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max())
+                I_ax.set_ylabel("y [pixels]")
+                I_ax.set_xlabel("x [pixels]")
+                V_ax.set_xlabel("x [pixels]")
+            elif frame == "arcsec":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec")
+                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                I_ax.set_ylabel("y [arcsec]")
+                I_ax.set_xlabel("x [arcsec]")
+                V_ax.set_xlabel("x [arcsec]")
+            elif frame == "megameter":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="megameter")
+                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                I_ax.set_ylabel("y [Mm]")
+                I_ax.set_xlabel("x [Mm]")
+                V_ax.set_xlabel("x [Mm]")
+            elif frame == "helioprojective":
+                tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec", centre=True)
+                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                I_ax.set_ylabel("Helioprojective-y [arcsec]")
+                I_ax.set_xlabel("Helioprojective-x [arcsec]")
+                V_ax.set_xlabel("Helioprojective-x [arcsec]")
