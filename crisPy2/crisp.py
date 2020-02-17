@@ -301,7 +301,7 @@ class CRISP:
                 fig = plt.figure()
                 ax1 = fig.add_subplot(1,2,1)
                 if len(self.ca.data.shape) == 4:
-                    ax1.plot(self.ca_wvls, self.ca.data[:, 0, int(coord[0].value), int(coord[1].value)])
+                    ax1.plot(self.ca_wvls, self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
                 else:
                     ax1.plot(self.ca_wvls, self.ca.data[:, int(coord[0].value), int(coord[1].value)])
                 ax1.set_title(f"Ca II {l}8542")
@@ -318,7 +318,7 @@ class CRISP:
                 fig = plt.figure()
                 ax1 = fig.add_subplot(1,2,1)
                 if len(self.ca.data.shape) == 4:
-                    ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 0, int(coord[0].value), int(coord[1].value)])
+                    ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
                 else:
                     ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, int(coord[0].value), int(coord[1].value)])
                 ax1.set_title(f"Ca II {l}8542")
@@ -336,7 +336,7 @@ class CRISP:
                 fig = plt.figure()
                 ax1 = fig.gca()
                 if len(self.ca.data.shape) == 4:
-                    ax1.plot(self.ca_wvls, self.ca.data[:, 0, int(coord[0].value), int(coord[1].value)])
+                    ax1.plot(self.ca_wvls, self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
                 else:
                     ax1.plot(self.ca_wvls, self.ca.data[:, int(coord[0].value), int(coord[1].value)])
                 ax1.set_title(f"Ca II {l}8542")
@@ -347,7 +347,7 @@ class CRISP:
                 fig = plt.figure()
                 ax1 = fig.gca()
                 if len(self.ca.data.shape) == 4:
-                    ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 0, int(coord[0].value), int(coord[1].value)])
+                    ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
                 else:
                     ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, int(coord[0].value), int(coord[1].value)])
                 ax1.set_title(f"Ca II {l}8542")
@@ -398,38 +398,38 @@ class CRISP:
             if not d:
                 fig = plt.figure()
                 ax1 = fig.add_subplot(2,2,1)
-                ax1.plot(self.ca_wvls, self.ca.data[:, 0, int(coord[0].value), int(coord[1].value)])
+                ax1.plot(self.ca_wvls, self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
                 ax1.set_ylabel("I [DNs]")
                 ax1.set_xlabel(f"{l} [{aa}]")
                 ax2 = fig.add_subplot(2,2,2)
-                ax2.plot(self.ca_wvls, self.ca.data[:, 1, int(coord[0].value), int(coord[1].value)])
+                ax2.plot(self.ca_wvls, self.ca.data[1, :, int(coord[0].value), int(coord[1].value)])
                 ax2.set_ylabel("Q [DNs]")
                 ax2.set_xlabel(f"{l} [{aa}]")
                 ax3 = fig.add_subplot(2,2,3)
-                ax3.plot(self.ca_wvls, self.ca.data[:, 2, int(coord[0].value), int(coord[1].value)])
+                ax3.plot(self.ca_wvls, self.ca.data[2, :, int(coord[0].value), int(coord[1].value)])
                 ax3.set_ylabel("U [DNs]")
                 ax3.set_xlabel(f"{l} [{aa}]")
                 ax4 = fig.add_subplot(2,2,4)
-                ax4.plot(self.ca_wvls, self.ca.data[:, 3, int(coord[0].value), int(coord[1].value)])
+                ax4.plot(self.ca_wvls, self.ca.data[3, :, int(coord[0].value), int(coord[1].value)])
                 ax4.set_ylabel("V [DNs]")
                 ax4.set_xlabel(f"{l} [{aa}]")
                 fig.show()
             else:
                 fig = plt.figure()
                 ax1 = fig.add_subplot(2,2,1)
-                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 0, int(coord[0].value), int(coord[1].value)])
+                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
                 ax1.set_ylabel("I [DNs]")
                 ax1.set_xlabel(f"{D} {l} [{aa}]")
                 ax2 = fig.add_subplot(2,2,2)
-                ax2.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 1, int(coord[0].value), int(coord[1].value)])
+                ax2.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[1, :, int(coord[0].value), int(coord[1].value)])
                 ax2.set_ylabel("Q [DNs]")
                 ax2.set_xlabel(f"{D} {l} [{aa}]")
                 ax3 = fig.add_subplot(2,2,3)
-                ax3.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 2, int(coord[0].value), int(coord[1].value)])
+                ax3.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[2, :, int(coord[0].value), int(coord[1].value)])
                 ax3.set_ylabel("U [DNs]")
                 ax3.set_xlabel(f"{D} {l} [{aa}]")
                 ax4 = fig.add_subplot(2,2,4)
-                ax4.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 3, int(coord[0].value), int(coord[1].value)])
+                ax4.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[3, :, int(coord[0].value), int(coord[1].value)])
                 ax4.set_ylabel("V [DNs]")
                 ax4.set_xlabel(f"{D} {l} [{aa}]")
                 fig.show()
@@ -437,14 +437,14 @@ class CRISP:
             if not d:
                 fig = plt.figure()
                 ax1 = fig.gca()
-                ax1.plot(self.ca_wvls, self.ca.data[:, 0, int(coord[0].value), int(coord[1].value)])
+                ax1.plot(self.ca_wvls, self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
                 ax1.set_ylabel("I [DNs]")
                 ax1.set_xlabel(f"{l} [{aa}]")
                 fig.show()
             else:
                 fig = plt.figure()
                 ax1 = fig.gca()
-                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 0, int(coord[0].value), int(coord[1].value)])
+                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
                 ax1.set_ylabel("I [DNs]")
                 ax1.set_xlabel(f"{D} {l} [{aa}]")
                 fig.show()
@@ -452,14 +452,14 @@ class CRISP:
             if not d:
                 fig = plt.figure()
                 ax1 = fig.gca()
-                ax1.plot(self.ca_wvls, self.ca.data[:, 1, int(coord[0].value), int(coord[1].value)])
+                ax1.plot(self.ca_wvls, self.ca.data[1, :, int(coord[0].value), int(coord[1].value)])
                 ax1.set_ylabel("Q [DNs]")
                 ax1.set_xlabel(f"{l} [{aa}]")
                 fig.show()
             else:
                 fig = plt.figure()
                 ax1 = fig.gca()
-                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 1, int(coord[0].value), int(coord[1].value)])
+                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[1, :, int(coord[0].value), int(coord[1].value)])
                 ax1.set_ylabel("Q [DNs]")
                 ax1.set_xlabel(f"{D} {l} [{aa}]")
                 fig.show()
@@ -467,14 +467,14 @@ class CRISP:
             if not d:
                 fig = plt.figure()
                 ax1 = fig.gca()
-                ax1.plot(self.ca_wvls, self.ca.data[:, 2, int(coord[0].value), int(coord[1].value)])
+                ax1.plot(self.ca_wvls, self.ca.data[2, :, int(coord[0].value), int(coord[1].value)])
                 ax1.set_ylabel("U [DNs]")
                 ax1.set_xlabel(f"{l} [{aa}]")
                 fig.show()
             else:
                 fig = plt.figure()
                 ax1 = fig.gca()
-                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 2, int(coord[0].value), int(coord[1].value)])
+                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[2, :, int(coord[0].value), int(coord[1].value)])
                 ax1.set_ylabel("U [DNs]")
                 ax1.set_xlabel(f"{D} {l} [{aa}]")
                 fig.show()
@@ -482,14 +482,14 @@ class CRISP:
             if not d:
                 fig = plt.figure()
                 ax1 = fig.gca()
-                ax1.plot(self.ca_wvls, self.ca.data[:, 3, int(coord[0].value), int(coord[1].value)])
+                ax1.plot(self.ca_wvls, self.ca.data[3, :, int(coord[0].value), int(coord[1].value)])
                 ax1.set_ylabel("V [DNs]")
                 ax1.set_xlabel(f"{l} [{aa}]")
                 fig.show()
             else:
                 fig = plt.figure()
                 ax1 = fig.gca()
-                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 3, int(coord[0].value), int(coord[1].value)])
+                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[3, :, int(coord[0].value), int(coord[1].value)])
                 ax1.set_ylabel("V [DNs]")
                 ax1.set_xlabel(f"{D} {l} [{aa}]")
                 fig.show()
@@ -497,22 +497,22 @@ class CRISP:
             if not d:
                 fig = plt.figure()
                 ax1 = fig.add_subplot(1,2,1)
-                ax1.plot(self.ca_wvls, self.ca.data[:, 0, int(coord[0].value), int(coord[1].value)])
+                ax1.plot(self.ca_wvls, self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
                 ax1.set_ylabel("I [DNs]")
                 ax1.set_xlabel(f"{l} [{aa}]")
                 ax2 = fig.add_subplot(1,2,2)
-                ax2.plot(self.ca_wvls, self.ca.data[:, 3, int(coord[0].value), int(coord[1].value)])
+                ax2.plot(self.ca_wvls, self.ca.data[3, :, int(coord[0].value), int(coord[1].value)])
                 ax2.set_ylabel("V [DNs]")
                 ax2.set_xlabel(f"{l} [{aa}]")
                 fig.show()
             else:
                 fig = plt.figure()
                 ax1 = fig.add_subplot(1,2,1)
-                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 0, int(coord[0].value), int(coord[1].value)])
+                ax1.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[0, :, int(coord[0].value), int(coord[1].value)])
                 ax1.set_ylabel("I [DNs]")
                 ax1.set_xlabel(f"{D} {l} [{aa}]")
                 ax2 = fig.add_subplot(1,2,2)
-                ax2.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[:, 3, int(coord[0].value), int(coord[1].value)])
+                ax2.plot(self.ca_wvls - np.median(self.ca_wvls), self.ca.data[3, :, int(coord[0].value), int(coord[1].value)])
                 fig.show()
 
     def intensity_map(self, line, frame, ca_wvl_idx=None, ha_wvl_idx=None):
@@ -548,7 +548,7 @@ class CRISP:
             ha_ax.tick_params(labelleft=False)
             if frame == "pix":
                 if len(self.ca.data.shape) == 4:
-                    ca_ax.imshow(self.ca.data[ca_wvl_idx,0], cmap="greys_r", origin="lower")
+                    ca_ax.imshow(self.ca.data[0,ca_wvl_idx], cmap="greys_r", origin="lower")
                 else:
                     ca_ax.imshow(self.ca.data[ca_wvl_idx], cmap="Greys_r", origin="lower")
                 ha_ax.imshow(self.ha.data[ha_wvl_idx], cmap="Greys_r", origin="lower")
@@ -560,7 +560,7 @@ class CRISP:
                 ca_tr = self.unit_conversion(self.ca.data.shape[-2:] << u.pix, unit_to="arcsec").value
                 ha_tr = self.unit_conversion(self.ha.data.shape[-2:] << u.pix, unit_to="arcsec").value
                 if len(self.ca.data.shape) == 4:
-                    ca_ax.imshow(self.ca.data[ca_wvl_idx,0], cmap="greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
+                    ca_ax.imshow(self.ca.data[0,ca_wvl_idx], cmap="greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
                 else:
                     ca_ax.imshow(self.ca.data[ca_wvl_idx], cmap="Greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
                 ha_ax.imshow(self.ha.data[ha_wvl_idx], cmap="Greys_r", origin="lower", extent=[0, ha_tr[1], 0, ha_tr[0]])
@@ -572,7 +572,7 @@ class CRISP:
                 ca_tr = self.unit_conversion(self.ca.data.shape[-2:] << u.pix, unit_to="megameter").value
                 ha_tr = self.unit_conversion(self.ha.data.shape[-2:] << u.pix, unit_to="megameter").value
                 if len(self.ca.data.shape) == 4:
-                    ca_ax.imshow(self.ca.data[ca_wvl_idx,0], cmap="greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
+                    ca_ax.imshow(self.ca.data[0,ca_wvl_idx], cmap="greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
                 else:
                     ca_ax.imshow(self.ca.data[ca_wvl_idx], cmap="Greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
                 ha_ax.imshow(self.ha.data[ha_wvl_idx], cmap="Greys_r", origin="lower", extent=[0, ha_tr[1], 0, ha_tr[0]])
@@ -584,7 +584,7 @@ class CRISP:
                 ca_tr = self.unit_conversion(self.ca.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
                 ha_tr = self.unit_conversion(self.ha.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
                 if len(self.ca.data.shape) == 4:
-                    ca_ax.imshow(self.ca.data[ca_wvl_idx,0], cmap="greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
+                    ca_ax.imshow(self.ca.data[0,ca_wvl_idx], cmap="greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
                 else:
                     ca_ax.imshow(self.ca.data[ca_wvl_idx], cmap="Greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
                 ha_ax.imshow(self.ha.data[ha_wvl_idx], cmap="Greys_r", origin="lower", extent=[0, ha_tr[1], 0, ha_tr[0]])
@@ -598,7 +598,7 @@ class CRISP:
             ca_ax.set_title(f"Ca II {l}8542, {D} {l} = "+str(np.round(self.ca_wvls[ca_wvl_idx] - np.median(self.ca_wvls), decimals=3).value)+f"{aa}")
             if frame == "pix":
                 if len(self.ca.data.shape) == 4:
-                    ca_ax.imshow(self.ca.data[ca_wvl_idx,0], cmap="greys_r", origin="lower")
+                    ca_ax.imshow(self.ca.data[0,ca_wvl_idx], cmap="greys_r", origin="lower")
                 else:
                     ca_ax.imshow(self.ca.data[ca_wvl_idx], cmap="Greys_r", origin="lower")
                 ca_ax.set_ylabel("y [pixels]")
@@ -607,7 +607,7 @@ class CRISP:
             elif frame == "arcsec":
                 ca_tr = self.unit_conversion(self.ca.data.shape[-2:] << u.pix, unit_to="arcsec").value
                 if len(self.ca.data.shape) == 4:
-                    ca_ax.imshow(self.ca.data[ca_wvl_idx,0], cmap="greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
+                    ca_ax.imshow(self.ca.data[0,ca_wvl_idx], cmap="greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
                 else:
                     ca_ax.imshow(self.ca.data[ca_wvl_idx], cmap="Greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
                 ca_ax.set_ylabel("y [arcseconds]")
@@ -616,7 +616,7 @@ class CRISP:
             elif frame == "megameter":
                 ca_tr = self.unit_conversion(self.ca.data.shape[-2:] << u.pix, unit_to="megameter").value
                 if len(self.ca.data.shape) == 4:
-                    ca_ax.imshow(self.ca.data[ca_wvl_idx,0], cmap="greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
+                    ca_ax.imshow(self.ca.data[0,ca_wvl_idx], cmap="greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
                 else:
                     ca_ax.imshow(self.ca.data[ca_wvl_idx], cmap="Greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
                 ca_ax.set_ylabel("y [Mm]")
@@ -625,7 +625,7 @@ class CRISP:
             elif frame == "helioprojective":
                 ca_tr = self.unit_conversion(self.ca.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
                 if len(self.ca.data.shape) == 4:
-                    ca_ax.imshow(self.ca.data[ca_wvl_idx,0], cmap="greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
+                    ca_ax.imshow(self.ca.data[0,ca_wvl_idx], cmap="greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
                 else:
                     ca_ax.imshow(self.ca.data[ca_wvl_idx], cmap="Greys_r", origin="lower", extent=[0, ca_tr[1], 0, ca_tr[0]])
                 ca_ax.set_ylabel("Helioprojective-y [arcsec]")
@@ -690,10 +690,10 @@ class CRISP:
             Q_ax.tick_params(labelbottom=False, labelleft=False)
             V_ax.tick_params(labelleft=False)
             if frame == "pix":
-                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0)
-                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max())
-                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max())
-                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max())
+                I_ax.imshow(self.ca.data[0,wvl_idx], cmap="Greys_r", origin="bottom", vmin=0)
+                Q_ax.imshow(self.ca.data[1,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max())
+                U_ax.imshow(self.ca.data[2,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max())
+                V_ax.imshow(self.ca.data[3,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[0,wvl_idx].max(), vmax=0.5*self.ca.data[0,wvl_idx].max())
                 I_ax.set_ylabel("y [pixels]")
                 U_ax.set_ylabel("y [pixels]")
                 U_ax.set_xlabel("x [pixels]")
@@ -701,10 +701,10 @@ class CRISP:
                 fig.show()
             elif frame == "arcsec":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec").value
-                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
-                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
-                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
-                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                I_ax.imshow(self.ca.data[0,wvl_idx], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
+                Q_ax.imshow(self.ca.data[1,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
+                U_ax.imshow(self.ca.data[2,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[3,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[0,wvl_idx].max(), vmax=0.5*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 I_ax.set_ylabel("y [arcsec]")
                 U_ax.set_ylabel("y [arcsec]")
                 U_ax.set_xlabel("x [arcsec]")
@@ -712,10 +712,10 @@ class CRISP:
                 fig.show()
             elif frame == "megameter":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="megameter").value
-                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
-                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
-                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
-                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                I_ax.imshow(self.ca.data[0,wvl_idx], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
+                Q_ax.imshow(self.ca.data[1,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
+                U_ax.imshow(self.ca.data[2,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[3,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[0,wvl_idx].max(), vmax=0.5*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 I_ax.set_ylabel("y [Mm]")
                 U_ax.set_ylabel("y [Mm]")
                 U_ax.set_xlabel("x [Mm]")
@@ -723,10 +723,10 @@ class CRISP:
                 fig.show()
             elif frame == "helioprojective":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec", centre=True).value
-                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
-                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
-                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
-                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                I_ax.imshow(self.ca.data[0,wvl_idx], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
+                Q_ax.imshow(self.ca.data[1,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
+                U_ax.imshow(self.ca.data[2,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[3,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[0,wvl_idx].max(), vmax=0.5*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 I_ax.set_ylabel("Helioprojective-y [arcsec]")
                 U_ax.set_ylabel("Helioprojective-y [arcsec]")
                 U_ax.set_xlabel("Helioprojective-x [arcsec]")
@@ -739,25 +739,25 @@ class CRISP:
             Q_ax = fig.add_subplot(1,1,1)
             Q_ax.set_title(f"Q, {D} {l} = "+str(np.round(self.ca_wvls[wvl_idx] - np.median(self.ca_wvls), decimals=3).value)+f"{aa}")
             if frame == "pix":
-                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max())
+                Q_ax.imshow(self.ca.data[1,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max())
                 Q_ax.set_ylabel("y [pixels]")
                 Q_ax.set_xlabel("x [pixels]")
                 fig.show()
             elif frame == "arcsec":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec").value
-                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                Q_ax.imshow(self.ca.data[1,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 Q_ax.set_ylabel("y [arcsec]")
                 Q_ax.set_xlabel("x [arcsec]")
                 fig.show()
             elif frame == "megameter":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="megameter").value
-                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                Q_ax.imshow(self.ca.data[1,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 Q_ax.set_ylabel("y [Mm]")
                 Q_ax.set_xlabel("x [Mm]")
                 fig.show()
             elif frame == "helioprojective":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec", centre=True).value
-                Q_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                Q_ax.imshow(self.ca.data[1,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 Q_ax.set_ylabel("Helioprojective-y [arcsec]")
                 Q_ax.set_xlabel("Helioprojective-x [arcsec]")
                 fig.show()
@@ -766,25 +766,25 @@ class CRISP:
             U_ax = fig.add_subplot(1,1,1)
             U_ax.set_title(f"U, {D} {l} = "+str(np.round(self.ca_wvls[wvl_idx] - np.median(self.ca_wvls), decimals=3).value)+f"{aa}")
             if frame == "pix":
-                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max())
+                U_ax.imshow(self.ca.data[2,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max())
                 U_ax.set_ylabel("y [pixels]")
                 U_ax.set_xlabel("x [pixels]")
                 fig.show()
             elif frame == "arcsec":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec").value
-                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                U_ax.imshow(self.ca.data[2,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 U_ax.set_ylabel("y [arcsec]")
                 U_ax.set_xlabel("x [arcsec]")
                 fig.show()
             elif frame == "megameter":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="megameter").value
-                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                U_ax.imshow(self.ca.data[2,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 U_ax.set_ylabel("y [Mm]")
                 U_ax.set_xlabel("x [Mm]")
                 fig.show()
             elif frame == "helioprojective":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec", centre=True).value
-                U_ax.imshow(self.ca.data[wvl_idx,2], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[wvl_idx,0].max(), vmax=0.1*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                U_ax.imshow(self.ca.data[2,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.1*self.ca.data[0,wvl_idx].max(), vmax=0.1*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 U_ax.set_ylabel("Helioprojective-y [arcsec]")
                 U_ax.set_xlabel("Helioprojective-x [arcsec]")
                 fig.show()
@@ -793,25 +793,25 @@ class CRISP:
             V_ax = fig.add_subplot(1,1,1)
             V_ax.set_title(f"V, {D} {l} = "+str(np.round(self.ca_wvls[wvl_idx] - np.median(self.ca_wvls), decimals=3).value)+f"{aa}")
             if frame == "pix":
-                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max())
+                V_ax.imshow(self.ca.data[3,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[0,wvl_idx].max(), vmax=0.5*self.ca.data[0,wvl_idx].max())
                 V_ax.set_ylabel("y [pixels]")
                 V_ax.set_xlabel("x [pixels]")
                 fig.show()
             elif frame == "arcsec":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec").value
-                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[3,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[0,wvl_idx].max(), vmax=0.5*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 V_ax.set_ylabel("y [arcsec]")
                 V_ax.set_xlabel("x [arcsec]")
                 fig.show()
             elif frame == "megameter":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="megameter").value
-                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[3,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[0,wvl_idx].max(), vmax=0.5*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 V_ax.set_ylabel("y [Mm]")
                 V_ax.set_xlabel("x [Mm]")
                 fig.show()
             elif frame == "helioprojective":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec", centre=True).value
-                V_ax.imshow(self.ca.data[wvl_idx,1], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[3,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[0,wvl_idx].max(), vmax=0.5*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 V_ax.set_ylabel("Helioprojective-y [arcsec]")
                 V_ax.set_xlabel("Helioprojective-x [arcsec]")
                 fig.show()
@@ -823,32 +823,32 @@ class CRISP:
             V_ax.set_title(f"V, {D} {l} = "+str(np.round(self.ca_wvls[wvl_idx] - np.median(self.ca_wvls), decimals=3).value)+f"{aa}")
             V_ax.tick_params(labelleft=False)
             if frame == "pix":
-                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0)
-                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max())
+                I_ax.imshow(self.ca.data[0,wvl_idx], cmap="Greys_r", origin="bottom", vmin=0)
+                V_ax.imshow(self.ca.data[3,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[0,wvl_idx].max(), vmax=0.5*self.ca.data[0,wvl_idx].max())
                 I_ax.set_ylabel("y [pixels]")
                 I_ax.set_xlabel("x [pixels]")
                 V_ax.set_xlabel("x [pixels]")
                 fig.show()
             elif frame == "arcsec":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec").value
-                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
-                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                I_ax.imshow(self.ca.data[0,wvl_idx], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[3,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[0,wvl_idx].max(), vmax=0.5*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 I_ax.set_ylabel("y [arcsec]")
                 I_ax.set_xlabel("x [arcsec]")
                 V_ax.set_xlabel("x [arcsec]")
                 fig.show()
             elif frame == "megameter":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="megameter").value
-                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
-                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                I_ax.imshow(self.ca.data[0,wvl_idx], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[3,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[0,wvl_idx].max(), vmax=0.5*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 I_ax.set_ylabel("y [Mm]")
                 I_ax.set_xlabel("x [Mm]")
                 V_ax.set_xlabel("x [Mm]")
                 fig.show()
             elif frame == "helioprojective":
                 tr = self.unit_conversion(self.ca.data.shape[-2:], unit_to="arcsec", centre=True).value
-                I_ax.imshow(self.ca.data[wvl_idx,0], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
-                V_ax.imshow(self.ca.data[wvl_idx,3], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[wvl_idx,0].max(), vmax=0.5*self.ca.data[wvl_idx,0].max(), extent=[0, tr[1], 0, tr[0]])
+                I_ax.imshow(self.ca.data[0,wvl_idx], cmap="Greys_r", origin="bottom", vmin=0, extent=[0, tr[1], 0, tr[0]])
+                V_ax.imshow(self.ca.data[3,wvl_idx], cmap="Greys_r", origin="bottom", vmin=-0.5*self.ca.data[0,wvl_idx].max(), vmax=0.5*self.ca.data[0,wvl_idx].max(), extent=[0, tr[1], 0, tr[0]])
                 I_ax.set_ylabel("Helioprojective-y [arcsec]")
                 I_ax.set_xlabel("Helioprojective-x [arcsec]")
                 V_ax.set_xlabel("Helioprojective-x [arcsec]")
