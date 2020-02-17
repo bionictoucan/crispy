@@ -7,6 +7,7 @@ from matplotlib.colors import SymLogNorm
 from IPython.core.display import display
 from .utils import ObjDict
 from astropy.io import fits
+from .crisp import CRISP
 
 class AtmosViewer:
     def __init__(self, file_obj, z, eb=False):
@@ -260,19 +261,16 @@ class TimeViewer:
 class SpectralViewer:
     def __init__(self, data, hc=False):
         self.hc = hc
+        self.aa = html.unescape("&#8491;")
+        self.l = html.unescape("&lambda;")
+        self.a = html.unescape("&alpha;")
+        self.D = html.unescape("&Delta;")
         if type(data) == str:
-            if ".fits" in data:
-                self.file = fits.open(data)[0]
-                try:
-                    self.wvls = self.file.header["spect_pos"]
-                except KeyError:
-                    self.wvls = np.round(fits.open(data)[1].data, decimals=2)
-            elif ".h5" or ".hdf5" in data:
-                self.file = ObjDict({})
-                file = h5py.File(data, "r")
-                self.file["data"] = file.get("data")
-                self.file["header"] = yaml.load(file["header"][0], Loader=yaml.Loader)
-                self.wvls = self.file.header["spect_pos"]
+            self.file = CRISP(files=data)
+            if "8542" in data:
+                self.wvls = self.file.ca_wvls
+            else:
+                self.wvls = self.file.ha_wvls
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(1, 2, 1)
             self.ax1.set_ylabel("y [arcseconds]")
@@ -281,14 +279,18 @@ class SpectralViewer:
             self.ax2.yaxis.set_label_position("right")
             self.ax2.yaxis.tick_right()
             self.ax2.set_ylabel("Intensity [DNs]")
-            self.ax2.set_xlabel(r"$\lambda$ ["+aa+"]")
+            self.ax2.set_xlabel(f"{self.l} [{self.aa}]")
             self.ax2.grid()
             self.ax2.tick_params(direction="in")
             
-            if np.unique(np.round(np.diff(self.wvls), decimals=2)).size == 1:
-                ll = widgets.FloatSlider(min=np.round(self.wvls[0] - np.median(self.wvls), decimals=2), max=np.round(self.wvls[-1] - np.median(self.wvls), decimals=2), step=np.round(self.file.header["CDELT3"], decimals=2), description = r"$\Delta \lambda$ ["+aa+"]")
+            if ".fits" in data:
+                if np.unique(np.round(np.diff(self.wvls), decimals=2)).size == 1:
+                    ll = widgets.FloatSlider(min=np.round(self.wvls[0] - np.median(self.wvls), decimals=2), max=np.round(self.wvls[-1] - np.median(self.wvls), decimals=2), step=np.round(self.file.header["CDELT3"], decimals=2), description = f"${self.D} {self.l} [{self.aa}]")
+                else:
+                    ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
             else:
-                ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = r"$\Delta \lambda$ ["+aa+"]")
+                ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
+
             
             widgets.interact(self._img_plot1,
                             ll = ll)
@@ -311,6 +313,13 @@ class SpectralViewer:
                     except KeyError:
                         self.ha_wvls = np.round(fits.open(f)[1].data, decimals=2)
                         
+            for f in data:
+                if "8542" in f:
+                    self.ca = CRISP(files=f)
+                    self.ca_wvls = self.ca.ca_wvls
+                else:
+                    self.ha = CRISP(files=f)
+                    self.ha_wvls = self.ha.ha_wvls
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(2, 2, 1)
             self.ax1.set_ylabel("y [arcseconds]")
@@ -322,26 +331,30 @@ class SpectralViewer:
             self.ax3.yaxis.set_label_position("right")
             self.ax3.yaxis.tick_right()
             self.ax3.set_ylabel("Intensity [DNs]")
-            self.ax3.set_xlabel(r"$\lambda$ ["+aa+"]")
+            self.ax3.set_xlabel(f"{self.l} [{self.aa}]")
             self.ax3.grid()
             self.ax3.tick_params(direction="in")
             self.ax4 = self.fig.add_subplot(2, 2, 4)
             self.ax4.yaxis.set_label_position("right")
             self.ax4.yaxis.tick_right()
             self.ax4.set_ylabel("Intensity [DNs]")
-            self.ax4.set_xlabel(r"$\lambda$ ["+aa+"]")
+            self.ax4.set_xlabel(f"{self.l} [{self.aa}]")
             self.ax4.grid()
             self.ax4.tick_params(direction="in")
             
-            if np.unique(np.round(np.diff(self.ca_wvls), decimals=2)).size == 1:
-                ll1 = widgets.FloatSlider(min=np.round(self.ca_wvls[0]-np.median(self.ca_wvls), decimals=3), max=np.round(self.ca_wvls[-1]-np.median(self.ca_wvls), decimals=3), step=np.round(self.ca.header["CDELT3"], decimals=2), description=r"Ca II $\Delta \lambda$ ["+aa+"]")
+            if ".fits" in data[0]:
+                if np.unique(np.round(np.diff(self.ca_wvls), decimals=2)).size == 1:
+                    ll1 = widgets.FloatSlider(min=np.round(self.ca_wvls[0]-np.median(self.ca_wvls), decimals=3), max=np.round(self.ca_wvls[-1]-np.median(self.ca_wvls), decimals=3), step=np.round(self.ca.header["CDELT3"], decimals=2), description=f"Ca II {self.D} {self.l} [{self.aa}]")
+                else:
+                    ll1 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ca_wvls), decimals=2) for l in self.ca_wvls], description=f"Ca II {self.D} {self.l} [{self.aa}]")
+                    
+                if np.unique(np.round(np.diff(self.ha_wvls), decimals=2)).size == 1:
+                    ll2 = widgets.FloatSlider(min=self.ha_wvls[0]-np.median(self.ha_wvls), max=self.ha_wvls[-1]-np.median(self.ha_wvls), step=np.round(self.ha.header["CDELT3"], decimals=2), description=f"H{self.a} {self.D} {self.l} [{self.aa}]")
+                else:
+                    ll2 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ha_wvls), decimals=2) for l in self.ha_wvls], description = f"H{self.a} {self.D} {self.l} [{self.aa}]")
             else:
-                ll1 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ca_wvls), decimals=2) for l in self.ca_wvls], description=r"Ca II $\Delta \lambda$ ["+aa+"]")
-                
-            if np.unique(np.round(np.diff(self.ha_wvls), decimals=2)).size == 1:
-                ll2 = widgets.FloatSlider(min=self.ha_wvls[0]-np.median(self.ha_wvls), max=self.ha_wvls[-1]-np.median(self.ha_wvls), step=np.round(self.ha.header["CDELT3"], decimals=2), description=r"H$\alpha$ $\Delta \lambda$ ["+aa+"]")
-            else:
-                ll2 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ha_wvls), decimals=2) for l in self.ha_wvls], description = r"H$\alpha$ $\Delta \lambda$ ["+aa+"]")
+                ll1 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ca_wvls), decimals=2) for l in self.ca_wvls], description=f"Ca II {self.D} {self.l} [{self.aa}]")
+                ll2 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ha_wvls), decimals=2) for l in self.ha_wvls], description=f"H{self.a} {self.D} {self.l} [{self.aa}]")
             
             widgets.interact(self._img_plot2,
                             ll1 = ll1,
