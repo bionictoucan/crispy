@@ -481,6 +481,8 @@ class SpectralViewer:
             pass
         elif self.ax1.images[-1].colorbar is not None:
             self.ax1.images[-1].colorbar.remove()
+
+        if "ca" in self.file.__dict__:
             
         if self.hc:
             if self.file.header["CRVAL1"] < 0 and self.file.header["CRVAL2"] < 0:
