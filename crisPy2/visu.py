@@ -267,7 +267,7 @@ class SpectralViewer:
         self.a = html.unescape("&alpha;")
         self.D = html.unescape("&Delta;")
         if type(data) == str:
-            self.cube = CRISP(cubes=data)
+            self.cube = CRISP(files=data)
             if "8542" in data:
                 self.wvls = self.cube.ca_wvls
             else:
@@ -284,7 +284,7 @@ class SpectralViewer:
                 self.ca_wvls = self.cube.ca_wvls
                 self.ha_wvls = self.cube.ha_wvls
         elif type(data) == list:
-            self.cube = CRISP(cubes=data)
+            self.cube = CRISP(files=data)
             self.ca_wvls = self.cube.ca_wvls
             self.ha_wvls = self.cube.ha_wvls
             
