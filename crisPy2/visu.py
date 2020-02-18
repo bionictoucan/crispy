@@ -267,11 +267,28 @@ class SpectralViewer:
         self.a = html.unescape("&alpha;")
         self.D = html.unescape("&Delta;")
         if type(data) == str:
-            self.file = CRISP(files=data)
+            self.cube = CRISP(cubes=data)
             if "8542" in data:
-                self.wvls = self.file.ca_wvls
+                self.wvls = self.cube.ca_wvls
             else:
-                self.wvls = self.file.ha_wvls
+                self.wvls = self.cube.ha_wvls
+
+            widgets.interact(self._img_plot1, ll = ll)
+        elif type(data) == CRISP:
+            self.cube = data
+            if "ca" and not "ha" in self.cube.__dict__:
+                self.wvls = self.cube.ca_wvls
+            elif not "ca" and "ha" in self.cube.__dict__:
+                self.wvls = self.cube.ha_wvls
+            elif "ca" and "ha" in self.cube.__dict__:
+                self.ca_wvls = self.cube.ca_wvls
+                self.ha_wvls = self.cube.ha_wvls
+        elif type(data) == list:
+            self.cube = CRISP(cubes=data)
+            self.ca_wvls = self.cube.ca_wvls
+            self.ha_wvls = self.cube.ha_wvls
+            
+        if "wvls" in self.__dict__:
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(1, 2, 1)
             self.ax1.set_ylabel("y [arcseconds]")
@@ -285,15 +302,7 @@ class SpectralViewer:
             self.ax2.tick_params(direction="in")
             
             ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
-
-            widgets.interact(self._img_plot1, ll = ll)
-        elif type(data) == CRISP:
-            self.file = data
-            
-        elif type(data) == list:
-            self.file = CRISP(files=data)
-            self.ca_wvls = self.file.ca_wvls
-            self.ha_wvls = self.file.ha_wvls
+        else:
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(2, 2, 1)
             self.ax1.set_ylabel("y [arcseconds]")
@@ -320,7 +329,6 @@ class SpectralViewer:
             ll2 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ha_wvls), decimals=2) for l in self.ha_wvls], description=f"H{self.a} {self.D} {self.l} [{self.aa}]")
             
             widgets.interact(self._img_plot2, ll1 = ll1, ll2 = ll2)
-            
                     
         self.coords = []
         self.px_coords = []
@@ -337,73 +345,41 @@ class SpectralViewer:
     def _on_click(self, event):
         if self.fig.canvas.manager.toolbar.mode is not "":
             return
-        
-        if "file" in self.__dict__:
-            centre_coord = event.xdata, event.ydata
+
+        if "wvls" in self.__dict__:
+            centre_coord = event.ydata, event.xdata
             self.coords.append((event.ydata, event.xdata))
-            circ = patches.Circle(centre_coord, radius=0.25, color="r")
+            circ = patches.Circle(centre_coord[::-1], radius=0.25, color="r")
             self.ax1.add_patch(circ)
             if self.hc:
-                if self.file.header["CRVAL1"] < 0 and self.file.header["CRVAL2"] < 0:
-                    y_axis = np.linspace(self.file.header["CRVAL2"]+(self.file.header["CDELT2"]*self.file.data.shape[-2]/2), self.file.header["CRVAL2"]-(self.file.header["CDELT2"]*self.file.data.shape[-2]/2), num=self.file.data.shape[-2]+1)
-                    x_axis = np.linspace(self.file.header["CRVAL1"]+(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), self.file.header["CRVAL1"]-(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), num=self.file.data.shape[-1]+1)
-                    px_y = int(y_axis[np.abs(y_axis - event.ydata).argmin()])
-                    px_x = int(x_axis[np.abs(x_axis - event.xdata).argmin()])
-                elif self.file.header["CRVAL1"] > 0 and self.file.header["CRVAL2"] < 0:
-                    y_axis = np.linspace(self.file.header["CRVAL2"]+(self.file.header["CDELT2"]*self.file.data.shape[-2]/2), self.file.header["CRVAL2"]-(self.file.header["CDELT2"]*self.file.data.shape[-2]/2), num=self.file.data.shape[-2]+1)
-                    x_axis = np.linspace(self.file.header["CRVAL1"]-(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), self.file.header["CRVAL1"]+(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), num=self.file.data.shape[-1]+1)
-                    px_y = int(y_axis[np.abs(y_axis - event.ydata).argmin()])
-                    px_x = int(x_axis[np.abs(x_axis - event.xdata).argmin()])
-                elif self.file.header["CRVAL1"] > 0 and self.file.header["CRVAL2"] > 0:
-                    y_axis = np.linspace(self.file.header["CRVAL2"]-(self.file.header["CDELT2"]*self.file.data.shape[-2]/2), self.file.header["CRVAL2"]+(self.file.header["CDELT2"]*self.file.data.shape[-2]/2), num=self.file.data.shape[-2]+1)
-                    x_axis = np.linspace(self.file.header["CRVAL1"]-(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), self.file.header["CRVAL1"]+(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), num=self.file.data.shape[-1]+1)
-                    px_y = int(y_axis[np.abs(y_axis - event.ydata).argmin()])
-                    px_x = int(x_axis[np.abs(x_axis - event.xdata).argmin()])
-                elif self.file.header["CRVAL1"] < 0 and self.file.header["CRVAL2"] > 0:
-                    y_axis = np.linspace(self.file.header["CRVAL2"]-(self.file.header["CDELT2"]*self.file.data.shape[-2]/2), self.file.header["CRVAL2"]+(self.file.header["CDELT2"]*self.file.data.shape[-2]/2), num=self.file.data.shape[-2]+1)
-                    x_axis = np.linspace(self.file.header["CRVAL1"]+(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), self.file.header["CRVAL1"]-(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), num=self.file.data.shape[-1]+1)
-                    px_y = int(y_axis[np.abs(y_axis - event.ydata).argmin()])
-                    px_x = int(x_axis[np.abs(x_axis - event.xdata).argmin()])
+                px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix", centre=True).value
             else:
-                px_y = int(event.ydata / self.file.header["CDELT2"])
-                px_x = int(event.xdata / self.file.header["CDELT1"])
-            self.ax2.plot(self.wvls, self.file.data[:, px_y, px_x])
-            self.coords.append((event.ydata, event.xdata))
-            self.px_coords.append((px_y, px_x))
+                px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix").value
+            if "ca" in self.cube.__dict__:
+                if len(self.cube.ca.data.shape) == 4:
+                    self.ax2.plot(self.wvls, self.cube.ca.data[0,:,px[0],px[1]])
+                else:
+                    self.ax2.plot(self.wvls, self.cube.ca.data[:,px[0],px[1]])
+            else:
+                self.ax2.plot(self.wvls, self.cube.ha.data[:,px[0],px[1]])
+            self.px_coords.append(px)
             self.fig.canvas.draw()
         else:
-            centre_coord = event.xdata, event.ydata
-            circ1 = patches.Circle(centre_coord, radius=0.25, color="r")
-            circ2 = patches.Circle(centre_coord, radius=0.25, color="r")
+            centre_coord = event.ydata, event.xdata
+            circ1 = patches.Circle(centre_coord[::-1], radius=0.25, color="r")
+            circ2 = patches.Circle(centre_coord[::-1], radius=0.25, color="r")
             self.ax1.add_patch(circ1)
             self.ax2.add_patch(circ2)
             if self.hc:
-                if self.ca.header["CRVAL1"] < 0 and self.ca.header["CRVAL2"] < 0:
-                    y_axis = np.linspace(self.ca.header["CRVAL2"]+(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2), self.ca.header["CRVAL2"]-(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2), num=self.ca.data.shape[-2]+1)
-                    x_axis = np.linspace(self.ca.header["CRVAL1"]+(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), self.ca.header["CRVAL1"]-(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), num=self.ca.data.shape[-1]+1)
-                    px_y = int(y_axis[np.abs(y_axis - event.ydata).argmin()])
-                    px_x = int(x_axis[np.abs(x_axis - event.xdata).argmin()])
-                elif self.ca.header["CRVAL1"] > 0 and self.ca.header["CRVAL2"] < 0:
-                    y_axis = np.linspace(self.ca.header["CRVAL2"]+(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2), self.ca.header["CRVAL2"]-(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2), num=self.ca.data.shape[-2]+1)
-                    x_axis = np.linspace(self.ca.header["CRVAL1"]-(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), self.ca.header["CRVAL1"]+(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), num=self.ca.data.shape[-1]+1)
-                    px_y = int(y_axis[np.abs(y_axis - event.ydata).argmin()])
-                    px_x = int(x_axis[np.abs(x_axis - event.xdata).argmin()])
-                elif self.ca.header["CRVAL1"] > 0 and self.ca.header["CRVAL2"] > 0:
-                    y_axis = np.linspace(self.ca.header["CRVAL2"]-(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2), self.ca.header["CRVAL2"]+(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2), num=self.ca.data.shape[-2]+1)
-                    x_axis = np.linspace(self.ca.header["CRVAL1"]-(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), self.ca.header["CRVAL1"]+(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), num=self.ca.data.shape[-1]+1)
-                    px_y = int(y_axis[np.abs(y_axis - event.ydata).argmin()])
-                    px_x = int(x_axis[np.abs(x_axis - event.xdata).argmin()])
-                elif self.ca.header["CRVAL1"] < 0 and self.ca.header["CRVAL2"] > 0:
-                    y_axis = np.linspace(self.ca.header["CRVAL2"]-(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2), self.ca.header["CRVAL2"]+(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2), num=self.ca.data.shape[-2]+1)
-                    x_axis = np.linspace(self.ca.header["CRVAL1"]+(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), self.ca.header["CRVAL1"]-(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), num=self.ca.data.shape[-1]+1)
-                    px_y = int(y_axis[np.abs(y_axis - event.ydata).argmin()])
-                    px_x = int(x_axis[np.abs(x_axis - event.xdata).argmin()])
+                px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix", centre=True).value
             else:
-                px_y = int(event.ydata / self.ca.header["CDELT2"])
-                px_x = int(event.xdata / self.ca.header["CDELT1"])
-            self.ax3.plot(self.ca_wvls, self.ca.data[:, px_y, px_x])
-            self.ax4.plot(self.ha_wvls, self.ha.data[:, px_y, px_x])
-            self.px_coords.append((px_y, px_x))
+                px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix").value
+            if len(self.cube.ca.data.shape) == 4:
+                self.ax3.plot(self.ca_wvls, self.cube.ca.data[0,:,px[0],px[1]])
+            else:
+                self.ax3.plot(self.ca_wvls, self.cube.ca.data[:,px[0],px[1]])
+            self.ax4.plot(self.ha_wvls, self.cube.ha.data[:,px[0],px[1]])
+            self.px_coords.append(px)
             self.fig.canvas.draw()
         
     def _disconnect_matplotlib(self, _):
@@ -412,7 +388,7 @@ class SpectralViewer:
     def _clear(self, _):
         self.coords = []
         self.px_coords = []
-        if "file" in self.__dict__:
+        if "cube" in self.__dict__:
             while len(self.ax1.patches) > 0:
                 for p in self.ax1.patches:
                     p.remove()
@@ -443,35 +419,35 @@ class SpectralViewer:
         elif self.ax1.images[-1].colorbar is not None:
             self.ax1.images[-1].colorbar.remove()
 
-        if "ca" in self.file.__dict__:
+        if "ca" in self.cube.__dict__:
             if self.hc:
-                tr = self.file.unit_conversion(self.file.ca.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
-                bl = self.file.unit_conversion((0,0) << u.pix, unit_to="arcsec", centre=True).value
+                tr = self.cube.unit_conversion(self.cube.ca.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
+                bl = self.cube.unit_conversion((0,0) << u.pix, unit_to="arcsec", centre=True).value
                 extent = [bl[1], tr[1], bl[0], tr[0]]
             else:
-                tr = self.file.unit_conversion(self.file.ca.data.shape[-2:] << u.pix, unit_to="arcsec").value
+                tr = self.cube.unit_conversion(self.cube.ca.data.shape[-2:] << u.pix, unit_to="arcsec").value
                 extent = [0, tr[1], 0, tr[0]]
             try:
-                ll_idx = int(ll / np.round(self.file.ca.header["CDELT3"], decimals=2) + (self.file.ca.header["CRPIX3"]-1))
+                ll_idx = int(ll / np.round(self.cube.ca.header["CDELT3"], decimals=2) + (self.cube.ca.header["CRPIX3"]-1))
             except KeyError:
                 ll_idx = int(np.where(np.round(self.wvls, decimals=2) == np.round(np.median(self.wvls) + ll, decimals=2))[0])
-            if len(self.file.ca.data.shape) == 4:
-                im1 = self.ax1.imshow(self.file.ca.data[0, ll_idx], cmap="Greys_r", extent=extent)
+            if len(self.cube.ca.data.shape) == 4:
+                im1 = self.ax1.imshow(self.cube.ca.data[0, ll_idx], cmap="Greys_r", extent=extent)
             else:
-                im1 = self.ax1.imshow(self.file.ca.data[ll_idx], cmap="Greys_r", extent=extent)
+                im1 = self.ax1.imshow(self.cube.ca.data[ll_idx], cmap="Greys_r", extent=extent)
         else:
             if self.hc:
-                tr = self.file.unit_conversion(self.file.ha.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
-                bl = self.file.unit_conversion((0,0) << u.pix, unit_to="arcsec", centre=True).value
+                tr = self.cube.unit_conversion(self.cube.ha.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
+                bl = self.cube.unit_conversion((0,0) << u.pix, unit_to="arcsec", centre=True).value
                 extent = [bl[1], tr[1], bl[0], tr[0]]
             else:
-                tr = self.file.unit_conversion(self.file.ha.data.shape[-2:] << u.pix, unit_to="arcsec").value
+                tr = self.cube.unit_conversion(self.cube.ha.data.shape[-2:] << u.pix, unit_to="arcsec").value
                 extent = [0, tr[1], 0, tr[0]]
             try:
-                ll_idx = int(ll / np.round(self.file.ha.header["CDELT3"], decimals=2) + (self.file.ha.header["CRPIX3"]-1))
+                ll_idx = int(ll / np.round(self.cube.ha.header["CDELT3"], decimals=2) + (self.cube.ha.header["CRPIX3"]-1))
             except KeyError:
                 ll_idx = int(np.where(np.round(self.wvls, decimals=2) == np.round(np.median(self.wvls) + ll, decimals=2))[0])
-            im1 = self.ax1.imshow(self.file.ha.data[ll_idx], cmap="Greys_r", extent=extent)
+            im1 = self.ax1.imshow(self.cube.ha.data[ll_idx], cmap="Greys_r", extent=extent)
 
             
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
@@ -488,29 +464,29 @@ class SpectralViewer:
             self.ax2.images[-1].colorbar.remove()
             
         if self.hc:
-            tr_ca = self.file.unit_conversion(self.file.ca.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
-            tr_ha = self.file.unit_conversion(self.file.ha.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
-            bl = self.file.unit_conversion((0,0) << u.pix, unit_to="arcsec", centre=True).value
+            tr_ca = self.cube.unit_conversion(self.cube.ca.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
+            tr_ha = self.cube.unit_conversion(self.cube.ha.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
+            bl = self.cube.unit_conversion((0,0) << u.pix, unit_to="arcsec", centre=True).value
 
             extent1 = [bl[1], tr_ca[1], bl[0], tr_ca[0]]
             extent2 = [bl[1], tr_ha[1], bl[0], tr_ha[0]]
         else:
-            tr_ca = self.file.unit_conversion(self.file.ca.data.shape[-2:] << u.pix, unit_to="arcsec").value
-            tr_ha = self.file.unit_conversion(self.file.ha.data.shape[-2:] << u.pix, unit_to="arcsec").value
+            tr_ca = self.cube.unit_conversion(self.cube.ca.data.shape[-2:] << u.pix, unit_to="arcsec").value
+            tr_ha = self.cube.unit_conversion(self.cube.ha.data.shape[-2:] << u.pix, unit_to="arcsec").value
 
             extent1 = [0, tr_ca[1], 0, tr_ca[0]]
             extent2 = [0, tr_ha[1], 0, tr_ha[0]]
 
         try:
-            ll1_idx = int(ll1 / np.round(self.ca.header["CDELT3"], decimals=2) + (self.ca.header["CRPIX3"]-1))
-            ll2_idx = int(ll2 / np.round(self.ha.header["CDELT3"], decimals=2) + (self.ha.header["CRPIX3"]-1))
+            ll1_idx = int(ll1 / np.round(self.cube.ca.header["CDELT3"], decimals=2) + (self.cube.ca.header["CRPIX3"]-1))
+            ll2_idx = int(ll2 / np.round(self.cube.ha.header["CDELT3"], decimals=2) + (self.cube.ha.header["CRPIX3"]-1))
         except KeyError:
            ll1_idx = int(np.where(np.round(self.ca_wvls, decimals=2) == np.round(np.median(self.ca_wvls) + ll, decimals=2))[0]) 
            ll2_idx = int(np.where(np.round(self.ha_wvls, decimals=2) == np.round(np.median(self.ha_wvls) + ll, decimals=2))[0]) 
-        if len(self.file.ca.data.shape) == 4:
-            im1 = self.ax1.imshow(self.file.ca.data[0, ll_idx], cmap="Greys_r", extent=extent)
+        if len(self.cube.ca.data.shape) == 4:
+            im1 = self.ax1.imshow(self.cube.ca.data[0, ll1_idx], cmap="Greys_r", extent=extent1)
         else:
-            im1 = self.ax1.imshow(self.file.ca.data[ll_idx], cmap="Greys_r", extent=extent)
-        im2 = self.ax2.imshow(self.ha.data[ll2_idx], origin="lower", cmap=sol_cm, extent=extent2)
+            im1 = self.ax1.imshow(self.cube.ca.data[ll1_idx], cmap="Greys_r", extent=extent1)
+        im2 = self.ax2.imshow(self.cube.ha.data[ll2_idx], origin="lower", cmap="Greys_r", extent=extent2)
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="Intensity [DNs]")
