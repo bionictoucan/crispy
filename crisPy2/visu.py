@@ -8,6 +8,7 @@ from IPython.core.display import display
 from .utils import ObjDict
 from astropy.io import fits
 from .crisp import CRISP
+import astropy.units as u
 
 class AtmosViewer:
     def __init__(self, file_obj, z, eb=False):
@@ -284,10 +285,16 @@ class SpectralViewer:
             self.ax2.tick_params(direction="in")
             
             if ".fits" in data:
-                if np.unique(np.round(np.diff(self.wvls), decimals=2)).size == 1:
-                    ll = widgets.FloatSlider(min=np.round(self.wvls[0] - np.median(self.wvls), decimals=2), max=np.round(self.wvls[-1] - np.median(self.wvls), decimals=2), step=np.round(self.file.header["CDELT3"], decimals=2), description = f"${self.D} {self.l} [{self.aa}]")
+                if "8542" in data:
+                    if np.unique(np.round(np.diff(self.wvls), decimals=2)).size == 1:
+                        ll = widgets.FloatSlider(min=np.round(self.wvls[0] - np.median(self.wvls), decimals=2), max=np.round(self.wvls[-1] - np.median(self.wvls), decimals=2), step=np.round(self.file.ca.header["CDELT3"], decimals=2), description = f"${self.D} {self.l} [{self.aa}]")
+                    else:
+                        ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
                 else:
-                    ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
+                    if np.unique(np.round(np.diff(self.wvls), decimals=2)).size == 1:
+                        ll = widgets.FloatSlider(min=np.round(self.wvls[0] - np.median(self.wvls), decimals=2), max=np.round(self.wvls[-1] - np.median(self.wvls), decimals=2), step=np.round(self.file.ha.header["CDELT3"], decimals=2), description = f"${self.D} {self.l} [{self.aa}]")
+                    else:
+                        ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
             else:
                 ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
 
@@ -483,21 +490,32 @@ class SpectralViewer:
             self.ax1.images[-1].colorbar.remove()
 
         if "ca" in self.file.__dict__:
-            
-        if self.hc:
-            if self.file.header["CRVAL1"] < 0 and self.file.header["CRVAL2"] < 0:
-                extent = [self.file.header["CRVAL1"]+(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), self.file.header["CRVAL1"]-(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), self.file.header["CRVAL2"]+(self.file.header["CDELT2"]*self.file.data.shape[-2]/2), self.file.header["CRVAL2"]-(self.file.header["CDELT2"]*self.file.data.shape[-2]/2)]
-            elif self.file.header["CRVAL1"] > 0 and self.file.header["CRVAL2"] < 0:
-                extent = [self.file.header["CRVAL1"]-(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), self.file.header["CRVAL1"]+(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), self.file.header["CRVAL2"]+(self.file.header["CDELT2"]*self.file.data.shape[-2]/2), self.file.header["CRVAL2"]-(self.file.header["CDELT2"]*self.file.data.shape[-2]/2)]
-            elif self.file.header["CRVAL1"] > 0 and self.file.header["CRVAL2"] > 0:
-                extent = [self.file.header["CRVAL1"](self.file.header["CDELT1"]*self.file.data.shape[-1]/2), self.file.header["CRVAL1"]+(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), self.file.header["CRVAL2"]-(self.file.header["CDELT2"]*self.file.data.shape[-2]/2), self.file.header["CRVAL2"]+(self.file.header["CDELT2"]*self.file.data.shape[-2]/2)]
-            elif self.file.header["CRVAL1"] < 0 and self.file.header["CRVAL2"] > 0:
-                extent = [self.file.header["CRVAL1"]+(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), self.file.header["CRVAL1"]-(self.file.header["CDELT1"]*self.file.data.shape[-1]/2), self.file.header["CRVAL2"]-(self.file.header["CDELT2"]*self.file.data.shape[-2]/2), self.file.header["CRVAL2"]+(self.file.header["CDELT2"]*self.file.data.shape[-2]/2)]
+            if self.hc:
+                tr = self.file.unit_conversion(self.file.ca.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True)
+            else:
+                tr = self.file.unit_conversion(self.file.ca.data.shape[-2:] << u.pix, unit_to="arcsec")
+            extent = [0, tr[1], 0, tr[0]]
+            try:
+                ll_idx = int(ll / np.round(self.file.ca.header["CDELT3"], decimals=2) + (self.file.ca.header["CRPIX3"]-1))
+            except KeyError:
+                ll_idx = int(np.where(np.round(self.wvls, decimals=2) == np.round(np.median(self.wvls) + ll, decimals=2))[0])
+            if len(self.file.ca.data.shape) == 4:
+                im1 = self.ax1.imshow(self.file.ca.data[0, ll_idx], cmap="Greys_r", extent=extent)
+            else:
+                im1 = self.ax1.imshow(self.file.ca.data[ll_idx], cmap="Greys_r", extent=extent)
         else:
-            extent = [0,self.file.header["CDELT1"]*self.file.data.shape[-1],0,self.file.header["CDELT2"]*self.file.data.shape[-2]]
-        
-        ll_idx = int(ll / np.round(self.file.header["CDELT3"], decimals=2) + (self.file.header["CRPIX3"]-1))
-        im1 = self.ax1.imshow(self.file.data[ll_idx], cmap=sol_cm, extent=extent)
+            if self.hc:
+                tr = self.file.unit_conversion(self.file.ha.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True)
+            else:
+                tr = self.file.unit_conversion(self.file.ha.data.shape[-2:] << u.pix, unit_to="arcsec")
+            extent = [0, tr[1], 0, tr[0]]
+            try:
+                ll_idx = int(ll / np.round(self.file.ha.header["CDELT3"], decimals=2) + (self.file.ha.header["CRPIX3"]-1))
+            except KeyError:
+                ll_idx = int(np.where(np.round(self.wvls, decimals=2) == np.round(np.median(self.wvls) + ll, decimals=2))[0])
+            im1 = self.ax1.imshow(self.file.ha.data[ll_idx], cmap=sol_cm, extent=extent)
+
+            
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
         
     def _img_plot2(self, ll1, ll2):
