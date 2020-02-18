@@ -284,49 +284,16 @@ class SpectralViewer:
             self.ax2.grid()
             self.ax2.tick_params(direction="in")
             
-            if ".fits" in data:
-                if "8542" in data:
-                    if np.unique(np.round(np.diff(self.wvls), decimals=2)).size == 1:
-                        ll = widgets.FloatSlider(min=np.round(self.wvls[0] - np.median(self.wvls), decimals=2), max=np.round(self.wvls[-1] - np.median(self.wvls), decimals=2), step=np.round(self.file.ca.header["CDELT3"], decimals=2), description = f"${self.D} {self.l} [{self.aa}]")
-                    else:
-                        ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
-                else:
-                    if np.unique(np.round(np.diff(self.wvls), decimals=2)).size == 1:
-                        ll = widgets.FloatSlider(min=np.round(self.wvls[0] - np.median(self.wvls), decimals=2), max=np.round(self.wvls[-1] - np.median(self.wvls), decimals=2), step=np.round(self.file.ha.header["CDELT3"], decimals=2), description = f"${self.D} {self.l} [{self.aa}]")
-                    else:
-                        ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
-            else:
-                ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
+            ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
 
+            widgets.interact(self._img_plot1, ll = ll)
+        elif type(data) == CRISP:
+            self.file = data
             
-            widgets.interact(self._img_plot1,
-                            ll = ll)
-#         elif type(data) == CRISP:
-            # add input here for CRISP objects when they have been completed
-#             pass
-        else:
-            assert len(data) == 2
-            for f in data:
-                if "ca" in f:
-                    self.ca = fits.open(f)[0]
-                    try:
-                        self.ca_wvls = self.ca.header["spect_pos"]
-                    except KeyError:
-                        self.ca_wvls = np.round(fits.open(f)[1].data, decimals=2)
-                elif "Halpha" in f:
-                    self.ha = fits.open(f)[0]
-                    try:
-                        self.ha_wvls = self.ha.header["spect_pos"]
-                    except KeyError:
-                        self.ha_wvls = np.round(fits.open(f)[1].data, decimals=2)
-                        
-            for f in data:
-                if "8542" in f:
-                    self.ca = CRISP(files=f)
-                    self.ca_wvls = self.ca.ca_wvls
-                else:
-                    self.ha = CRISP(files=f)
-                    self.ha_wvls = self.ha.ha_wvls
+        elif type(data) == list:
+            self.file = CRISP(files=data)
+            self.ca_wvls = self.file.ca_wvls
+            self.ha_wvls = self.file.ha_wvls
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(2, 2, 1)
             self.ax1.set_ylabel("y [arcseconds]")
@@ -349,23 +316,10 @@ class SpectralViewer:
             self.ax4.grid()
             self.ax4.tick_params(direction="in")
             
-            if ".fits" in data[0]:
-                if np.unique(np.round(np.diff(self.ca_wvls), decimals=2)).size == 1:
-                    ll1 = widgets.FloatSlider(min=np.round(self.ca_wvls[0]-np.median(self.ca_wvls), decimals=3), max=np.round(self.ca_wvls[-1]-np.median(self.ca_wvls), decimals=3), step=np.round(self.ca.header["CDELT3"], decimals=2), description=f"Ca II {self.D} {self.l} [{self.aa}]")
-                else:
-                    ll1 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ca_wvls), decimals=2) for l in self.ca_wvls], description=f"Ca II {self.D} {self.l} [{self.aa}]")
-                    
-                if np.unique(np.round(np.diff(self.ha_wvls), decimals=2)).size == 1:
-                    ll2 = widgets.FloatSlider(min=self.ha_wvls[0]-np.median(self.ha_wvls), max=self.ha_wvls[-1]-np.median(self.ha_wvls), step=np.round(self.ha.header["CDELT3"], decimals=2), description=f"H{self.a} {self.D} {self.l} [{self.aa}]")
-                else:
-                    ll2 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ha_wvls), decimals=2) for l in self.ha_wvls], description = f"H{self.a} {self.D} {self.l} [{self.aa}]")
-            else:
-                ll1 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ca_wvls), decimals=2) for l in self.ca_wvls], description=f"Ca II {self.D} {self.l} [{self.aa}]")
-                ll2 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ha_wvls), decimals=2) for l in self.ha_wvls], description=f"H{self.a} {self.D} {self.l} [{self.aa}]")
+            ll1 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ca_wvls), decimals=2) for l in self.ca_wvls], description=f"Ca II {self.D} {self.l} [{self.aa}]")
+            ll2 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ha_wvls), decimals=2) for l in self.ha_wvls], description=f"H{self.a} {self.D} {self.l} [{self.aa}]")
             
-            widgets.interact(self._img_plot2,
-                            ll1 = ll1,
-                            ll2 = ll2)
+            widgets.interact(self._img_plot2, ll1 = ll1, ll2 = ll2)
             
                     
         self.coords = []
@@ -491,10 +445,12 @@ class SpectralViewer:
 
         if "ca" in self.file.__dict__:
             if self.hc:
-                tr = self.file.unit_conversion(self.file.ca.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True)
+                tr = self.file.unit_conversion(self.file.ca.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
+                bl = self.file.unit_conversion((0,0) << u.pix, unit_to="arcsec", centre=True).value
+                extent = [bl[1], tr[1], bl[0], tr[0]]
             else:
-                tr = self.file.unit_conversion(self.file.ca.data.shape[-2:] << u.pix, unit_to="arcsec")
-            extent = [0, tr[1], 0, tr[0]]
+                tr = self.file.unit_conversion(self.file.ca.data.shape[-2:] << u.pix, unit_to="arcsec").value
+                extent = [0, tr[1], 0, tr[0]]
             try:
                 ll_idx = int(ll / np.round(self.file.ca.header["CDELT3"], decimals=2) + (self.file.ca.header["CRPIX3"]-1))
             except KeyError:
@@ -505,15 +461,17 @@ class SpectralViewer:
                 im1 = self.ax1.imshow(self.file.ca.data[ll_idx], cmap="Greys_r", extent=extent)
         else:
             if self.hc:
-                tr = self.file.unit_conversion(self.file.ha.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True)
+                tr = self.file.unit_conversion(self.file.ha.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
+                bl = self.file.unit_conversion((0,0) << u.pix, unit_to="arcsec", centre=True).value
+                extent = [bl[1], tr[1], bl[0], tr[0]]
             else:
-                tr = self.file.unit_conversion(self.file.ha.data.shape[-2:] << u.pix, unit_to="arcsec")
-            extent = [0, tr[1], 0, tr[0]]
+                tr = self.file.unit_conversion(self.file.ha.data.shape[-2:] << u.pix, unit_to="arcsec").value
+                extent = [0, tr[1], 0, tr[0]]
             try:
                 ll_idx = int(ll / np.round(self.file.ha.header["CDELT3"], decimals=2) + (self.file.ha.header["CRPIX3"]-1))
             except KeyError:
                 ll_idx = int(np.where(np.round(self.wvls, decimals=2) == np.round(np.median(self.wvls) + ll, decimals=2))[0])
-            im1 = self.ax1.imshow(self.file.ha.data[ll_idx], cmap=sol_cm, extent=extent)
+            im1 = self.ax1.imshow(self.file.ha.data[ll_idx], cmap="Greys_r", extent=extent)
 
             
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
@@ -530,25 +488,29 @@ class SpectralViewer:
             self.ax2.images[-1].colorbar.remove()
             
         if self.hc:
-            if self.ca.header["CRVAL1"] < 0 and self.ca.header["CRVAL2"] < 0:
-                extent1 = [self.ca.header["CRVAL1"]+(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), self.ca.header["CRVAL1"]-(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), self.ca.header["CRVAL2"]+(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2), self.ca.header["CRVAL2"]-(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2)]
-                extent2 = [self.ha.header["CRVAL1"]+(self.ha.header["CDELT1"]*self.ha.data.shape[-1]/2), self.ha.header["CRVAL1"]-(self.ha.header["CDELT1"]*self.ha.data.shape[-1]/2), self.ha.header["CRVAL2"]+(self.ha.header["CDELT2"]*self.ha.data.shape[-2]/2), self.ha.header["CRVAL2"]-(self.ha.header["CDELT2"]*self.ha.data.shape[-2]/2)]
-            elif self.ca.header["CRVAL1"] > 0 and self.ca.header["CRVAL2"] < 0:
-                extent1 = [self.ca.header["CRVAL1"]-(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), self.ca.header["CRVAL1"]+(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), self.ca.header["CRVAL2"]+(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2), self.ca.header["CRVAL2"]-(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2)]
-                extent2 = [self.ha.header["CRVAL1"]-(self.ha.header["CDELT1"]*self.ha.data.shape[-1]/2), self.ha.header["CRVAL1"]+(self.ha.header["CDELT1"]*self.ha.data.shape[-1]/2), self.ha.header["CRVAL2"]+(self.ha.header["CDELT2"]*self.ha.data.shape[-2]/2), self.ha.header["CRVAL2"]-(self.ha.header["CDELT2"]*self.ha.data.shape[-2]/2)]
-            elif self.ca.header["CRVAL1"] > 0 and self.ca.header["CRVAL2"] > 0:
-                extent1 = [self.ca.header["CRVAL1"]-(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), self.ca.header["CRVAL1"]+(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), self.ca.header["CRVAL2"]-(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2), self.ca.header["CRVAL2"]+(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2)]
-                extent2 = [self.ha.header["CRVAL1"]-(self.ha.header["CDELT1"]*self.ha.data.shape[-1]/2), self.ha.header["CRVAL1"]+(self.ha.header["CDELT1"]*self.ha.data.shape[-1]/2), self.ha.header["CRVAL2"]-(self.ha.header["CDELT2"]*self.ha.data.shape[-2]/2), self.ha.header["CRVAL2"]+(self.ha.header["CDELT2"]*self.ha.data.shape[-2]/2)]
-            elif self.ca.header["CRVAL1"] < 0 and self.ca.header["CRVAL2"] > 0:
-                extent1 = [self.ca.header["CRVAL1"]+(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), self.ca.header["CRVAL1"]-(self.ca.header["CDELT1"]*self.ca.data.shape[-1]/2), self.ca.header["CRVAL2"]-(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2), self.ca.header["CRVAL2"]+(self.ca.header["CDELT2"]*self.ca.data.shape[-2]/2)]
-                extent2 = [self.ha.header["CRVAL1"]+(self.ha.header["CDELT1"]*self.ha.data.shape[-1]/2), self.ha.header["CRVAL1"]-(self.ha.header["CDELT1"]*self.ha.data.shape[-1]/2), self.ha.header["CRVAL2"]-(self.ha.header["CDELT2"]*self.ha.data.shape[-2]/2), self.ha.header["CRVAL2"]+(self.ha.header["CDELT2"]*self.ha.data.shape[-2]/2)]
+            tr_ca = self.file.unit_conversion(self.file.ca.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
+            tr_ha = self.file.unit_conversion(self.file.ha.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
+            bl = self.file.unit_conversion((0,0) << u.pix, unit_to="arcsec", centre=True).value
+
+            extent1 = [bl[1], tr_ca[1], bl[0], tr_ca[0]]
+            extent2 = [bl[1], tr_ha[1], bl[0], tr_ha[0]]
         else:
-            extent1 = [0,self.ca.header["CDELT1"]*self.ca.data.shape[-1],0,self.ca.header["CDELT2"]*self.ca.data.shape[-2]]
-            extent2 = [0,self.ha.header["CDELT1"]*self.ha.data.shape[-1],0,self.ha.header["CDELT2"]*self.ha.shape[-2]]
-            
-        ll1_idx = int(ll1 / np.round(self.ca.header["CDELT3"], decimals=2) + (self.ca.header["CRPIX3"]-1))
-        ll2_idx = int(ll2 / np.round(self.ha.header["CDELT3"], decimals=2) + (self.ha.header["CRPIX3"]-1))
-        im1 = self.ax1.imshow(self.ca.data[ll1_idx], origin="lower", cmap=sol_cm, extent=extent1)
-        self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
+            tr_ca = self.file.unit_conversion(self.file.ca.data.shape[-2:] << u.pix, unit_to="arcsec").value
+            tr_ha = self.file.unit_conversion(self.file.ha.data.shape[-2:] << u.pix, unit_to="arcsec").value
+
+            extent1 = [0, tr_ca[1], 0, tr_ca[0]]
+            extent2 = [0, tr_ha[1], 0, tr_ha[0]]
+
+        try:
+            ll1_idx = int(ll1 / np.round(self.ca.header["CDELT3"], decimals=2) + (self.ca.header["CRPIX3"]-1))
+            ll2_idx = int(ll2 / np.round(self.ha.header["CDELT3"], decimals=2) + (self.ha.header["CRPIX3"]-1))
+        except KeyError:
+           ll1_idx = int(np.where(np.round(self.ca_wvls, decimals=2) == np.round(np.median(self.ca_wvls) + ll, decimals=2))[0]) 
+           ll2_idx = int(np.where(np.round(self.ha_wvls, decimals=2) == np.round(np.median(self.ha_wvls) + ll, decimals=2))[0]) 
+        if len(self.file.ca.data.shape) == 4:
+            im1 = self.ax1.imshow(self.file.ca.data[0, ll_idx], cmap="Greys_r", extent=extent)
+        else:
+            im1 = self.ax1.imshow(self.file.ca.data[ll_idx], cmap="Greys_r", extent=extent)
         im2 = self.ax2.imshow(self.ha.data[ll2_idx], origin="lower", cmap=sol_cm, extent=extent2)
+        self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="Intensity [DNs]")
