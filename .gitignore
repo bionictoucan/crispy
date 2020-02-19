@@ -7,3 +7,5 @@
 /build/
 /*.ipynb
 /.ipynb_checkpoints/*
+*.png
+*.pdf

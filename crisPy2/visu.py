@@ -273,7 +273,6 @@ class SpectralViewer:
             else:
                 self.wvls = self.cube.ha_wvls
 
-            widgets.interact(self._img_plot1, ll = ll)
         elif type(data) == CRISP:
             self.cube = data
             if "ca" and not "ha" in self.cube.__dict__:
@@ -302,12 +301,15 @@ class SpectralViewer:
             self.ax2.tick_params(direction="in")
             
             ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2).value for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
+            widgets.interact(self._img_plot1, ll = ll)
         else:
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(2, 2, 1)
+            self.ax1.set_title(f"Ca II {self.l}8542")
             self.ax1.set_ylabel("y [arcseconds]")
             self.ax1.tick_params(labelbottom=False)
             self.ax2 = self.fig.add_subplot(2, 2, 3)
+            self.ax2.set_title(f"H{self.a}")
             self.ax2.set_ylabel("y [arcseconds]")
             self.ax2.set_xlabel("x [arcseconds]")
             self.ax3 = self.fig.add_subplot(2, 2, 2)
@@ -339,8 +341,10 @@ class SpectralViewer:
         done_button.on_click(self._disconnect_matplotlib)
         clear_button = widgets.Button(description='Clear')
         clear_button.on_click(self._clear)
-        display(widgets.HBox([done_button, clear_button]))
-        
+        save_button = widgets.Button(description="Save")
+        save_button.on_click(self._save)
+        display(widgets.HBox([done_button, clear_button, save_button]))
+        widgets.interact(self._file_name, fn = widgets.Text(description="Filename to save as: ", style={"description_width" : "initial"}))
         
     def _on_click(self, event):
         if self.fig.canvas.manager.toolbar.mode is not "":
@@ -413,6 +417,12 @@ class SpectralViewer:
                     p.remove()
                 self.fig.canvas.draw()
                 self.fig.canvas.flush_events()
+
+    def _save(self, _):
+        self.fig.savefig(self.filename, dpi=300)
+
+    def _file_name(self, fn):
+        self.filename = fn
         
     def _img_plot1(self, ll):
         if self.ax1.images == []:
@@ -428,10 +438,7 @@ class SpectralViewer:
             else:
                 tr = self.cube.unit_conversion(self.cube.ca.data.shape[-2:] << u.pix, unit_to="arcsec").value
                 extent = [0, tr[1], 0, tr[0]]
-            try:
-                ll_idx = int(ll / np.round(self.cube.ca.header["CDELT3"], decimals=2) + (self.cube.ca.header["CRPIX3"]-1))
-            except KeyError:
-                ll_idx = int(np.where(np.round(self.wvls, decimals=2) == np.round(np.median(self.wvls) + ll, decimals=2))[0])
+            ll_idx = int(np.where(np.round(self.wvls, decimals=2) == np.round(np.median(self.wvls) + ll, decimals=2))[0])
             if len(self.cube.ca.data.shape) == 4:
                 im1 = self.ax1.imshow(self.cube.ca.data[0, ll_idx], origin="lower", cmap="Greys_r", extent=extent)
             else:
@@ -444,10 +451,7 @@ class SpectralViewer:
             else:
                 tr = self.cube.unit_conversion(self.cube.ha.data.shape[-2:] << u.pix, unit_to="arcsec").value
                 extent = [0, tr[1], 0, tr[0]]
-            try:
-                ll_idx = int(ll / np.round(self.cube.ha.header["CDELT3"], decimals=2) + (self.cube.ha.header["CRPIX3"]-1))
-            except KeyError:
-                ll_idx = int(np.where(np.round(self.wvls, decimals=2) == np.round(np.median(self.wvls) + ll, decimals=2))[0])
+            ll_idx = int(np.where(np.round(self.wvls, decimals=2) == np.round(np.median(self.wvls) + ll, decimals=2))[0])
             im1 = self.ax1.imshow(self.cube.ha.data[ll_idx], origin="lower", cmap="Greys_r", extent=extent)
 
             
@@ -478,10 +482,6 @@ class SpectralViewer:
             extent1 = [0, tr_ca[1], 0, tr_ca[0]]
             extent2 = [0, tr_ha[1], 0, tr_ha[0]]
 
-#        try:
-#            ll1_idx = int(ll1 / np.round(self.cube.ca.header["CDELT3"], decimals=2) + (self.cube.ca.header["CRPIX3"]-1))
-#            ll2_idx = int(ll2 / np.round(self.cube.ha.header["CDELT3"], decimals=2) + (self.cube.ha.header["CRPIX3"]-1))
-#        except KeyError:
         ll1_idx = int(np.where(np.round(self.ca_wvls, decimals=2).value == np.round(np.median(self.ca_wvls).value + ll1, decimals=2))[0]) 
         ll2_idx = int(np.where(np.round(self.ha_wvls, decimals=2).value == np.round(np.median(self.ha_wvls).value + ll2, decimals=2))[0]) 
         if len(self.cube.ca.data.shape) == 4:
