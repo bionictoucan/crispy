@@ -73,9 +73,9 @@ class AtmosViewer:
         if self.fig.canvas.manager.toolbar.mode is not "":
             return
         centre_coord = int(event.xdata), int(event.ydata)
-        circ1 = patches.Circle(centre_coord, color=f"C{self.colour_idx}")
-        circ2 = patches.Circle(centre_coord, color=f"C{self.colour_idx}")
-        circ3 = patches.Circle(centre_coord, color=f"C{self.colour_idx}")
+        circ1 = patches.Circle(centre_coord, radius=10, color=f"C{self.colour_idx}")
+        circ2 = patches.Circle(centre_coord, radius=10, color=f"C{self.colour_idx}")
+        circ3 = patches.Circle(centre_coord, radius=10, color=f"C{self.colour_idx}")
         self.ax1.add_patch(circ1)
         self.ax2.add_patch(circ2)
         self.ax3.add_patch(circ3)
@@ -127,7 +127,7 @@ class AtmosViewer:
             
     def _img_plot(self, z):
         z_r = np.round(z, decimals=2)
-        self.fig.suptitle(f"17:10:41 z = {z_r} Mm")
+        self.fig.suptitle("17:10:41 z ="+str(z_r)+"Mm")
         if self.ax1.images == []:
             pass
         elif self.ax1.images[-1].colorbar is not None:
@@ -212,9 +212,9 @@ class TimeViewer:
         if self.fig.canvas.manager.toolbar.mode is not "":
             return
         centre_coord = int(event.xdata), int(event.ydata)
-        circ1 = patches.Circle(centre_coord, color=f"C{self.colour_idx}")
-        circ2 = patches.Circle(centre_coord, color=f"C{self.colour_idx}")
-        circ3 = patches.Circle(centre_coord, color=f"C{self.colour_idx}")
+        circ1 = patches.Circle(centre_coord, radius=10, color=f"C{self.colour_idx}")
+        circ2 = patches.Circle(centre_coord, radius=10, color=f"C{self.colour_idx}")
+        circ3 = patches.Circle(centre_coord, radius=10, color=f"C{self.colour_idx}")
         self.ax1.add_patch(circ1)
         self.ax2.add_patch(circ2)
         self.ax3.add_patch(circ3)
@@ -266,7 +266,7 @@ class TimeViewer:
             
     def _img_plot(self, z):
         z_r = np.round(z, decimals=2)
-        self.fig.suptitle(f"17:10:41 z = {z_r} Mm")
+        self.fig.suptitle("17:10:41 z = "+str(z_r)+" Mm")
         if self.ax1.images == []:
             pass
         elif self.ax1.images[-1].colorbar is not None:
