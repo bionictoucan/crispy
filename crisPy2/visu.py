@@ -126,7 +126,8 @@ class AtmosViewer:
         self.filename = fn
             
     def _img_plot(self, z):
-        self.fig.suptitle(f"17:10:41 z = {np.round(z, decimals=2)} Mm")
+        z_r = np.round(z, decimals=2)
+        self.fig.suptitle(f"17:10:41 z = {z_r} Mm")
         if self.ax1.images == []:
             pass
         elif self.ax1.images[-1].colorbar is not None:
@@ -264,7 +265,8 @@ class TimeViewer:
         self.filename = fn
             
     def _img_plot(self, z):
-        self.fig.suptitle(f"17:10:41 z = {np.round(z, decimals=2)} Mm")
+        z_r = np.round(z, decimals=2)
+        self.fig.suptitle(f"17:10:41 z = {z_r} Mm")
         if self.ax1.images == []:
             pass
         elif self.ax1.images[-1].colorbar is not None:
