@@ -21,6 +21,7 @@ class AtmosViewer:
             
         self.coords = []
         self.eb = eb
+        self.colour_idx = 0
         
         self.fig = plt.figure(figsize=(8,10))
         self.gs = self.fig.add_gridspec(nrows=5, ncols=3)
@@ -72,9 +73,9 @@ class AtmosViewer:
         if self.fig.canvas.manager.toolbar.mode is not "":
             return
         centre_coord = int(event.xdata), int(event.ydata)
-        circ1 = patches.Circle(centre_coord, color="r")
-        circ2 = patches.Circle(centre_coord, color="r")
-        circ3 = patches.Circle(centre_coord, color="r")
+        circ1 = patches.Circle(centre_coord, color=f"C{self.colour_idx}")
+        circ2 = patches.Circle(centre_coord, color=f"C{self.colour_idx}")
+        circ3 = patches.Circle(centre_coord, color=f"C{self.colour_idx}")
         self.ax1.add_patch(circ1)
         self.ax2.add_patch(circ2)
         self.ax3.add_patch(circ3)
@@ -87,6 +88,7 @@ class AtmosViewer:
             self.ax5.plot(self.z, self.file_obj["temperature"][event.xdata*event.ydata])
             self.ax6.plot(self.z, self.file_obj["vel"][event.xdata*event.ydata])
         self.coords.append((int(event.ydata), int(event.xdata)))
+        self.colour_idx += 1
         self.fig.canvas.draw()
         
     def _disconnect_matplotlib(self, _):
@@ -94,6 +96,7 @@ class AtmosViewer:
         
     def _clear(self, _):
         self.coords = []
+        self.colour_idx = 0
         while len(self.ax1.patches) > 0:
             for p in self.ax1.patches:
                 p.remove()
@@ -155,6 +158,7 @@ class TimeViewer:
             
         self.coords = []
         self.eb = eb
+        self.colour_idx = 0
         
         self.fig = plt.figure(figsize=(8,10))
         self.gs = self.fig.add_gridspec(nrows=5, ncols=3)
@@ -206,9 +210,9 @@ class TimeViewer:
         if self.fig.canvas.manager.toolbar.mode is not "":
             return
         centre_coord = int(event.xdata), int(event.ydata)
-        circ1 = patches.Circle(centre_coord, color="r")
-        circ2 = patches.Circle(centre_coord, color="r")
-        circ3 = patches.Circle(centre_coord, color="r")
+        circ1 = patches.Circle(centre_coord, color=f"C{self.colour_idx}")
+        circ2 = patches.Circle(centre_coord, color=f"C{self.colour_idx}")
+        circ3 = patches.Circle(centre_coord, color=f"C{self.colour_idx}")
         self.ax1.add_patch(circ1)
         self.ax2.add_patch(circ2)
         self.ax3.add_patch(circ3)
@@ -221,6 +225,7 @@ class TimeViewer:
             self.ax5.plot(range(len(self.file_list)), [x["temperature"][event.xdata*event.ydata, 20] for x in self.file_list])
             self.ax6.plot(range(len(self.file_list)), [x["vel"][event.xdata*event.ydata, 20] for x in self.file_list])
         self.coords.append((int(event.ydata), int(event.xdata)))
+        self.colour_idx += 1
         self.fig.canvas.draw()
         
     def _disconnect_matplotlib(self, _):
@@ -228,6 +233,7 @@ class TimeViewer:
         
     def _clear(self, _):
         self.coords = []
+        self.colour_idx = 0
         while len(self.ax1.patches) > 0:
             for p in self.ax1.patches:
                 p.remove()
@@ -353,6 +359,7 @@ class SpectralViewer:
                     
         self.coords = []
         self.px_coords = []
+        self.colour_idx = 0
         
         self.receiver = self.fig.canvas.mpl_connect("button_press_event", self._on_click)
         
@@ -372,7 +379,7 @@ class SpectralViewer:
         if "wvls" in self.__dict__:
             centre_coord = event.ydata, event.xdata
             self.coords.append((event.ydata, event.xdata) << u.arcsec)
-            circ = patches.Circle(centre_coord[::-1], radius=0.25, color="r")
+            circ = patches.Circle(centre_coord[::-1], radius=0.25, color=f"C{self.colour_idx}")
             self.ax1.add_patch(circ)
             if self.hc:
                 px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix", centre=True).value.astype(int)
@@ -386,12 +393,13 @@ class SpectralViewer:
             else:
                 self.ax2.plot(self.wvls, self.cube.ha.data[:,px[0],px[1]])
             self.px_coords.append(px << u.pix)
+            self.colour_idx += 1
             self.fig.canvas.draw()
         else:
             centre_coord = event.ydata, event.xdata
             self.coords.append(centre_coord << u.arcsec)
-            circ1 = patches.Circle(centre_coord[::-1], radius=0.25, color="r")
-            circ2 = patches.Circle(centre_coord[::-1], radius=0.25, color="r")
+            circ1 = patches.Circle(centre_coord[::-1], radius=0.25, color=f"C{self.colour_idx}")
+            circ2 = patches.Circle(centre_coord[::-1], radius=0.25, color=f"C{self.colour_idx}")
             self.ax1.add_patch(circ1)
             self.ax2.add_patch(circ2)
             if self.hc:
@@ -404,6 +412,7 @@ class SpectralViewer:
                 self.ax3.plot(self.ca_wvls, self.cube.ca.data[:,px[0],px[1]])
             self.ax4.plot(self.ha_wvls, self.cube.ha.data[:,px[0],px[1]])
             self.px_coords.append(px << u.pix)
+            self.colour_idx += 1
             self.fig.canvas.draw()
         
     def _disconnect_matplotlib(self, _):
@@ -412,6 +421,7 @@ class SpectralViewer:
     def _clear(self, _):
         self.coords = []
         self.px_coords = []
+        self.colour_idx = 0
         if "wvls" in self.__dict__:
             while len(self.ax1.patches) > 0:
                 for p in self.ax1.patches:
