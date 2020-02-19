@@ -301,7 +301,7 @@ class SpectralViewer:
             self.ax2.grid()
             self.ax2.tick_params(direction="in")
             
-            ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2) for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
+            ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2).value for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
         else:
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(2, 2, 1)
@@ -325,8 +325,8 @@ class SpectralViewer:
             self.ax4.grid()
             self.ax4.tick_params(direction="in")
             
-            ll1 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ca_wvls), decimals=2) for l in self.ca_wvls], description=f"Ca II {self.D} {self.l} [{self.aa}]")
-            ll2 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ha_wvls), decimals=2) for l in self.ha_wvls], description=f"H{self.a} {self.D} {self.l} [{self.aa}]")
+            ll1 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ca_wvls), decimals=2).value for l in self.ca_wvls], description=f"Ca II {self.D} {self.l} [{self.aa}]")
+            ll2 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ha_wvls), decimals=2).value for l in self.ha_wvls], description=f"H{self.a} {self.D} {self.l} [{self.aa}]")
             
             widgets.interact(self._img_plot2, ll1 = ll1, ll2 = ll2)
                     
@@ -348,13 +348,13 @@ class SpectralViewer:
 
         if "wvls" in self.__dict__:
             centre_coord = event.ydata, event.xdata
-            self.coords.append((event.ydata, event.xdata))
+            self.coords.append((event.ydata, event.xdata) << u.arcsec)
             circ = patches.Circle(centre_coord[::-1], radius=0.25, color="r")
             self.ax1.add_patch(circ)
             if self.hc:
-                px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix", centre=True).value
+                px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix", centre=True).value.astype(int)
             else:
-                px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix").value
+                px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix").value.astype(int)
             if "ca" in self.cube.__dict__:
                 if len(self.cube.ca.data.shape) == 4:
                     self.ax2.plot(self.wvls, self.cube.ca.data[0,:,px[0],px[1]])
@@ -362,24 +362,25 @@ class SpectralViewer:
                     self.ax2.plot(self.wvls, self.cube.ca.data[:,px[0],px[1]])
             else:
                 self.ax2.plot(self.wvls, self.cube.ha.data[:,px[0],px[1]])
-            self.px_coords.append(px)
+            self.px_coords.append(px << u.pix)
             self.fig.canvas.draw()
         else:
             centre_coord = event.ydata, event.xdata
+            self.coords.append(centre_coord << u.arcsec)
             circ1 = patches.Circle(centre_coord[::-1], radius=0.25, color="r")
             circ2 = patches.Circle(centre_coord[::-1], radius=0.25, color="r")
             self.ax1.add_patch(circ1)
             self.ax2.add_patch(circ2)
             if self.hc:
-                px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix", centre=True).value
+                px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix", centre=True).value.astype(int)
             else:
-                px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix").value
+                px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix").value.astype(int)
             if len(self.cube.ca.data.shape) == 4:
                 self.ax3.plot(self.ca_wvls, self.cube.ca.data[0,:,px[0],px[1]])
             else:
                 self.ax3.plot(self.ca_wvls, self.cube.ca.data[:,px[0],px[1]])
             self.ax4.plot(self.ha_wvls, self.cube.ha.data[:,px[0],px[1]])
-            self.px_coords.append(px)
+            self.px_coords.append(px << u.pix)
             self.fig.canvas.draw()
         
     def _disconnect_matplotlib(self, _):
@@ -388,7 +389,7 @@ class SpectralViewer:
     def _clear(self, _):
         self.coords = []
         self.px_coords = []
-        if "cube" in self.__dict__:
+        if "wvls" in self.__dict__:
             while len(self.ax1.patches) > 0:
                 for p in self.ax1.patches:
                     p.remove()
@@ -432,9 +433,9 @@ class SpectralViewer:
             except KeyError:
                 ll_idx = int(np.where(np.round(self.wvls, decimals=2) == np.round(np.median(self.wvls) + ll, decimals=2))[0])
             if len(self.cube.ca.data.shape) == 4:
-                im1 = self.ax1.imshow(self.cube.ca.data[0, ll_idx], cmap="Greys_r", extent=extent)
+                im1 = self.ax1.imshow(self.cube.ca.data[0, ll_idx], origin="lower", cmap="Greys_r", extent=extent)
             else:
-                im1 = self.ax1.imshow(self.cube.ca.data[ll_idx], cmap="Greys_r", extent=extent)
+                im1 = self.ax1.imshow(self.cube.ca.data[ll_idx], origin="lower", cmap="Greys_r", extent=extent)
         else:
             if self.hc:
                 tr = self.cube.unit_conversion(self.cube.ha.data.shape[-2:] << u.pix, unit_to="arcsec", centre=True).value
@@ -447,7 +448,7 @@ class SpectralViewer:
                 ll_idx = int(ll / np.round(self.cube.ha.header["CDELT3"], decimals=2) + (self.cube.ha.header["CRPIX3"]-1))
             except KeyError:
                 ll_idx = int(np.where(np.round(self.wvls, decimals=2) == np.round(np.median(self.wvls) + ll, decimals=2))[0])
-            im1 = self.ax1.imshow(self.cube.ha.data[ll_idx], cmap="Greys_r", extent=extent)
+            im1 = self.ax1.imshow(self.cube.ha.data[ll_idx], origin="lower", cmap="Greys_r", extent=extent)
 
             
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
@@ -477,16 +478,16 @@ class SpectralViewer:
             extent1 = [0, tr_ca[1], 0, tr_ca[0]]
             extent2 = [0, tr_ha[1], 0, tr_ha[0]]
 
-        try:
-            ll1_idx = int(ll1 / np.round(self.cube.ca.header["CDELT3"], decimals=2) + (self.cube.ca.header["CRPIX3"]-1))
-            ll2_idx = int(ll2 / np.round(self.cube.ha.header["CDELT3"], decimals=2) + (self.cube.ha.header["CRPIX3"]-1))
-        except KeyError:
-           ll1_idx = int(np.where(np.round(self.ca_wvls, decimals=2) == np.round(np.median(self.ca_wvls) + ll, decimals=2))[0]) 
-           ll2_idx = int(np.where(np.round(self.ha_wvls, decimals=2) == np.round(np.median(self.ha_wvls) + ll, decimals=2))[0]) 
+#        try:
+#            ll1_idx = int(ll1 / np.round(self.cube.ca.header["CDELT3"], decimals=2) + (self.cube.ca.header["CRPIX3"]-1))
+#            ll2_idx = int(ll2 / np.round(self.cube.ha.header["CDELT3"], decimals=2) + (self.cube.ha.header["CRPIX3"]-1))
+#        except KeyError:
+        ll1_idx = int(np.where(np.round(self.ca_wvls, decimals=2).value == np.round(np.median(self.ca_wvls).value + ll1, decimals=2))[0]) 
+        ll2_idx = int(np.where(np.round(self.ha_wvls, decimals=2).value == np.round(np.median(self.ha_wvls).value + ll2, decimals=2))[0]) 
         if len(self.cube.ca.data.shape) == 4:
-            im1 = self.ax1.imshow(self.cube.ca.data[0, ll1_idx], cmap="Greys_r", extent=extent1)
+            im1 = self.ax1.imshow(self.cube.ca.data[0, ll1_idx], origin="lower", cmap="Greys_r", extent=extent1)
         else:
-            im1 = self.ax1.imshow(self.cube.ca.data[ll1_idx], cmap="Greys_r", extent=extent1)
+            im1 = self.ax1.imshow(self.cube.ca.data[ll1_idx], origin="lower", cmap="Greys_r", extent=extent1)
         im2 = self.ax2.imshow(self.cube.ha.data[ll2_idx], origin="lower", cmap="Greys_r", extent=extent2)
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="Intensity [DNs]")
