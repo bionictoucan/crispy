@@ -62,7 +62,10 @@ class AtmosViewer:
         done_button.on_click(self._disconnect_matplotlib)
         clear_button = widgets.Button(description='Clear')
         clear_button.on_click(self._clear)
-        display(widgets.HBox([done_button, clear_button]))
+        save_button = widgets.Button(description="Save")
+        save_button.on_click(self._save)
+        display(widgets.HBox([done_button, clear_button, save_button]))
+        widgets.interact(self._file_name, fn = widgets.Text(description="Filename to save as: ", style={"description_width" : "initial"}), layout=widgets.Layout(width="50%"))
         
     def _on_click(self, event):
         if self.fig.canvas.manager.toolbar.mode is not "":
@@ -111,6 +114,12 @@ class AtmosViewer:
         self.ax6.set_xlabel(r"z [Mm]")
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
+
+    def _save(self, _):
+        self.fig.savefig(self.filename, dpi=300)
+
+    def _file_name(self, fn):
+        self.filename = fn
             
     def _img_plot(self, z):
         if self.ax1.images == []:
@@ -124,7 +133,7 @@ class AtmosViewer:
             pass
         elif self.ax2.images[-1].colorbar is not None:
             self.ax2.images[-1].colorbar.remove()
-        im2 = self.ax2.imshow(self.file_obj["temperature"][:,np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), origin="lower", cmap=sol_cm)
+        im2 = self.ax2.imshow(self.file_obj["temperature"][:,np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), origin="lower", cmap="hot")
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label=r"log T [K]")
 
         if self.ax3.images == []:
@@ -187,7 +196,10 @@ class TimeViewer:
         done_button.on_click(self._disconnect_matplotlib)
         clear_button = widgets.Button(description='Clear')
         clear_button.on_click(self._clear)
-        display(widgets.HBox([done_button, clear_button]))
+        save_button = widgets.Button(description="Save")
+        save_button.on_click(self._save)
+        display(widgets.HBox([done_button, clear_button, save_button]))
+        widgets.interact(self._file_name, fn = widgets.Text(description="Filename to save as: ", style={"description_width" : "initial"}), layout=widgets.Layout(width="50%"))
         
     def _on_click(self, event):
         if self.fig.canvas.manager.toolbar.mode is not "":
@@ -236,6 +248,12 @@ class TimeViewer:
         self.ax6.set_xlabel(r"z [Mm]")
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
+
+    def _save(self, _):
+        self.fig.savefig(self.filename, dpi=300)
+
+    def _file_name(self, fn):
+        self.filename = fn
             
     def _img_plot(self, z):
         if self.ax1.images == []:
@@ -249,7 +267,7 @@ class TimeViewer:
             pass
         elif self.ax2.images[-1].colorbar is not None:
             self.ax2.images[-1].colorbar.remove()
-        im2 = self.ax2.imshow(self.file_obj["temperature"][:,np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), origin="lower", cmap=sol_cm)
+        im2 = self.ax2.imshow(self.file_obj["temperature"][:,np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), origin="lower", cmap="hot")
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label=r"log T [K]")
 
         if self.ax3.images == []:
