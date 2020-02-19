@@ -9,6 +9,7 @@ from .utils import ObjDict
 from astropy.io import fits
 from .crisp import CRISP
 import astropy.units as u
+from matplotlib import ticker
 
 class AtmosViewer:
     def __init__(self, file_obj, z, eb=False):
@@ -140,7 +141,7 @@ class AtmosViewer:
             pass
         elif self.ax3.images[-1].colorbar is not None:
             self.ax3.images[-1].colorbar.remove()
-        im3 = self.ax3.imshow(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), origin="lower", cmap="RdBu", norm=SymLogNorm(0.01), clim=(-np.max(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)]), np.max(self.file_obj["vel"][:,np.argwhere(np.round(self.z, decimals=2) == z)])))
+        im3 = self.ax3.imshow(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), origin="lower", cmap="RdBu", norm=SymLogNorm(1), clim=(-np.max(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)]), np.max(self.file_obj["vel"][:,np.argwhere(np.round(self.z, decimals=2) == z)])))
         self.fig.colorbar(im3, ax=self.ax3, orientation="horizontal", label=r"v [km s$^{-1}$]")
 
 class TimeViewer:
@@ -274,7 +275,7 @@ class TimeViewer:
             pass
         elif self.ax3.images[-1].colorbar is not None:
             self.ax3.images[-1].colorbar.remove()
-        im3 = self.ax3.imshow(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), origin="lower", cmap="RdBu", norm=SymLogNorm(0.01), clim=(-np.max(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)]), np.max(self.file_obj["vel"][:,np.argwhere(np.round(self.z, decimals=2) == z)])))
+        im3 = self.ax3.imshow(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), origin="lower", cmap="RdBu", norm=SymLogNorm(1), clim=(-np.max(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)]), np.max(self.file_obj["vel"][:,np.argwhere(np.round(self.z, decimals=2) == z)])))
         self.fig.colorbar(im3, ax=self.ax3, orientation="horizontal", label=r"v [km s$^{-1}$]")
 
 class SpectralViewer:
