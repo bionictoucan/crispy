@@ -344,7 +344,7 @@ class SpectralViewer:
         save_button = widgets.Button(description="Save")
         save_button.on_click(self._save)
         display(widgets.HBox([done_button, clear_button, save_button]))
-        widgets.interact(self._file_name, fn = widgets.Text(description="Filename to save as: ", style={"description_width" : "initial"}))
+        widgets.interact(self._file_name, fn = widgets.Text(description="Filename to save as: ", style={"description_width" : "initial"}), layout=widgets.Layout(width="50%"))
         
     def _on_click(self, event):
         if self.fig.canvas.manager.toolbar.mode is not "":
@@ -397,11 +397,12 @@ class SpectralViewer:
             while len(self.ax1.patches) > 0:
                 for p in self.ax1.patches:
                     p.remove()
-            while len(self.ax2.lines) > 0:
-                for p in self.ax2.lines:
-                    p.remove()
-                self.fig.canvas.draw()
-                self.fig.canvas.flush_events()
+            self.ax2.clear()
+            self.ax2.grid()
+            self.ax2.set_ylabel("Intensity [DNs]")
+            self.ax2.set_xlabel(f"{self.l} [{self.aa}]")
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
         else:
             while len(self.ax1.patches) > 0:
                 for p in self.ax1.patches:
@@ -409,14 +410,15 @@ class SpectralViewer:
             while len(self.ax2.patches) > 0:
                 for p in self.ax2.patches:
                     p.remove()
-            while len(self.ax3.lines) > 0:
-                for p in self.ax3.lines:
-                    p.remove()
-            while len(self.ax4.lines) > 0:
-                for p in self.ax4.lines:
-                    p.remove()
-                self.fig.canvas.draw()
-                self.fig.canvas.flush_events()
+            self.ax3.clear()
+            self.ax3.grid()
+            self.ax3.set_ylabel("Intensity [DNs]")
+            self.ax4.clear()
+            self.ax4.grid()
+            self.ax4.set_ylabel("Intensity [DNs]")
+            self.ax4.set_xlabel(f"{self.l} [{self.aa}]")
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
 
     def _save(self, _):
         self.fig.savefig(self.filename, dpi=300)
