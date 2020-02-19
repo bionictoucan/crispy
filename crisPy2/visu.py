@@ -24,7 +24,6 @@ class AtmosViewer:
         self.colour_idx = 0
         
         self.fig = plt.figure(figsize=(8,10))
-        self.fig.suptitle("17:10:41")
         self.gs = self.fig.add_gridspec(nrows=5, ncols=3)
         
         self.ax1 = self.fig.add_subplot(self.gs[:2, 0])
@@ -127,6 +126,7 @@ class AtmosViewer:
         self.filename = fn
             
     def _img_plot(self, z):
+        self.fig.suptitle(f"17:10:41 z = {z} Mm")
         if self.ax1.images == []:
             pass
         elif self.ax1.images[-1].colorbar is not None:
@@ -162,7 +162,6 @@ class TimeViewer:
         self.colour_idx = 0
         
         self.fig = plt.figure(figsize=(8,10))
-        self.fig.suptitle("17:10:41")
         self.gs = self.fig.add_gridspec(nrows=5, ncols=3)
         
         self.ax1 = self.fig.add_subplot(self.gs[:2, 0])
@@ -265,6 +264,7 @@ class TimeViewer:
         self.filename = fn
             
     def _img_plot(self, z):
+        self.fig.suptitle(f"17:10:41 z = {z} Mm")
         if self.ax1.images == []:
             pass
         elif self.ax1.images[-1].colorbar is not None:
@@ -381,7 +381,7 @@ class SpectralViewer:
         if "wvls" in self.__dict__:
             centre_coord = event.ydata, event.xdata
             self.coords.append((event.ydata, event.xdata) << u.arcsec)
-            circ = patches.Circle(centre_coord[::-1], radius=0.25, color=f"C{self.colour_idx}")
+            circ = patches.Circle(centre_coord[::-1], radius=0.5, color=f"C{self.colour_idx}")
             self.ax1.add_patch(circ)
             if self.hc:
                 px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix", centre=True).value.astype(int)
@@ -400,8 +400,8 @@ class SpectralViewer:
         else:
             centre_coord = event.ydata, event.xdata
             self.coords.append(centre_coord << u.arcsec)
-            circ1 = patches.Circle(centre_coord[::-1], radius=0.25, color=f"C{self.colour_idx}")
-            circ2 = patches.Circle(centre_coord[::-1], radius=0.25, color=f"C{self.colour_idx}")
+            circ1 = patches.Circle(centre_coord[::-1], radius=0.5, color=f"C{self.colour_idx}")
+            circ2 = patches.Circle(centre_coord[::-1], radius=0.5, color=f"C{self.colour_idx}")
             self.ax1.add_patch(circ1)
             self.ax2.add_patch(circ2)
             if self.hc:
