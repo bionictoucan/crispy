@@ -1,3 +1,3 @@
 from .crisp import *
 from .utils import *
-__version__ = "0.0.32"
+__version__ = "0.0.38"

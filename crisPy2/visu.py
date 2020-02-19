@@ -24,6 +24,7 @@ class AtmosViewer:
         self.colour_idx = 0
         
         self.fig = plt.figure(figsize=(8,10))
+        self.fig.suptitle("17:10:41")
         self.gs = self.fig.add_gridspec(nrows=5, ncols=3)
         
         self.ax1 = self.fig.add_subplot(self.gs[:2, 0])
@@ -161,6 +162,7 @@ class TimeViewer:
         self.colour_idx = 0
         
         self.fig = plt.figure(figsize=(8,10))
+        self.fig.suptitle("17:10:41")
         self.gs = self.fig.add_gridspec(nrows=5, ncols=3)
         
         self.ax1 = self.fig.add_subplot(self.gs[:2, 0])
@@ -314,6 +316,7 @@ class SpectralViewer:
             
         if "wvls" in self.__dict__:
             self.fig = plt.figure(figsize=(8,10))
+            self.fig.suptitle("17:10:41")
             self.ax1 = self.fig.add_subplot(1, 2, 1)
             self.ax1.set_ylabel("y [arcseconds]")
             self.ax1.set_xlabel("x [arcseconds]")
@@ -329,12 +332,11 @@ class SpectralViewer:
             widgets.interact(self._img_plot1, ll = ll)
         else:
             self.fig = plt.figure(figsize=(8,10))
+            self.fig.suptitle("17:10:41")
             self.ax1 = self.fig.add_subplot(2, 2, 1)
-            self.ax1.set_title(f"Ca II {self.l}8542")
             self.ax1.set_ylabel("y [arcseconds]")
             self.ax1.tick_params(labelbottom=False)
             self.ax2 = self.fig.add_subplot(2, 2, 3)
-            self.ax2.set_title(f"H{self.a}")
             self.ax2.set_ylabel("y [arcseconds]")
             self.ax2.set_xlabel("x [arcseconds]")
             self.ax3 = self.fig.add_subplot(2, 2, 2)
@@ -354,7 +356,7 @@ class SpectralViewer:
             
             ll1 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ca_wvls), decimals=2).value for l in self.ca_wvls], description=f"Ca II {self.D} {self.l} [{self.aa}]")
             ll2 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ha_wvls), decimals=2).value for l in self.ha_wvls], description=f"H{self.a} {self.D} {self.l} [{self.aa}]")
-            
+
             widgets.interact(self._img_plot2, ll1 = ll1, ll2 = ll2)
                     
         self.coords = []
@@ -484,6 +486,10 @@ class SpectralViewer:
                 extent = [0, tr[1], 0, tr[0]]
             ll_idx = int(np.where(np.round(self.wvls, decimals=2) == np.round(np.median(self.wvls) + ll, decimals=2))[0])
             im1 = self.ax1.imshow(self.cube.ha.data[ll_idx], origin="lower", cmap="Greys_r", extent=extent)
+        if "ca" in self.cube.__dict__:
+            self.ax1.set_title(f"Ca II {self.l}8542 {self.D} {self.l} = {ll} {self.aa}")
+        else:
+            self.ax1.set_title(f"H{self.a} {self.D} {self.l} = {ll} {self.aa}")
 
             
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
@@ -522,3 +528,5 @@ class SpectralViewer:
         im2 = self.ax2.imshow(self.cube.ha.data[ll2_idx], origin="lower", cmap="Greys_r", extent=extent2)
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="Intensity [DNs]")
+        self.ax1.set_title(f"Ca II {self.l}8542 {self.D} {self.l} = {ll1} {self.aa}")
+        self.ax2.set_title(f"H{self.a} {self.D} {self.l} = {ll2} {self.aa}")
