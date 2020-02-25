@@ -9,3 +9,4 @@
 /.ipynb_checkpoints/*
 *.png
 *.pdf
+/docs/_templates
