@@ -12,6 +12,9 @@ import astropy.units as u
 from matplotlib import ticker
 
 class AtmosViewer:
+    '''
+    
+    '''
     def __init__(self, file_obj, z, eb=False):
         self.file_obj = file_obj
         if type(z) != str:
