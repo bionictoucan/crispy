@@ -13,7 +13,9 @@ from matplotlib import ticker
 
 class AtmosViewer:
     '''
-    
+    This is an Jupyter interactive plot for exploring whole image inversions quickly and reliably. Have an inverted image and want to see what the atmospheric parameters are doing at a certain pixel location for all heights? Then this is the tool for you. This is currently built to support inversions with 3 atmospheric parameters as was the use case from `RADYNVERSION <https://doi.org/10.3847/1538-4357/ab07b4>`_ where we inverted SST/CRISP flare data to retrieve the electron number density, electron temperature and bulk velocity flow of the plasma for a flaring solar atmosphere. More arguments may be added in the future if there is a need for it to be able to take arbitrary numbers of atmospheric parameters and allowing the user to define what they like in the plots.
+
+    The use of this system is relatively simple but requires the use of a Jupyter notebook and the interactive backend ``%matplotlib notebook``.
     '''
     def __init__(self, file_obj, z, eb=False):
         self.file_obj = file_obj
@@ -292,6 +294,7 @@ class TimeViewer:
         self.fig.colorbar(im3, ax=self.ax3, orientation="horizontal", label=r"v [km s$^{-1}$]")
 
 class SpectralViewer:
+    #TODO: Make numbers on plots have outlines so they can be seen even when there is low contrast. Also add the number of the curves to the line plots.
     def __init__(self, data, hc=False):
         self.hc = hc
         self.aa = html.unescape("&#8491;")
@@ -330,7 +333,7 @@ class SpectralViewer:
             self.ax2.yaxis.tick_right()
             self.ax2.set_ylabel("Intensity [DNs]")
             self.ax2.set_xlabel(f"{self.l} [{self.aa}]")
-            self.ax2.grid()
+            # self.ax2.grid()
             self.ax2.tick_params(direction="in")
             
             ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2).value for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
@@ -349,14 +352,14 @@ class SpectralViewer:
             self.ax3.yaxis.tick_right()
             self.ax3.set_ylabel("Intensity [DNs]")
             self.ax3.set_xlabel(f"{self.l} [{self.aa}]")
-            self.ax3.grid()
+            # self.ax3.grid()
             self.ax3.tick_params(direction="in")
             self.ax4 = self.fig.add_subplot(2, 2, 4)
             self.ax4.yaxis.set_label_position("right")
             self.ax4.yaxis.tick_right()
             self.ax4.set_ylabel("Intensity [DNs]")
             self.ax4.set_xlabel(f"{self.l} [{self.aa}]")
-            self.ax4.grid()
+            # self.ax4.grid()
             self.ax4.tick_params(direction="in")
             
             ll1 = widgets.SelectionSlider(options=[np.round(l - np.median(self.ca_wvls), decimals=2).value for l in self.ca_wvls], description=f"Ca II {self.D} {self.l} [{self.aa}]")
@@ -388,6 +391,11 @@ class SpectralViewer:
             self.coords.append((event.ydata, event.xdata) << u.arcsec)
             circ = patches.Circle(centre_coord[::-1], radius=0.5, color=f"C{self.colour_idx}")
             self.ax1.add_patch(circ)
+            font = {
+                "size" : 16,
+                "color" : f"C{self.colour_idx}"
+            }
+            self.ax1.text(centre_coord[1]+0.75, centre_coord[0]+0.6, s=f"{self.colour_idx+1}", fontdict=font)
             if self.hc:
                 px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix", centre=True).value.astype(int)
             else:
@@ -409,6 +417,12 @@ class SpectralViewer:
             circ2 = patches.Circle(centre_coord[::-1], radius=0.5, color=f"C{self.colour_idx}")
             self.ax1.add_patch(circ1)
             self.ax2.add_patch(circ2)
+            font = {
+                "size" : 16,
+                "color" : f"C{self.colour_idx}"
+            }
+            self.ax1.text(centre_coord[1]+0.75, centre_coord[0]+0.6, s=f"{self.colour_idx+1}", fontdict=font)
+            self.ax2.text(centre_coord[1]+0.75, centre_coord[0]+0.6, s=f"{self.colour_idx+1}", fontdict=font)
             if self.hc:
                 px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix", centre=True).value.astype(int)
             else:
@@ -433,8 +447,11 @@ class SpectralViewer:
             while len(self.ax1.patches) > 0:
                 for p in self.ax1.patches:
                     p.remove()
+            while len(self.ax1.texts) > 0:
+                for t in self.ax1.texts:
+                    t.remove()
             self.ax2.clear()
-            self.ax2.grid()
+            # self.ax2.grid()
             self.ax2.set_ylabel("Intensity [DNs]")
             self.ax2.set_xlabel(f"{self.l} [{self.aa}]")
             self.fig.canvas.draw()
@@ -446,11 +463,17 @@ class SpectralViewer:
             while len(self.ax2.patches) > 0:
                 for p in self.ax2.patches:
                     p.remove()
+            while len(self.ax1.texts) > 0:
+                for t in self.ax1.texts:
+                    t.remove()
+            while len(self.ax2.texts) > 0:
+                for t in self.ax2.texts:
+                    t.remove()
             self.ax3.clear()
-            self.ax3.grid()
+            # self.ax3.grid()
             self.ax3.set_ylabel("Intensity [DNs]")
             self.ax4.clear()
-            self.ax4.grid()
+            # self.ax4.grid()
             self.ax4.set_ylabel("Intensity [DNs]")
             self.ax4.set_xlabel(f"{self.l} [{self.aa}]")
             self.fig.canvas.draw()
