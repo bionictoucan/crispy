@@ -10,6 +10,8 @@ from astropy.io import fits
 from .crisp import CRISP
 import astropy.units as u
 from matplotlib import ticker
+import matplotlib.patheffects as PathEffects
+from matplotlib.lines import Line2D
 
 class AtmosViewer:
     '''
@@ -389,49 +391,55 @@ class SpectralViewer:
         if "wvls" in self.__dict__:
             centre_coord = event.ydata, event.xdata
             self.coords.append((event.ydata, event.xdata) << u.arcsec)
-            circ = patches.Circle(centre_coord[::-1], radius=0.5, color=f"C{self.colour_idx}")
+            circ = patches.Circle(centre_coord[::-1], radius=0.5, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
             self.ax1.add_patch(circ)
             font = {
-                "size" : 16,
+                "size" : 12,
                 "color" : f"C{self.colour_idx}"
             }
-            self.ax1.text(centre_coord[1]+0.75, centre_coord[0]+0.6, s=f"{self.colour_idx+1}", fontdict=font)
+            txt = self.ax1.text(centre_coord[1]+0.75, centre_coord[0]+0.6, s=f"{self.colour_idx+1}", fontdict=font)
+            txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
             if self.hc:
                 px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix", centre=True).value.astype(int)
             else:
                 px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix").value.astype(int)
             if "ca" in self.cube.__dict__:
                 if len(self.cube.ca.data.shape) == 4:
-                    self.ax2.plot(self.wvls, self.cube.ca.data[0,:,px[0],px[1]])
+                    self.ax2.plot(self.wvls, self.cube.ca.data[0,:,px[0],px[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
                 else:
-                    self.ax2.plot(self.wvls, self.cube.ca.data[:,px[0],px[1]])
+                    self.ax2.plot(self.wvls, self.cube.ca.data[:,px[0],px[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
             else:
-                self.ax2.plot(self.wvls, self.cube.ha.data[:,px[0],px[1]])
+                self.ax2.plot(self.wvls, self.cube.ha.data[:,px[0],px[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax2.legend()
             self.px_coords.append(px << u.pix)
             self.colour_idx += 1
             self.fig.canvas.draw()
         else:
             centre_coord = event.ydata, event.xdata
             self.coords.append(centre_coord << u.arcsec)
-            circ1 = patches.Circle(centre_coord[::-1], radius=0.5, color=f"C{self.colour_idx}")
-            circ2 = patches.Circle(centre_coord[::-1], radius=0.5, color=f"C{self.colour_idx}")
+            circ1 = patches.Circle(centre_coord[::-1], radius=0.5, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+            circ2 = patches.Circle(centre_coord[::-1], radius=0.5, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
             self.ax1.add_patch(circ1)
             self.ax2.add_patch(circ2)
             font = {
-                "size" : 16,
+                "size" : 12,
                 "color" : f"C{self.colour_idx}"
             }
-            self.ax1.text(centre_coord[1]+0.75, centre_coord[0]+0.6, s=f"{self.colour_idx+1}", fontdict=font)
-            self.ax2.text(centre_coord[1]+0.75, centre_coord[0]+0.6, s=f"{self.colour_idx+1}", fontdict=font)
+            txt_1 = self.ax1.text(centre_coord[1]+0.75, centre_coord[0]+0.6, s=f"{self.colour_idx+1}", fontdict=font)
+            txt_2 = self.ax2.text(centre_coord[1]+0.75, centre_coord[0]+0.6, s=f"{self.colour_idx+1}", fontdict=font)
+            txt_1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+            txt_2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
             if self.hc:
                 px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix", centre=True).value.astype(int)
             else:
                 px = self.cube.unit_conversion(centre_coord << u.arcsec, unit_to="pix").value.astype(int)
             if len(self.cube.ca.data.shape) == 4:
-                self.ax3.plot(self.ca_wvls, self.cube.ca.data[0,:,px[0],px[1]])
+                self.ax3.plot(self.ca_wvls, self.cube.ca.data[0,:,px[0],px[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
             else:
-                self.ax3.plot(self.ca_wvls, self.cube.ca.data[:,px[0],px[1]])
-            self.ax4.plot(self.ha_wvls, self.cube.ha.data[:,px[0],px[1]])
+                self.ax3.plot(self.ca_wvls, self.cube.ca.data[:,px[0],px[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax4.plot(self.ha_wvls, self.cube.ha.data[:,px[0],px[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax3.legend()
+            self.ax4.legend()
             self.px_coords.append(px << u.pix)
             self.colour_idx += 1
             self.fig.canvas.draw()
