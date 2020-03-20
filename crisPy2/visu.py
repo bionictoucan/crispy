@@ -43,20 +43,17 @@ class AtmosViewer:
         self.ax4.set_ylabel(r"log $n_{e}$ [cm$^{-3}$]")
         self.ax4.yaxis.set_label_position("right")
         self.ax4.yaxis.tick_right()
-        self.ax4.grid()
         
         self.ax5 = self.fig.add_subplot(self.gs[3, :])
         self.ax5.set_ylabel(r"log T [K]")
         self.ax5.yaxis.set_label_position("right")
         self.ax5.yaxis.tick_right()
-        self.ax5.grid()
         
         self.ax6 = self.fig.add_subplot(self.gs[4, :])
         self.ax6.set_ylabel(r"v [km s$^{-1}$]")
         self.ax6.set_xlabel(r"z [Mm]")
         self.ax6.yaxis.set_label_position("right")
         self.ax6.yaxis.tick_right()
-        self.ax6.grid()
         
         self.ax4.tick_params(labelbottom=False, direction="in")
         self.ax5.tick_params(labelbottom=False, direction="in")
@@ -79,22 +76,35 @@ class AtmosViewer:
     def _on_click(self, event):
         if self.fig.canvas.manager.toolbar.mode is not "":
             return
-        centre_coord = int(event.xdata), int(event.ydata)
-        circ1 = patches.Circle(centre_coord, radius=10, color=f"C{self.colour_idx}")
-        circ2 = patches.Circle(centre_coord, radius=10, color=f"C{self.colour_idx}")
-        circ3 = patches.Circle(centre_coord, radius=10, color=f"C{self.colour_idx}")
+        centre_coord = int(event.ydata), int(event.xdata)
+        self.coords.append((int(event.ydata), int(event.xdata)) << u.pix)
+        circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+        circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+        circ3 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
         self.ax1.add_patch(circ1)
         self.ax2.add_patch(circ2)
         self.ax3.add_patch(circ3)
+        font = {
+            "size" : 12,
+            "color" : f"C{self.colour_idx}"
+        }
+        txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
+        txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
+        txt_3 = self.ax3.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
+        txt_1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+        txt_2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+        txt_3.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
         if self.eb:
-            self.ax4.errorbar(self.z, self.file_obj["ne"][event.xdata*event.ydata], yerr=self.file_obj["mad"][event.xdata*event.ydata,0])
-            self.ax5.errorbar(self.z, self.file_obj["temperature"][event.xdata*event.ydata], yerr=self.file_obj["mad"][event.xdata*event.ydata,1])
-            self.ax6.errorbar(self.z, self.file_obj["vel"][event.xdata*event.ydata], yerr=self.file_obj["mad"][event.xdata*event.ydata,2])
+            self.ax4.errorbar(self.z, self.file_obj["ne"][event.xdata*event.ydata], yerr=self.file_obj["mad"][event.xdata*event.ydata,0], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax5.errorbar(self.z, self.file_obj["temperature"][event.xdata*event.ydata], yerr=self.file_obj["mad"][event.xdata*event.ydata,1], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax6.errorbar(self.z, self.file_obj["vel"][event.xdata*event.ydata], yerr=self.file_obj["mad"][event.xdata*event.ydata,2], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
         else:
-            self.ax4.plot(self.z, self.file_obj["ne"][event.xdata*event.ydata])
-            self.ax5.plot(self.z, self.file_obj["temperature"][event.xdata*event.ydata])
-            self.ax6.plot(self.z, self.file_obj["vel"][event.xdata*event.ydata])
-        self.coords.append((int(event.ydata), int(event.xdata)))
+            self.ax4.plot(self.z, self.file_obj["ne"][event.xdata*event.ydata], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax5.plot(self.z, self.file_obj["temperature"][event.xdata*event.ydata], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax6.plot(self.z, self.file_obj["vel"][event.xdata*event.ydata], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+        self.ax4.legend()
+        self.ax5.legend()
+        self.ax6.legend()
         self.colour_idx += 1
         self.fig.canvas.draw()
         
@@ -113,14 +123,20 @@ class AtmosViewer:
         while len(self.ax3.patches) > 0:
             for p in self.ax3.patches:
                 p.remove()
+        while len(self.ax1.texts) > 0:
+            for t in self.ax1.texts:
+                t.remove()
+        while len(self.ax2.texts) > 0:
+            for t in self.ax2.texts:
+                t.remove()
+        while len(self.ax3.texts) > 0:
+            for t in self.ax3.texts:
+                t.remove()
         self.ax4.clear()
-        self.ax4.grid()
         self.ax4.set_ylabel(r"log n$_{e}$ [cm$^{-3}$]")
         self.ax5.clear()
-        self.ax5.grid()
         self.ax5.set_ylabel(r"log T [K]")
         self.ax6.clear()
-        self.ax6.grid()
         self.ax6.set_ylabel(r"v [km s$^{-1}$]")
         self.ax6.set_xlabel(r"z [Mm]")
         self.fig.canvas.draw()
@@ -139,21 +155,21 @@ class AtmosViewer:
             pass
         elif self.ax1.images[-1].colorbar is not None:
             self.ax1.images[-1].colorbar.remove()
-        im1 = self.ax1.imshow(self.file_obj["ne"][:,np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), origin="lower", cmap="cividis")
+        im1 = self.ax1.imshow(self.file_obj["ne"][:,np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), cmap="cividis")
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label=r"log $n_{e}$ [cm$^{-3}$]")
 
         if self.ax2.images == []:
             pass
         elif self.ax2.images[-1].colorbar is not None:
             self.ax2.images[-1].colorbar.remove()
-        im2 = self.ax2.imshow(self.file_obj["temperature"][:,np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), origin="lower", cmap="hot")
+        im2 = self.ax2.imshow(self.file_obj["temperature"][:,np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), cmap="hot")
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label=r"log T [K]")
 
         if self.ax3.images == []:
             pass
         elif self.ax3.images[-1].colorbar is not None:
             self.ax3.images[-1].colorbar.remove()
-        im3 = self.ax3.imshow(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), origin="lower", cmap="RdBu", norm=SymLogNorm(1), clim=(-np.max(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)]), np.max(self.file_obj["vel"][:,np.argwhere(np.round(self.z, decimals=2) == z)])))
+        im3 = self.ax3.imshow(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), cmap="RdBu", norm=SymLogNorm(1), clim=(-np.max(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)]), np.max(self.file_obj["vel"][:,np.argwhere(np.round(self.z, decimals=2) == z)])))
         self.fig.colorbar(im3, ax=self.ax3, orientation="horizontal", label=r"v [km s$^{-1}$]")
 
 class TimeViewer:
@@ -296,7 +312,6 @@ class TimeViewer:
         self.fig.colorbar(im3, ax=self.ax3, orientation="horizontal", label=r"v [km s$^{-1}$]")
 
 class SpectralViewer:
-    #TODO: Make numbers on plots have outlines so they can be seen even when there is low contrast. Also add the number of the curves to the line plots.
     def __init__(self, data, hc=False):
         self.hc = hc
         self.aa = html.unescape("&#8491;")
