@@ -1,17 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import patches
 import os, h5py, yaml, html
-import astropy.units as u
 from astropy.io import fits
-from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
-from sunpy.coordinates import Helioprojective
-from sunpy.time import parse_time
-from sunpy.physics.differential_rotation import solar_rotate_coordinate
 from specutils.utils.wcs_utils import vac_to_air
-from .utils import ObjDict, WiseGuyError
 from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
 
 class CRISP(CRISPSlicingMixin):
