@@ -20,3 +20,16 @@ class CRISPSlicingMixin(NDSlicingMixin):
         kwargs["file"]["header"] = self.file.header
 
         return kwargs
+
+class CRISPSequenceSlicingMixin(CRISPSlicingMixin):
+    '''
+    This is the parent class that will allow the CRISPSequence objects to be sliced without having to create new objects.
+    '''
+
+    def __getitem__(self, item):
+        args = self._slice(item)
+        return self.__class__(args)
+
+    def _slice(self, item):
+        args = [f._slice(item) for f in self.list]
+        return args
