@@ -6,6 +6,7 @@ from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
 from specutils.utils.wcs_utils import vac_to_air
 from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
+from .utils import ObjDict
 
 class CRISP(CRISPSlicingMixin):
     def __init__(self, file, wcs=None, uncertainty=None, mask=None):
