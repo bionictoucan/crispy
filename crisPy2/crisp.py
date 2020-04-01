@@ -4,6 +4,7 @@ import os, h5py, yaml, html
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
+from astropy.wcs.utils import add_stokes_axis_to_wcs
 from specutils.utils.wcs_utils import vac_to_air
 from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
 from .utils import ObjDict
@@ -863,6 +864,19 @@ def hdf5_header_to_wcs(header):
     if type(header) != dict:
         header = yaml.load(header, Loader=yaml.Loader)
 
-    wcs = WCS(naxis=len(header["dimensions"]))
-    wcs.wcs.crpix = header["crpix"]
-    wcs.wcs.naxis = header["dimensions"]
+    wcs = WCS(naxis=3)
+    if len(header["dimensions"]) == 4:
+        wcs.wcs.crpix = header["crpix"][1:]
+        wcs.wcs.crval = header["crval"]
+        wcs.wcs.ctype = ("WAVE", "HPLT-TAN", "HPLN-TAN")
+        wcs.wcs.cunit = ("angstrom", "arcsec", "arcsec")
+        wcs.wcs.cdelt = (0.015, 0.059, 0.059)
+        wcs.wcs.array_shape = header["dimensions"]
+
+        return wcs
+
+class CRISPWideband(CRISP):
+    def __init__(self, file, wcs=None, uncertainty=None, mask=None):
+        super().__init__(file, wcs=wcs, uncertainty=uncertainty, mask=mask)
+
+    def __str__(self):
