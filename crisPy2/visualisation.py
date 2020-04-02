@@ -127,7 +127,7 @@ class SpectralViewer:
             px = self.cube.wcs.array_index_to_world(*centre_coord) << u.arcsec
             self.ax2.plot(self.wvls, self.cube.file.data[:, centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
             self.ax2.legend()
-            self.px_coords.append(px)
+            self.coords.append(px)
             self.colour_idx += 1
             self.fig.canvas.draw()
         elif type(self.cube) == CRISPSequence:
@@ -236,10 +236,204 @@ class SpectralViewer:
 
 class WidebandViewer:
     def __init__(self, files):
+        plt.style.use("ggplot")
         if type(files) == CRISPWidebandSequence:
-            self.list = files
+            self.cube = files
         elif type(files) == list and type(files[0]) == dict:
-            self.list = CRISPWidebandSequence(files)
+            self.cube = CRISPWidebandSequence(files)
         elif type(files) == list and type(files[0]) == str:
             files = [{"file" : f} for f in files]
-            self.list = CRISPWidebandSequence(files)
+            self.cube = CRISPWidebandSequence(files)
+        elif type(files) == list and type(files[0]) == CRISPWidebandSequence:
+            self.cube = files
+        if type(self.cube) is not list:
+            self.time = [f.file.header.get("DATE-AVG")[-12:] for f in self.cube.list]
+            self.fig = plt.figure(figsize=(8,10))
+            self.ax1 = self.fig.add_subplot(1, 2, 1, projection=self.cube.list[0].wcs)
+            self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
+            self.ax1.set_xlabel("Helioprojective Longitude [arcsec]")
+            self.ax2 = self.fig.add_subplot(1, 2, 2)
+            self.ax2.yaxis.set_label_position("right")
+            self.ax2.yaxis.ticks_right()
+            self.ax2.set_ylabel("I [DNs]")
+            self.ax2.set_xlabel("Time [UTC]")
+            self.ax2.xaxis.set_major_locator(plt.MaxNLocator(4))
+            self.ax2.tick_params(direction="in")
+
+            t = widgets.IntSlider(value=0, min=0, max=len(self.cube.list), step=1, description="Time index: ", style={"description_width" : "initial"})
+
+            widgets.interact(self._img_plot1, t = t)
+        else:
+            self.time1 = [f.file.header.get("DATE-AVG")[-12:] for f in self.cube[0].list]
+            self.time2 = [f.file.header.get("DATE-AVG")[-12:] for f in self.cube[1].list]
+            self.fig = plt.figure(figsize=(8,10))
+            self.ax1 = self.fig.add_subplot(2, 2, 1, projection=self.cube[0].list[0].wcs)
+            self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
+            self.ax1.set_xlabel("Helioprojective Longitude [arcsec]")
+            self.ax1.xaxis.set_label_position("top")
+            self.ax1.xaxis.tick_top()
+
+            self.ax2 = self.fig.add_subplot(2, 2, 3, projection=self.cube[1].list[0].wcs)
+            self.ax2.ylabel("Helioprojective Latitude [arcsec]")
+            self.ax2.xlabel("Helioprojective Longitude [arcsec]")
+
+            self.ax3 = self.fig.add_subplot(2, 2, 2)
+            self.ax3.yaxis.set_label_position("right")
+            self.ax3.yaxis.tick_right()
+            self.ax3.set_ylabel("I [DNs]")
+            self.ax3.set_xlabel("Time [UTC]")
+            self.ax3.xaxis.set_label_position("top")
+            self.ax3.xaxis.tick_top()
+            self.ax3.xaxis.set_major_locator(plt.MaxNLocator(4))
+            self.ax3.tick_params(direction="in")
+
+            self.ax4 = self.fig.add_subplot(2, 2, 4)
+            self.ax4.yaxis.set_label_position("right")
+            self.ax4.yaxis.tick_right()
+            self.ax4.set_ylabel("I [DNs]")
+            self.ax4.set_xlabel("Time [UTC]")
+            self.ax4.xaxis.set_major_locator(plt.MaxNLocator(4))
+            self.ax4.tick_params(direction="in")
+
+            t1 = widgets.IntSlider(value=0, min=0, max=len(self.cube[0].list), step=1, description="Time index: ", style={"description_width" : "initial"})
+            t2 = widgets.IntSlider(value=0, min=0, max=len(self.cube[1].list), step=1, description="Time index: ", style={"description_width" : "initial"})
+
+            widgets.interact(self._img_plot2, t1=t1, t2=t2)
+
+        self.coords = []
+        self.px_coords = []
+        self.colour_idx = 0
+
+        self.reveiver = self.fig.canvas.mpl_connect("button_press_event", self._on_click)
+
+        done_button = widgets.Button(description="Done")
+        done_button.on_click(self._disconnect_matplotlib)
+        clear_button = widgets.Button(description="Clear")
+        clear_button.on_click(self._clear)
+        save_button = widgets.Button(description="Save")
+        save_button.on_click(self._save)
+        display(widgets.HBox([done_button, clear_button, save_button]))
+        widgets.interact(self._file_name, fn= widgets.Text(description="Filename to save as: "), style={"description_width" : "initial"}, layout=widgets.Layout(width="50%"))
+
+    def _on_click(self, event):
+        if self.fig.canvas.manager.toolbar.mode is not "":
+            return
+
+        if type(self.cube) == CRISPWidebandSequence:
+            centre_coord = int(event.ydata), int(event.xdata)
+            self.px_coords.append(centre_coord)
+            circ = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+            self.ax1.add_patch(circ)
+            font = {
+                "size" : 12,
+                "color" : f"C{self.colour_idx}"
+            }
+            txt = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
+            txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+            px = self.cube.list[0].wcs.array_index_to_world(*centre_coord) << u.arcsec
+            prof = [f.file.data[centre_coord[0], centre_coord[1]] for f in self.cube.list]
+            self.ax2.plot(self.time, prof, marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax2.legend()
+            self.coords.append(px)
+            self.colour_idx += 1
+            self.fig.canvas.draw()
+        elif type(self.cube) == list:
+            centre_coord = int(event.ydata), int(event.xdata)
+            self.px_coords.append(centre_coord)
+            circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+            circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+            self.ax1.add_patch(circ1)
+            self.ax2.add_patch(circ2)
+            font = {
+                "size" : 12,
+                "color" : f"C{self.colour_idx}"
+            }
+            txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
+            txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
+            txt_1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+            txt_2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+            px = self.cube[0].list[0].wcs.array_index_to_world(*centre_coord) << u.arcsec
+            prof_1 = [f.file.data[centre_coord[0], centre_coord[1]] for f in self.cube[0].list]
+            prof_2 = [f.file.data[centre_coord[0], centre_coord[1]] for f in self.cube[1].list]
+            self.ax3.plot(self.time1, prof_1, marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax4.plot(self.time2, prof_2, marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax3.legend()
+            self.ax4.legend()
+            self.coords.append(px)
+            self.colour_idx += 1
+            self.fig.canvas.draw()
+
+    def _disconnect_matplotlib(self, _):
+        self.fig.canvas.mpl_disconnect(self.receiver)
+
+    def _clear(self, _):
+        self.coords = []
+        self.px_coords = []
+        self.colour_idx = 0
+        if type(self.cube) == CRISPWidebandSequence:
+            while len(self.ax1.patches) > 0:
+                for p in self.ax1.patches:
+                    p.remove()
+            while len(self.ax1.texts) > 0:
+                for t in self.ax1.texts:
+                    t.remove()
+            self.ax2.clear()
+            self.ax2.set_ylabel("I [DNs]")
+            self.ax2.set_xlabel("Time [UTC]")
+            self.ax2.xaxis.set_major_locator(plt.MaxNLocator(4))
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+        else:
+            while len(self.ax1.patches) > 0:
+                for p in self.ax1.patches:
+                    p.remove()
+            while len(self.ax2.patches) > 0:
+                for p in self.ax2.patches:
+                    p.remove()
+            while len(self.ax1.texts) > 0:
+                for t in self.ax1.patches:
+                    t.remove()
+            while len(self.ax2.patches) > 0:
+                for t in self.ax2.patches:
+                    t.remove()
+            self.ax3.clear()
+            self.ax3.set_ylabel("I [DNs]")
+            self.ax3.set_xlabel("Time [UTC]")
+            self.ax3.xaxis.set_major_locator(plt.MaxNLocator(4))
+            self.ax4.clear()
+            self.ax4.set_ylabel("I [DNs]")
+            self.ax4.set_xlabel("Time [UTC]")
+            self.ax4.xaxis.set_major_locator(plt.MaxNLocator(4))
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+
+    def _save(self, _):
+        self.fig.savefig(self.filename, dpi=300)
+
+    def _file_name(self, fn):
+        self.filename = fn
+
+    def _img_plot1(self, t):
+        if self.ax1.images == []:
+            pass
+        elif self.ax1.images[-1].colorbar is not None:
+            self.ax1.images[-1].colorbar.remove()
+
+        im1 = self.ax1.imshow(self.cube.list[t].file.data, cmap="Greys_r")
+        self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="I [DNs]")
+
+    def _img_plot2(self, t1, t2):
+        if self.ax1.images = []:
+            pass
+        elif self.ax1.images[-1].colorbar is not None:
+            self.ax1.images[-1].colorbar.remove()
+
+        if self.ax2.images == []:
+            pass
+        elif self.ax2.images[-1].colorbar is not None:
+            self.ax2.images[-1].colorbar.remove()
+
+        im1 = self.ax1.imshow(self.cube[0].list[t].file.data, cmap="Greys_r")
+        im2 = self.ax2.imshow(self.cube[1].list[t].file.data, cmap="Greys_r")
+        self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="I [DNs]")
+        self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="I [DNs]")
