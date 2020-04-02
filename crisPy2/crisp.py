@@ -9,11 +9,11 @@ from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
 from .utils import ObjDict
 
 class CRISP(CRISPSlicingMixin):
-    def __init__(self, file, wcs=None, uncertainty=None, mask=None):
-        if type(file) == str:
-            self.file = fits.open(file)[0]
-        elif type(file) == ObjDict:
-            self.file = file
+    def __init__(self, filename, wcs=None, uncertainty=None, mask=None):
+        if type(filename) == str:
+            self.file = fits.open(filename)[0]
+        elif type(filename) == ObjDict:
+            self.file = filename
         else:
             raise NotImplementedError("m8 y?")
         if wcs is None:
@@ -921,10 +921,10 @@ class CRISPWidebandSequence(CRISPSequence):
         return self.__str__()
 
 class CRISPNonU(CRISP):
-    def __init__(self, file, wcs=None, uncertainty=None, mask=None):
-        super().__init__(file=file, wcs=wcs, uncertainty=uncertainty, mask=mask)
+    def __init__(self, filename, wcs=None, uncertainty=None, mask=None):
+        super().__init__(filename=filename, wcs=wcs, uncertainty=uncertainty, mask=mask)
 
-        self.wvls = fits.open(file)[1].data #This assumes that the true wavelength points are stored in the first HDU of the FITS file as a numpy array
+        self.wvls = fits.open(filename)[1].data #This assumes that the true wavelength points are stored in the first HDU of the FITS file as a numpy array
 
     def __str__(self):
         time = self.file.header.get("DATE-AVG")[-12:]

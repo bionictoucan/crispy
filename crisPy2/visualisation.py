@@ -6,6 +6,7 @@ import matplotlib.patches as patches
 from matplotlib.colors import SymLogNorm
 import astropy.units as u
 from .crisp import CRISP, CRISPSequence, CRISPWidebandSequence
+from .inversions import Inversion
 from matplotlib import ticker
 import matplotlib.patheffects as PathEffects
 from matplotlib.lines import Line2D
@@ -437,3 +438,160 @@ class WidebandViewer:
         im2 = self.ax2.imshow(self.cube[1].list[t].file.data, cmap="Greys_r")
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="I [DNs]")
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="I [DNs]")
+
+class AtmosViewer:
+    def __init__(self, filename, z=None, wcs=None, header=None):
+        if type(filename) == str:
+            assert z is not None
+            assert wcs is not None
+            self.inv = Inversion(filename=filename, wcs=wcs, z=z, header=header)
+        elif type(filename) == Inversion:
+            self.inv = filename
+
+        self.coords = []
+        self.px_coords = []
+        self.colour_idx = 0
+
+        self.fig = plt.figure(figsize=(8,10))
+        self.gs = self.fig.add_gridspec(nrows=5, ncols=3)
+
+        self.ax1 = self.fig.add_subplot(self.gs[:2, 0])
+        self.ax2 = self.fig.add_subplot(self.gs[:2, 1])
+        self.ax3 = self.fig.add_subplot(self.gs[:2, 2])
+        self.ax2.tick_params(labelleft=False)
+        self.ax3.tick_params(labelleft=False)
+        
+        self.ax4 = self.fig.add_subplot(self.gs[2, :])
+        self.ax4.set_ylabel(r"log $n_{e}$ [cm$^{-3}$]")
+        self.ax4.yaxis.set_label_position("right")
+        self.ax4.yaxis.tick_right()
+        
+        self.ax5 = self.fig.add_subplot(self.gs[3, :])
+        self.ax5.set_ylabel(r"log T [K]")
+        self.ax5.yaxis.set_label_position("right")
+        self.ax5.yaxis.tick_right()
+        
+        self.ax6 = self.fig.add_subplot(self.gs[4, :])
+        self.ax6.set_ylabel(r"v [km s$^{-1}$]")
+        self.ax6.set_xlabel(r"z [Mm]")
+        self.ax6.yaxis.set_label_position("right")
+        self.ax6.yaxis.tick_right()
+        
+        self.ax4.tick_params(labelbottom=False, direction="in")
+        self.ax5.tick_params(labelbottom=False, direction="in")
+        self.ax6.tick_params(direction="in")
+        
+        widgets.interact(self._img_plot,
+                        z = widgets.SelectionSlider(options=np.round(self.inv.z, decimals=2), description="Image height [Mm]: ", style={"description_width" : "initial"}, layout=widgets.Layout(width="75%")))
+        
+        self.receiver = self.fig.canvas.mpl_connect("button_press_event", self._on_click)
+        
+        done_button = widgets.Button(description="Done")
+        done_button.on_click(self._disconnect_matplotlib)
+        clear_button = widgets.Button(description='Clear')
+        clear_button.on_click(self._clear)
+        save_button = widgets.Button(description="Save")
+        save_button.on_click(self._save)
+        display(widgets.HBox([done_button, clear_button, save_button]))
+        widgets.interact(self._file_name, fn = widgets.Text(description="Filename to save as: ", style={"description_width" : "initial"}), layout=widgets.Layout(width="50%"))
+        
+    def _on_click(self, event):
+        if self.fig.canvas.manager.toolbar.mode is not "":
+            return
+        centre_coord = int(event.ydata), int(event.xdata)
+        self.px_coords.append(centre_coord)
+        circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+        circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+        circ3 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+        self.ax1.add_patch(circ1)
+        self.ax2.add_patch(circ2)
+        self.ax3.add_patch(circ3)
+        font = {
+            "size" : 12,
+            "color" : f"C{self.colour_idx}"
+        }
+        txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
+        txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
+        txt_3 = self.ax3.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
+        txt_1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+        txt_2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+        txt_3.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+        if self.eb:
+            self.ax4.errorbar(self.z, self.ne[*centre_coord], yerr=self.err[*centre_coord,0], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax5.errorbar(self.z, self.temp[*centre_coord], yerr=self.err[*centre_coord,1], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax6.errorbar(self.z, self.vel[*centre_coord], yerr=self.err[*centre_coord,2], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+        else:
+            self.ax4.plot(self.z, self.ne[*centre_coord], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax5.plot(self.z, self.temp[*centre_coord], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax6.plot(self.z, self.vel[*centre_coord], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+        self.ax4.legend()
+        self.ax5.legend()
+        self.ax6.legend()
+        px = self.inv.wcs.array_index_to_world(*centre_coord) << u.arcsec
+        self.colour_idx += 1
+        self.coords.append(px)
+        self.fig.canvas.draw()
+        
+    def _disconnect_matplotlib(self, _):
+        self.fig.canvas.mpl_disconnect(self.receiver)
+        
+    def _clear(self, _):
+        self.coords = []
+        self.px_coords = []
+        self.colour_idx = 0
+        while len(self.ax1.patches) > 0:
+            for p in self.ax1.patches:
+                p.remove()
+        while len(self.ax2.patches) > 0:
+            for p in self.ax2.patches:
+                p.remove()
+        while len(self.ax3.patches) > 0:
+            for p in self.ax3.patches:
+                p.remove()
+        while len(self.ax1.texts) > 0:
+            for t in self.ax1.texts:
+                t.remove()
+        while len(self.ax2.texts) > 0:
+            for t in self.ax2.texts:
+                t.remove()
+        while len(self.ax3.texts) > 0:
+            for t in self.ax3.texts:
+                t.remove()
+        self.ax4.clear()
+        self.ax4.set_ylabel(r"log n$_{e}$ [cm$^{-3}$]")
+        self.ax5.clear()
+        self.ax5.set_ylabel(r"log T [K]")
+        self.ax6.clear()
+        self.ax6.set_ylabel(r"v [km s$^{-1}$]")
+        self.ax6.set_xlabel(r"z [Mm]")
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+
+    def _save(self, _):
+        self.fig.savefig(self.filename, dpi=300)
+
+    def _file_name(self, fn):
+        self.filename = fn
+            
+    def _img_plot(self, z):
+        z_r = np.round(z, decimals=2)
+        if self.ax1.images == []:
+            pass
+        elif self.ax1.images[-1].colorbar is not None:
+            self.ax1.images[-1].colorbar.remove()
+        im1 = self.ax1.imshow(self.ne[:,:,np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), cmap="cividis")
+        self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label=r"log $n_{e}$ [cm$^{-3}$]")
+
+        if self.ax2.images == []:
+            pass
+        elif self.ax2.images[-1].colorbar is not None:
+            self.ax2.images[-1].colorbar.remove()
+        im2 = self.ax2.imshow(self.temp[:,:,np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), cmap="hot")
+        self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label=r"log T [K]")
+
+        if self.ax3.images == []:
+            pass
+        elif self.ax3.images[-1].colorbar is not None:
+            self.ax3.images[-1].colorbar.remove()
+        im3 = self.ax3.imshow(self.vel[:,:, np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), cmap="RdBu", norm=SymLogNorm(1), clim=(-np.max(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)]), np.max(self.file_obj["vel"][:,np.argwhere(np.round(self.z, decimals=2) == z)])))
+        self.fig.colorbar(im3, ax=self.ax3, orientation="horizontal", label=r"v [km s$^{-1}$]")
