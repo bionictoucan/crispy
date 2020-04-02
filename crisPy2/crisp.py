@@ -921,7 +921,7 @@ class CRISPWidebandSequence(CRISPSequence):
     def __repr__(self):
         return self.__str__()
 
-class CRISPNonUSequence(CRISP):
+class CRISPNonU(CRISP):
     def __init__(self, file, wcs=None, uncertainty=None, mask=None):
         super().__init__(file=file, wcs=wcs, uncertainty=uncertainty, mask=mask)
 
@@ -1203,3 +1203,32 @@ class CRISPNonUSequence(CRISP):
                 ax[1].set_ylabel("V [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
+
+class CRISPNonUSequence(CRISPSequence):
+    def __init__(self, list):
+        self.list = [CRISPNonU(**f) for f in list]
+
+    def __str__(self):
+        time = self.list[0].file.header.get("DATE-AVG")[-12:]
+        date = self.list[0].file.header.get("DATE-AVG")[:-13]
+        cl = [str(np.round(f.file.header.get("TWAVE1"), decimals=2)) for f in self.list]
+        wwidth = [f.file.header.get("WWIDTH1") for f in self.list]
+        shape = [str([f.file.header.get(f"NAXIS{j+1}") for j in reversed(range(f.file.data.ndim))]) for f in self.list]
+        el = [f.file.header.get("WDESC1") for f in self.list]
+        pointing_x = str(self.list[0].file.header.get("CRVAL1"))
+        pointing_y = str(self.list[0].file.header.get("CRVAL2"))
+        sampled_wvls = [f.wvls for f in self.list]
+
+        return f"""CRISP Observation
+        ------------------
+        {date} {time}
+
+        Observed: {el}
+        Centre wavelength: {cl}
+        Wavelengths sampled: {wwidth}
+        Pointing: ({pointing_x}, {pointing_y})
+        Shape: {shape}
+        Sampled wavlengths: {sampled_wvls}"""
+
+    def __repr__(self):
+        return self.__str__()
