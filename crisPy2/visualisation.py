@@ -5,7 +5,7 @@ import h5py, yaml, html
 import matplotlib.patches as patches
 from matplotlib.colors import SymLogNorm
 import astropy.units as u
-from .crisp import CRISP, CRISPSequence
+from .crisp import CRISP, CRISPSequence, CRISPWidebandSequence
 from matplotlib import ticker
 import matplotlib.patheffects as PathEffects
 from matplotlib.lines import Line2D
@@ -233,3 +233,13 @@ class SpectralViewer:
         self.ax2.set_title(self.cube.list[1].file.header["WDESC1"]+f"{self.aa} {self.D} {self.l} = {ll2} {self.aa}")
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="Intensity [DNs]")
+
+class WidebandViewer:
+    def __init__(self, files):
+        if type(files) == CRISPWidebandSequence:
+            self.list = files
+        elif type(files) == list and type(files[0]) == dict:
+            self.list = CRISPWidebandSequence(files)
+        elif type(files) == list and type(files[0]) == str:
+            files = [{"file" : f} for f in files]
+            self.list = CRISPWidebandSequence(files)

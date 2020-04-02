@@ -1,10 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os, h5py, yaml, html
+import os, html
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
-from astropy.wcs.utils import add_stokes_axis_to_wcs
 from specutils.utils.wcs_utils import vac_to_air
 from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
 from .utils import ObjDict
@@ -825,8 +824,8 @@ class CRISP(CRISPSlicingMixin):
                     ax2.tick_params(direction="in")
 
 class CRISPSequence(CRISPSequenceSlicingMixin):
-    def __init__(self, list):
-        self.list = [CRISP(**f) for f in list]
+    def __init__(self, files):
+        self.list = [CRISP(**f) for f in files]
 
     def __str__(self):
         time = self.list[0].file.header.get("DATE-AVG")[-12:]
@@ -899,8 +898,8 @@ class CRISPWideband(CRISP):
             fig.show()
 
 class CRISPWidebandSequence(CRISPSequence):
-    def __init__(self, list):
-        self.list = [CRISPWideband(**f) for f in list]
+    def __init__(self, files):
+        self.list = [CRISPWideband(**f) for f in files]
 
     def __str__(self):
         time = self.list[0].file.header.get("DATE-AVG")[-12:]
@@ -1205,8 +1204,8 @@ class CRISPNonU(CRISP):
                 ax[1].tick_params(direction="in")
 
 class CRISPNonUSequence(CRISPSequence):
-    def __init__(self, list):
-        self.list = [CRISPNonU(**f) for f in list]
+    def __init__(self, files):
+        self.list = [CRISPNonU(**f) for f in files]
 
     def __str__(self):
         time = self.list[0].file.header.get("DATE-AVG")[-12:]
