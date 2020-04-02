@@ -860,23 +860,346 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         for f in self.list:
             f.intensity_map(frame=frame)
 
-def hdf5_header_to_wcs(header):
-    if type(header) != dict:
-        header = yaml.load(header, Loader=yaml.Loader)
-
-    wcs = WCS(naxis=3)
-    if len(header["dimensions"]) == 4:
-        wcs.wcs.crpix = header["crpix"][1:]
-        wcs.wcs.crval = header["crval"]
-        wcs.wcs.ctype = ("WAVE", "HPLT-TAN", "HPLN-TAN")
-        wcs.wcs.cunit = ("angstrom", "arcsec", "arcsec")
-        wcs.wcs.cdelt = (0.015, 0.059, 0.059)
-        wcs.wcs.array_shape = header["dimensions"]
-
-        return wcs
-
 class CRISPWideband(CRISP):
-    def __init__(self, file, wcs=None, uncertainty=None, mask=None):
-        super().__init__(file, wcs=wcs, uncertainty=uncertainty, mask=mask)
+    def __str__(self):
+        time = self.file.header.get("DATE-AVG")[-12:]
+        date = self.file.header.get("DATE-AVG")[:-13]
+        shape = str([self.file.header.get(f"NAXIS{j+1}") for j in reversed(range(self.file.data.ndim))])
+        el = self.file.header.get("WDESC1")
+        pointing_x = str(self.file.header.get("CRVAL1"))
+        pointing_y = str(self.file.header.get("CRVAL2"))
+
+        return f"""CRISP Wideband Context Image
+        ------------------
+        {date} {time}
+
+        Observed: {el}
+        Pointing: ({pointing_x}, {pointing_y})
+        Shape: {shape}"""
+
+    def __repr__(self):
+        return self.__str__()
+
+    def intensity_map(self, frame=None):
+        plt.style.use("ggplot")
+
+        if frame is None:
+            fig = plt.figure()
+            ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs)
+            ax1.imshow(self.file.data, cmap="Greys_r", vmin=0)
+            ax1.set_ylabel("Helioprojective Latitude [arcsec]")
+            ax1.set_xlabel("Helioprojective Longitude [arcsec]")
+            fig.show()
+        elif frame == "pix":
+            fig = plt.figure()
+            ax1 = fig.add_subplot(1, 1, 1)
+            ax1.imshow(self.file.data, cmap="Greys_r", vmin=0, origin="lower")
+            ax1.set_ylabel("y [arcsec]")
+            ax1.set_xlabel("x [arcsec]")
+            fig.show()
+
+class CRISPWidebandSequence(CRISPSequence):
+    def __init__(self, list):
+        self.list = [CRISPWideband(**f) for f in list]
 
     def __str__(self):
+        time = self.list[0].file.header.get("DATE-AVG")[-12:]
+        date = self.list[0].file.header.get("DATE-AVG")[:-13]
+        shape = [str([f.file.header.get(f"NAXIS{j+1}") for j in reversed(range(f.file.data.ndim))]) for f in self.list]
+        el = [f.file.header.get("WDESC1") for f in self.list]
+        pointing_x = str(self.list[0].file.header.get("CRVAL1"))
+        pointing_y = str(self.list[0].file.header.get("CRVAL2"))
+
+        return f"""CRISP Wideband Context Image
+        ------------------
+        {date} {time}
+
+        Observed: {el}
+        Pointing: ({pointing_x}, {pointing_y})
+        Shape: {shape}"""
+
+    def __repr__(self):
+        return self.__str__()
+
+class CRISPNonUSequence(CRISP):
+    def __init__(self, file, wcs=None, uncertainty=None, mask=None):
+        super().__init__(file=file, wcs=wcs, uncertainty=uncertainty, mask=mask)
+
+        self.wvls = fits.open(file)[1].data #This assumes that the true wavelength points are stored in the first HDU of the FITS file as a numpy array
+
+    def __str__(self):
+        time = self.file.header.get("DATE-AVG")[-12:]
+        date = self.file.header.get("DATE-AVG")[:-13]
+        cl = str(np.round(self.file.header.get("TWAVE1"), decimals=2))
+        wwidth = self.file.header.get("WWIDTH1")
+        shape = str([self.file.header.get(f"NAXIS{j+1}") for j in reversed(range(self.file.data.ndim))])
+        el = self.file.header.get("WDESC1")
+        pointing_x = str(self.file.header.get("CRVAL1"))
+        pointing_y = str(self.file.header.get("CRVAL2"))
+        sampled_wvls = str(self.wvls)
+
+        return f"""CRISP Observation
+        ------------------
+        {date} {time}
+
+        Observed: {el}
+        Centre wavelength: {cl}
+        Wavelengths sampled: {wwidth}
+        Pointing: ({pointing_x}, {pointing_y})
+        Shape: {shape}
+        Wavelengths sampled: {sampled_wvls}"""
+
+    def __repr__(self):
+        return self.__str__()
+
+    def plot_spectrum(self, unit=None, air=False, d=False):
+        plt.style.use("ggplot")
+        if self.file.data.ndim != 1:
+            raise IndexError("If you are using Stokes data please use the plot_stokes method.")
+
+        wavelength = self.wvls
+        if unit is None:
+            wavelength <<= u.Angstrom
+        else:
+            wavelength <<= unit
+
+        if air:
+            wavelength = vac_to_air(wavelength)
+
+        if d:
+            wavelength = wavelength - np.median(wavelength)
+            xlabel = f"{self.D}{self.l} [{self.aa}]"
+        else:
+            xlabel = f"{self.l} [{self.aa}]"
+
+        fig = plt.figure()
+        ax1 = fig.gca()
+        ax1.plot(wavelength, self.file.data)
+        ax1.set_ylabel("Intensity [DNs]")
+        ax1.set_xlabel(xlabel)
+        ax1.set_title(self.file.header.get("WDESC1"))
+        ax1.tick_params(direction="in")
+        fig.show()
+
+    def plot_stokes(self, stokes, unit=None, air=False, d=False):
+
+        if self.file.data.ndim == 1:
+            wavelength = self.wvls
+
+            if unit is None:
+                wavelength <<= u.Angstrom
+            else:
+                wavelength <<= unit
+
+            if air:
+                wavelength = vac_to_air(wavelength)
+
+            if d:
+                wavelength = wavelength - np.median(wavelength)
+                xlabel = f"{self.D}{self.l} [{self.aa}]"
+            else:
+                xlabel = f"{self.l} [{self.aa}]"
+
+            fig = plt.figure()
+            ax1 = fig.gca()
+            ax1.plot(wavelength, self.file.data)
+            if stokes == "I":
+                ax1.set_ylabel("Intensity [DNs]")
+                ax1.set_xlabel(xlabel)
+                ax1.set_title(self.file.header.get("WDESC1")+f"{self.aa} Stokes I")
+            elif stokes == "Q":
+                ax1.set_ylabel("Q [DNs]")
+                ax1.set_xlabel(xlabel)
+                ax1.set_title(self.file.header.get("WDESC1")+f"{self.aa} Stokes Q")
+            elif stokes == "U":
+                ax1.set_ylabel("U [DNs]")
+                ax1.set_xlabel(xlabel)
+                ax1.set_title(self.file.header.get("WDESC1")+f"{self.aa} Stokes U")
+            elif stokes == "V":
+                ax1.set_ylabel("V [DNs]")
+                ax1.set_xlabel(xlabel)
+                ax1.set_title(self.file.header.get("WDESC1")+f"{self.aa} Stokes V")
+            else:
+                raise ValueError("This is not a Stokes.")
+            ax1.tick_params(direction="in")
+            fig.show()
+        elif self.file.data.ndim == 2:
+            wavelength = self.wvls
+
+            if unit is None:
+                wavelength <<= u.Angstrom
+            else:
+                wavelength <<= unit
+
+            if air:
+                wavelength = vac_to_air(wavelength)
+
+            if d:
+                wavelength = wavelength - np.median(wavelength)
+                xlabel = f"{self.D}{self.l} [{self.aa}]"
+            else:
+                xlabel = f"{self.l} [{self.aa}]"
+
+            if stokes == "all":
+                fig, ax = plt.subplots(nrows=2, ncols=2)
+                ax[0,0].plot(wavelength, self.file.data[0])
+                ax[0,0].set_ylabel("I [DNs]")
+                ax[0,0].tick_params(labelbottom=False, direction="in")
+
+                ax[0,1].plot(wavelength, self.file.data[1])
+                ax[0,1].set_ylabel("Q [DNs]")
+                ax[0,1].yaxis.set_label_position("right")
+                ax[0,1].yaxis.tick_right()
+                ax[0,1].tick_params(labelbottom=False, direction="in")
+
+                ax[1,0].plot(wavelength, self.file.data[2])
+                ax[1,0].set_ylabel("U [DNs]")
+                ax[1,0].set_xlabel(xlabel)
+                ax[1,0].tick_params(direction="in")
+
+                ax[1,1].plot(wavelength, self.file.data[3])
+                ax[1,1].set_ylabel("V [DNs]")
+                ax[1,1].set_xlabel(xlabel)
+                ax[1,1].yaxis.set_label_position("right")
+                ax[1,1].yaxis.ticks_right()
+                ax[1,1].tick_params(direction="in")
+            elif stokes == "IQU":
+                fig, ax = plt.subplots(nrows=1, ncols=3)
+
+                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].set_ylabel("I [DNs]")
+                ax[0].set_xlabel(xlabel)
+                ax[0].tick_params(direction="in")
+
+                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].set_ylabel("Q [DNs]")
+                ax[1].set_xlabel(xlabel)
+                ax[1].tick_params(direction="in")
+
+                ax[2].plot(wavelength, self.file.data[2])
+                ax[2].set_ylabel("U [DNs]")
+                ax[2].set_xlabel(xlabel)
+                ax[2].tick_params(direction="in")
+            elif stokes == "QUV":
+                fig, ax = plt.subplots(nrows=1, ncols=3)
+
+                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].set_ylabel("Q [DNs]")
+                ax[0].set_xlabel(xlabel)
+                ax[0].tick_params(direction="in")
+
+                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].set_ylabel("U [DNs]")
+                ax[1].set_xlabel(xlabel)
+                ax[1].tick_params(direction="in")
+
+                ax[2].plot(wavelength, self.file.data[2])
+                ax[2].set_ylabel("V [DNs]")
+                ax[2].set_xlabel(xlabel)
+                ax[2].tick_params(direction="in")
+            elif stokes == "IQV":
+                fig, ax = plt.subplots(nrows=1, ncols=3)
+
+                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].set_ylabel("I [DNs]")
+                ax[0].set_xlabel(xlabel)
+                ax[0].tick_params(direction="in")
+
+                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].set_ylabel("Q [DNs]")
+                ax[1].set_xlabel(xlabel)
+                ax[1].tick_params(direction="in")
+
+                ax[2].plot(wavelength, self.file.data[2])
+                ax[2].set_ylabel("V [DNs]")
+                ax[2].set_xlabel(xlabel)
+                ax[2].tick_params(direction="in")
+            elif stokes == "IUV":
+                fig, ax = plt.subplots(nrows=1, ncols=3)
+
+                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].set_ylabel("I [DNs]")
+                ax[0].set_xlabel(xlabel)
+                ax[0].tick_params(direction="in")
+
+                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].set_ylabel("U [DNs]")
+                ax[1].set_xlabel(xlabel)
+                ax[1].tick_params(direction="in")
+
+                ax[2].plot(wavelength, self.file.data[2])
+                ax[2].set_ylabel("V [DNs]")
+                ax[2].set_xlabel(xlabel)
+                ax[2].tick_params(direction="in")
+            elif stokes == "IQ":
+                fig, ax = plt.subplots(nrows=1, ncols=2)
+
+                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].set_ylabel("I [DNs]")
+                ax[0].set_xlabel(xlabel)
+                ax[0].tick_params(direction="in")
+
+                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].set_ylabel("Q [DNs]")
+                ax[1].set_xlabel(xlabel)
+                ax[1].tick_params(direction="in")
+            elif stokes == "IU":
+                fig, ax = plt.subplots(nrows=1, ncols=2)
+
+                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].set_ylabel("I [DNs]")
+                ax[0].set_xlabel(xlabel)
+                ax[0].tick_params(direction="in")
+
+                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].set_ylabel("U [DNs]")
+                ax[1].set_xlabel(xlabel)
+                ax[1].tick_params(direction="in")
+            elif stokes == "IV":
+                fig, ax = plt.subplots(nrows=1, ncols=2)
+
+                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].set_ylabel("I [DNs]")
+                ax[0].set_xlabel(xlabel)
+                ax[0].tick_params(direction="in")
+
+                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].set_ylabel("V [DNs]")
+                ax[1].set_xlabel(xlabel)
+                ax[1].tick_params(direction="in")
+            elif stokes == "QU":
+                fig, ax = plt.subplots(nrows=1, ncols=2)
+
+                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].set_ylabel("Q [DNs]")
+                ax[0].set_xlabel(xlabel)
+                ax[0].tick_params(direction="in")
+
+                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].set_ylabel("U [DNs]")
+                ax[1].set_xlabel(xlabel)
+                ax[1].tick_params(direction="in")
+            elif stokes == "QV":
+                fig, ax = plt.subplots(nrows=1, ncols=2)
+
+                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].set_ylabel("Q [DNs]")
+                ax[0].set_xlabel(xlabel)
+                ax[0].tick_params(direction="in")
+
+                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].set_ylabel("V [DNs]")
+                ax[1].set_xlabel(xlabel)
+                ax[1].tick_params(direction="in")
+            elif stokes == "UV":
+                fig, ax = plt.subplots(nrows=1, ncols=2)
+
+                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].set_ylabel("U [DNs]")
+                ax[0].set_xlabel(xlabel)
+                ax[0].tick_params(direction="in")
+
+                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].set_ylabel("V [DNs]")
+                ax[1].set_xlabel(xlabel)
+                ax[1].tick_params(direction="in")
