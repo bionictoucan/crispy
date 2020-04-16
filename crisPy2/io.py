@@ -1,6 +1,8 @@
 import numpy as np
 import os, yaml
 from astropy.wcs import WCS
+from scipy.io import readsav
+from tqdm import tqdm
 
 def memmmap_crisp_cube(path):
     """
@@ -144,3 +146,64 @@ def hdf5_header_to_wcs(hdf5_header, nonu=False):
         wcs_dict["CDELT2"] = hdf5_header["pixel_scale"]
 
     return WCS(wcs_dict)
+
+def la_palma_cube_to_hdf5(cube_path, tseries_path, spectfile, date_obs, telescope, instrument, pixel_scale, cadence, element, pointing, mu=None, start_idx=0, save_dir="./"):
+    """
+    This is a function to save a La Palma legacy cube as hdf5 files.
+    """
+
+    header = {}
+    header["date-obs"] = date_obs
+    header["telescope"] = telescope
+    header["instrument"] = instrument
+    header["pixel_scale"] = pixel_scale
+    header["cadence"] = cadence
+    header["element"] = element
+    if mu is not None:
+        header["mu"] = mu
+
+    mem_cube = memmmap_crisp_cube(cube_path)
+    times = readsav(tseries_path)["time"]
+
+    if "wb" not in cube_path and mem_cube.ndim == 5:
+        #this means there is Stokes
+        header["ctype"] = ("STOKES", "WAVE", "HPLT-TAN", "HPLN-TAN")
+        header["cunit"] = ("Angstrom", "arcsec", "arcsec")
+        header["spect_pos"] = readsav(spectfile)["spect_pos"]
+    elif "wb" not in cube_path and mem_cube.ndim == 4:
+        header["ctype"] = ("WAVE", "HPLT-TAN", "HPLN-TAN")
+        header["cunit"] = ("Angstrom", "arcsec", "arcsec")
+        header["spect_pos"] = readsav(spectfile)["spect_pos"]
+    else:
+        header["ctype"] = ("HPLT-TAN", "HPLN-TAN")
+        header["cunit"] = ("arcsec", "arcsec")
+
+    for jj, frame in enumerate(tqdm(mem_cube)):
+        header["time-obs"] = times[jj].deconde("utf-8")
+        if "wb" not in cube_path and frame.ndim == 4:
+            header["crpix"] = (1, np.median(np.arange(frame.shape[-3])), np.median(np.arange(frame.shape[-2])), np.median(np.arange(frame.shape[-1])))
+            header["crval"] = (1, np.median(header["spect_pos"]), poitning[-2], pointing[-1])
+            f = h5py.File(save_dir+str(start_idx).zfill(5)+".h5", "a")
+            f["data"] = frame
+            f.create_dataset("header", (1,), dtype=h5py.special_dtype(vlen=str))
+            f["header"][0] = yaml.dump(header)
+            f.close()
+            start_idx += 1
+        elif "wb" not in cube_path and frame.ndim == 3:
+            header["crpix"] = (np.median(np.arange(frame.shape[-3])), np.median(np.arange(frame.shape[-2])), np.median(np.arange(frame.shape[-1])))
+            header["crval"] = (np.median(header["spect_pos"]), poitning[-2], pointing[-1])
+            f = h5py.File(save_dir+str(start_idx).zfill(5)+".h5", "a")
+            f["data"] = frame
+            f.create_dataset("header", (1,), dtype=h5py.special_dtype(vlen=str))
+            f["header"][0] = yaml.dump(header)
+            f.close()
+            start_idx += 1
+        else:
+            header["crpix"] = (np.median(np.arange(frame.shape[-2])), np.median(np.arange(frame.shape[-1])))
+            header["crval"] = (poitning[-2], pointing[-1])
+            f = h5py.File(save_dir+str(start_idx).zfill(5)+".h5", "a")
+            f["data"] = frame
+            f.create_dataset("header", (1,), dtype=h5py.special_dtype(vlen=str))
+            f["header"][0] = yaml.dump(header)
+            f.close()
+            start_idx += 1
