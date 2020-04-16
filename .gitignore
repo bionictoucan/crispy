@@ -10,3 +10,4 @@
 *.png
 *.pdf
 /docs/_templates
+.DS_Store
