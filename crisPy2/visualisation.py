@@ -5,7 +5,7 @@ import h5py, yaml, html
 import matplotlib.patches as patches
 from matplotlib.colors import SymLogNorm
 import astropy.units as u
-from .crisp import CRISP, CRISPSequence, CRISPWidebandSequence
+from .crisp import CRISP, CRISPSequence, CRISPWideband, CRISPWidebandSequence
 from .inversions import Inversion
 from matplotlib import ticker
 import matplotlib.patheffects as PathEffects
@@ -245,7 +245,7 @@ class WidebandViewer:
         elif type(files) == list and type(files[0]) == str:
             files = [{"file" : f} for f in files]
             self.cube = CRISPWidebandSequence(files)
-        elif type(files) == list and type(files[0]) == CRISPWidebandSequence:
+        elif type(files) == list and type(files[0]) == CRISPWideband:
             self.cube = files
         if type(self.cube) is not list:
             self.time = [f.file.header.get("DATE-AVG")[-12:] for f in self.cube.list]

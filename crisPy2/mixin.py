@@ -18,6 +18,7 @@ class CRISPSlicingMixin(NDSlicingMixin):
         kwargs["mask"] = self._slice_mask(item)
         kwargs["wcs"] = self._slice_wcs(item)
         kwargs["filename"]["header"] = self.file.header
+        kwargs["nonu"] = self.nonu
 
         return kwargs
 

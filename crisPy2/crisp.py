@@ -1,25 +1,34 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os, html
+import os, html, yaml h5py
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
 from specutils.utils.wcs_utils import vac_to_air
 from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
 from .utils import ObjDict
+from .io import hdf5_header_to_wcs
 
 class CRISP(CRISPSlicingMixin):
-    def __init__(self, filename, wcs=None, uncertainty=None, mask=None):
-        if type(filename) == str:
+    def __init__(self, filename, wcs=None, uncertainty=None, mask=None, nonu=False):
+        if type(filename) == str and ".fits" in filename:
             self.file = fits.open(filename)[0]
+        elif type(filename) == str and ".h5" or ".hdf5" in filename:
+            f = h5py.File(filename, mode="r")
+            self.file = ObjDict({})
+            self.file["data"] = f["data"]
+            self.file["header"] = yaml.load(f["header"][0], Loader=yaml.Loader)
         elif type(filename) == ObjDict:
             self.file = filename
         else:
             raise NotImplementedError("m8 y?")
-        if wcs is None:
+        if wcs is None and ".fits" in filename:
             self.wcs = WCS(self.file.header)
+        elif wcs is None and ".h5" or ".hdf5" in filename:
+            self.wcs = hdf5_header_to_wcs(self.file.header, nonu=nonu)
         else:
             self.wcs = wcs
+        self.nonu = nonu
         self.uncertainty = uncertainty
         self.mask = mask
         self.aa = html.unescape("&#8491;")
@@ -28,14 +37,24 @@ class CRISP(CRISPSlicingMixin):
         self.D = html.unescape("&Delta;")
 
     def __str__(self):
-        time = self.file.header.get("DATE-AVG")[-12:]
-        date = self.file.header.get("DATE-AVG")[:-13]
-        cl = str(np.round(self.file.header.get("TWAVE1"), decimals=2))
-        wwidth = self.file.header.get("WWIDTH1")
-        shape = str([self.file.header.get(f"NAXIS{j+1}") for j in reversed(range(self.file.data.ndim))])
-        el = self.file.header.get("WDESC1")
-        pointing_x = str(self.file.header.get("CRVAL1"))
-        pointing_y = str(self.file.header.get("CRVAL2"))
+        if type(self.file.header) == astropy.io.header.Header:
+            time = self.file.header.get("DATE-AVG")[-12:]
+            date = self.file.header.get("DATE-AVG")[:-13]
+            cl = str(np.round(self.file.header.get("TWAVE1"), decimals=2))
+            wwidth = self.file.header.get("WWIDTH1")
+            shape = str([self.file.header.get(f"NAXIS{j+1}") for j in reversed(range(self.file.data.ndim))])
+            el = self.file.header.get("WDESC1")
+            pointing_x = str(self.file.header.get("CRVAL1"))
+            pointing_y = str(self.file.header.get("CRVAL2"))
+        elif type(self.file.header) == dict:
+            time = self.file.header["time-obs"]
+            date = self.file.header["date-obs"]
+            cl = str(self.file.header["crval"][-3])
+            wwidth = str(self.file.header["dimensions"][-3])
+            shape = str(self.file.header["dimensions"])
+            el = self.file.header["element"]
+            pointinig_x = str(self.file.header["crval"][-1])
+            pointing_y = str(self.file.header["crval"][-2])
 
         return f"""CRISP Observation
         ------------------
@@ -828,14 +847,24 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         self.list = [CRISP(**f) for f in files]
 
     def __str__(self):
-        time = self.list[0].file.header.get("DATE-AVG")[-12:]
-        date = self.list[0].file.header.get("DATE-AVG")[:-13]
-        cl = [str(np.round(f.file.header.get("TWAVE1"), decimals=2)) for f in self.list]
-        wwidth = [f.file.header.get("WWIDTH1") for f in self.list]
-        shape = [str([f.file.header.get(f"NAXIS{j+1}") for j in reversed(range(f.file.data.ndim))]) for f in self.list]
-        el = [f.file.header.get("WDESC1") for f in self.list]
-        pointing_x = str(self.list[0].file.header.get("CRVAL1"))
-        pointing_y = str(self.list[0].file.header.get("CRVAL2"))
+        if type(self.list[0].file.header) == astropy.io.header.Header:
+            time = self.list[0].file.header.get("DATE-AVG")[-12:]
+            date = self.list[0].file.header.get("DATE-AVG")[:-13]
+            cl = [str(np.round(f.file.header.get("TWAVE1"), decimals=2)) for f in self.list]
+            wwidth = [f.file.header.get("WWIDTH1") for f in self.list]
+            shape = [str([f.file.header.get(f"NAXIS{j+1}") for j in reversed(range(f.file.data.ndim))]) for f in self.list]
+            el = [f.file.header.get("WDESC1") for f in self.list]
+            pointing_x = str(self.list[0].file.header.get("CRVAL1"))
+            pointing_y = str(self.list[0].file.header.get("CRVAL2"))
+        elif type(self.list[0].file.header) == dict:
+            time = self.list[0].file.header["time-obs"]
+            date = self.list[0].file.header["date-obs"]
+            cl = [str(f.file.header["crval"][-3]) for f in self.list]
+            wwidth = [str(f.file.header["dimensions"][-3]) for f in self.list]
+            shape = [str(f.file.header["dimensions"]) for f in self.list]
+            el = [f.file.header["element"] for f in self.list]
+            pointing_x = str(self.list[0].file.header["crval"][-1])
+            pointing_y = str(self.list[0].file.header["crval"][-2])
 
         return f"""CRISP Observation
         ------------------
@@ -861,12 +890,20 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
 
 class CRISPWideband(CRISP):
     def __str__(self):
-        time = self.file.header.get("DATE-AVG")[-12:]
-        date = self.file.header.get("DATE-AVG")[:-13]
-        shape = str([self.file.header.get(f"NAXIS{j+1}") for j in reversed(range(self.file.data.ndim))])
-        el = self.file.header.get("WDESC1")
-        pointing_x = str(self.file.header.get("CRVAL1"))
-        pointing_y = str(self.file.header.get("CRVAL2"))
+        if type(self.file.header) == astropy.io.header.Header:
+            time = self.file.header.get("DATE-AVG")[-12:]
+            date = self.file.header.get("DATE-AVG")[:-13]
+            shape = str([self.file.header.get(f"NAXIS{j+1}") for j in reversed(range(self.file.data.ndim))])
+            el = self.file.header.get("WDESC1")
+            pointing_x = str(self.file.header.get("CRVAL1"))
+            pointing_y = str(self.file.header.get("CRVAL2"))
+        elif type(self.file.header) == dict:
+            time = self.file.header["time-obs"]
+            date = self.file.header["date-obs"]
+            shape = str(self.file.header["dimensions"])
+            el = self.file.header["element"]
+            pointing_x = str(self.file.header["crval"][-1])
+            pointing_y = str(self.file.header["crval"][-2])
 
         return f"""CRISP Wideband Context Image
         ------------------
@@ -902,12 +939,20 @@ class CRISPWidebandSequence(CRISPSequence):
         self.list = [CRISPWideband(**f) for f in files]
 
     def __str__(self):
-        time = self.list[0].file.header.get("DATE-AVG")[-12:]
-        date = self.list[0].file.header.get("DATE-AVG")[:-13]
-        shape = [str([f.file.header.get(f"NAXIS{j+1}") for j in reversed(range(f.file.data.ndim))]) for f in self.list]
-        el = [f.file.header.get("WDESC1") for f in self.list]
-        pointing_x = str(self.list[0].file.header.get("CRVAL1"))
-        pointing_y = str(self.list[0].file.header.get("CRVAL2"))
+        if type(self.list[0].file.header) == astropy.io.header.Header:
+            time = [f.file.header.get("DATE-AVG")[-12:] for f in self.list]
+            date = self.list[0].file.header.get("DATE-AVG")[:-13]
+            shape = [str([f.file.header.get(f"NAXIS{j+1}") for j in reversed(range(f.file.data.ndim))]) for f in self.list]
+            el = [f.file.header.get("WDESC1") for f in self.list]
+            pointing_x = str(self.list[0].file.header.get("CRVAL1"))
+            pointing_y = str(self.list[0].file.header.get("CRVAL2"))
+        elif type(self.list[0].file.header) == dict:
+            time = [f.file.header["time-obs"] for f in self.list]
+            data = self.list[0].file.header["date-obs"]
+            shape = [str(f.file.header["dimensions"]) for f in self.list]
+            el = self.list[0].header["element"] for f in self.list
+            pointing_x = str(self.list[0].file.header["crval"][-1])
+            pointing_y = str(self.list[0].file.header["crval"][-2])
 
         return f"""CRISP Wideband Context Image
         ------------------
@@ -921,20 +966,33 @@ class CRISPWidebandSequence(CRISPSequence):
         return self.__str__()
 
 class CRISPNonU(CRISP):
-    def __init__(self, filename, wcs=None, uncertainty=None, mask=None):
-        super().__init__(filename=filename, wcs=wcs, uncertainty=uncertainty, mask=mask)
+    def __init__(self, filename, wcs=None, uncertainty=None, mask=None, nonu=nonu):
+        super().__init__(filename=filename, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu)
 
-        self.wvls = fits.open(filename)[1].data #This assumes that the true wavelength points are stored in the first HDU of the FITS file as a numpy array
+        if ".fits" in filename:
+            self.wvls = fits.open(filename)[1].data #This assumes that the true wavelength points are stored in the first HDU of the FITS file as a numpy array
+        else:
+            self.wvls = self.file.header["spect_pos"]
 
     def __str__(self):
-        time = self.file.header.get("DATE-AVG")[-12:]
-        date = self.file.header.get("DATE-AVG")[:-13]
-        cl = str(np.round(self.file.header.get("TWAVE1"), decimals=2))
-        wwidth = self.file.header.get("WWIDTH1")
-        shape = str([self.file.header.get(f"NAXIS{j+1}") for j in reversed(range(self.file.data.ndim))])
-        el = self.file.header.get("WDESC1")
-        pointing_x = str(self.file.header.get("CRVAL1"))
-        pointing_y = str(self.file.header.get("CRVAL2"))
+        if type(self.file.header) == astropy.io.header.Header:
+            time = self.file.header.get("DATE-AVG")[-12:]
+            date = self.file.header.get("DATE-AVG")[:-13]
+            cl = str(np.round(self.file.header.get("TWAVE1"), decimals=2))
+            wwidth = self.file.header.get("WWIDTH1")
+            shape = str([self.file.header.get(f"NAXIS{j+1}") for j in reversed(range(self.file.data.ndim))])
+            el = self.file.header.get("WDESC1")
+            pointing_x = str(self.file.header.get("CRVAL1"))
+            pointing_y = str(self.file.header.get("CRVAL2"))
+        elif type(self.file.header) == dict:
+            time = self.file.header["time-obs"]
+            date = self.file.header["date-obs"]
+            cl = str(self.file.header["crval"][-3])
+            wwidth = self.file.header["dimensions"][-3]
+            shape = str(self.file.header["dimensions"])
+            el = self.file.header["element"]
+            pointing_x = str(self.file.header["crval"][-1])
+            pointing_y = str(self.file.header["crval"][-2])
         sampled_wvls = str(self.wvls)
 
         return f"""CRISP Observation
@@ -1208,14 +1266,24 @@ class CRISPNonUSequence(CRISPSequence):
         self.list = [CRISPNonU(**f) for f in files]
 
     def __str__(self):
-        time = self.list[0].file.header.get("DATE-AVG")[-12:]
-        date = self.list[0].file.header.get("DATE-AVG")[:-13]
-        cl = [str(np.round(f.file.header.get("TWAVE1"), decimals=2)) for f in self.list]
-        wwidth = [f.file.header.get("WWIDTH1") for f in self.list]
-        shape = [str([f.file.header.get(f"NAXIS{j+1}") for j in reversed(range(f.file.data.ndim))]) for f in self.list]
-        el = [f.file.header.get("WDESC1") for f in self.list]
-        pointing_x = str(self.list[0].file.header.get("CRVAL1"))
-        pointing_y = str(self.list[0].file.header.get("CRVAL2"))
+        if type(self.list[0].file.header) == astropy.io.header.Header:
+            time = self.list[0].file.header.get("DATE-AVG")[-12:]
+            date = self.list[0].file.header.get("DATE-AVG")[:-13]
+            cl = [str(np.round(f.file.header.get("TWAVE1"), decimals=2)) for f in self.list]
+            wwidth = [f.file.header.get("WWIDTH1") for f in self.list]
+            shape = [str([f.file.header.get(f"NAXIS{j+1}") for j in reversed(range(f.file.data.ndim))]) for f in self.list]
+            el = [f.file.header.get("WDESC1") for f in self.list]
+            pointing_x = str(self.list[0].file.header.get("CRVAL1"))
+            pointing_y = str(self.list[0].file.header.get("CRVAL2"))
+        elif type(self.list[0].file.header) == dict:
+            time = self.list[0].file.header["time-obs"]
+            date = self.list[0].file.header["date-obs"]
+            cl = [str(f.file.header["crval"][-3]) for f in self.list]
+            wwidth = [str(f.file.header["dimensions"][-3]) for f in self.list]
+            shape = [str(f.file.header["dimensions"]) for f in self.list]
+            el = [f.file.header["element"] for f in self.list]
+            pointing_x = str(self.list[0].file.header["crval"][-1])
+            pointing_y = str(self.list[0].file.header["crval"][-2])
         sampled_wvls = [f.wvls for f in self.list]
 
         return f"""CRISP Observation
