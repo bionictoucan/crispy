@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch.nn.functional as F
 
 class ConvBlock(nn.Module):
     """
@@ -22,11 +23,14 @@ class ConvBlock(nn.Module):
         The type of normalisation layer to use. Default is "batch".
     activation : str, optional
         The activation function to use. Default is "relu" to use the Rectified Linear Unit (ReLU) activation function.
+    upsample : bool, optional
+        Whether or not to upsample the input to the layer. This is useful in decoder layers in autoencoders. Upsampling is done via a factor of 2 interpolation (it is only currently implemented assuming the size of the input is to be doubled, will be retconned to work for me if there is demand). Default is False.
     """
 
-    def __init__(self, in_channels, out_channels, kernel=3, stride=1, pad="reflect", bias=False, normal="batch", activation="relu", **kwargs):
+    def __init__(self, in_channels, out_channels, kernel=3, stride=1, pad="reflect", bias=False, normal="batch", activation="relu", upsample=False, **kwargs):
         super(ConvBlock, self).__init__()
 
+        self.upsample = upsample
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel, stride=stride, bias=bias, padding=(kernel-1)//2, padding_mode=pad, **kwargs)
         if normal = "batch":
             self.norm = nn.BatchNorm2d(out_channels)
@@ -44,6 +48,8 @@ class ConvBlock(nn.Module):
             nn.init.constant_(self.conv.bias, 0.01)
 
     def forward(self, inp):
+        if self.upsample:
+            inp = F.interpolate(inp, scale_factor=2)
         out = self.conv(inp)
         if self.norm is not None:
             out = self.norm(out)
@@ -73,11 +79,14 @@ class ResBlock(nn.Module):
         The type of normalisation layer to use. Default is "batch".
     activation : str, optional
         The activation function to use. Default is "relu" to use the Rectified Linear Unit (ReLU) activation function.
+    upsample : bool, optional
+        Whether or not to upsample the input to the layer. This is useful in decoder layers in autoencoders. Upsampling is done via a factor of 2 interpolation (it is only currently implemented assuming the size of the input is to be doubled, will be retconned to work for me if there is demand). Default is False.
     """
 
-    def __init__(self, in_channels, out_channels, kernel=3, stride=1, pad="reflect", bias=False, normal="batch", activation="relu"):
+    def __init__(self, in_channels, out_channels, kernel=3, stride=1, pad="reflect", bias=False, normal="batch", activation="relu", upsample=False):
         super(ResBlock, self).__init__()
 
+        self.upsample = upsample
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=kernel, stride=stride, bias=bias, padding=(kernel-1)//2, padding_mode=pad)
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=kernel, stride=1, bias=bias, padding=(kernel-1)//2, padding_mode=pad)
         if normal == "batch":
@@ -100,13 +109,17 @@ class ResBlock(nn.Module):
             nn.init.constant_(self.conv1.bias, 0.01)
             nn.init.constant_(self.conv2.bias, 0.01)
 
-        if in_channels != out_channels:
+        if in_channels < out_channels:
             self.downsample = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False)
         else:
             self.downsample = None
 
     def forward(self, inp):
         identity = inp.clone()
+
+        if self.upsample:
+            identity = F.interpolate(identity, scale_factor=2)
+            inp = F.interpolate(inp, scale_factor=2)
 
         out = self.conv1(inp)
         if self.norm1 is not None:
