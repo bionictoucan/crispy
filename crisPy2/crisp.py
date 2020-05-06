@@ -966,7 +966,7 @@ class CRISPWidebandSequence(CRISPSequence):
         return self.__str__()
 
 class CRISPNonU(CRISP):
-    def __init__(self, filename, wcs=None, uncertainty=None, mask=None, nonu=nonu):
+    def __init__(self, filename, wcs=None, uncertainty=None, mask=None, nonu=True):
         super().__init__(filename=filename, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu)
 
         if ".fits" in filename:
