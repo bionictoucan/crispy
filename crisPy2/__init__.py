@@ -1,3 +1,9 @@
 from .crisp import *
 from .utils import *
-__version__ = "0.0.70"
+from .inversions import *
+from .io import *
+from .mixin import *
+from .neural_network import *
+from .spectral import *
+from .visualisation import *
+__version__ = "0.1.0"
