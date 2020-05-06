@@ -424,7 +424,7 @@ class WidebandViewer:
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="I [DNs]")
 
     def _img_plot2(self, t1, t2):
-        if self.ax1.images = []:
+        if self.ax1.images == []:
             pass
         elif self.ax1.images[-1].colorbar is not None:
             self.ax1.images[-1].colorbar.remove()

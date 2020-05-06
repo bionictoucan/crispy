@@ -32,7 +32,7 @@ class ConvBlock(nn.Module):
 
         self.upsample = upsample
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel, stride=stride, bias=bias, padding=(kernel-1)//2, padding_mode=pad, **kwargs)
-        if normal = "batch":
+        if normal == "batch":
             self.norm = nn.BatchNorm2d(out_channels)
         elif normal == "instance":
             self.norm = nn.InstanceNorm2d(out_channels)

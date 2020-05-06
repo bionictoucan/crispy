@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os, html, yaml h5py
+import os, html, yaml, h5py
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
