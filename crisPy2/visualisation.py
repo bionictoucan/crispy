@@ -499,7 +499,7 @@ class AtmosViewer:
     def _on_click(self, event):
         if self.fig.canvas.manager.toolbar.mode is not "":
             return
-        centre_coord = [int(event.ydata), int(event.xdata)]
+        centre_coord = int(event.ydata), int(event.xdata)
         self.px_coords.append(centre_coord)
         circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
         circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
@@ -518,13 +518,13 @@ class AtmosViewer:
         txt_2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
         txt_3.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
         if self.eb:
-            self.ax4.errorbar(self.z, self.ne[*centre_coord], yerr=self.err[*centre_coord,0], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax5.errorbar(self.z, self.temp[*centre_coord], yerr=self.err[*centre_coord,1], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax6.errorbar(self.z, self.vel[*centre_coord], yerr=self.err[*centre_coord,2], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax4.errorbar(self.z, self.ne[centre_coord[0], centre_coord[1]], yerr=self.err[centre_coord[0],centre_coord[1],0], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax5.errorbar(self.z, self.temp[centre_coord[0], centre_coord[1]], yerr=self.err[centre_coord[0],centre_coord[1],1], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax6.errorbar(self.z, self.vel[centre_coord[0],centre_coord[1]], yerr=self.err[centre_coord[0],centre_coord[1],2], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
         else:
-            self.ax4.plot(self.z, self.ne[*centre_coord], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax5.plot(self.z, self.temp[*centre_coord], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax6.plot(self.z, self.vel[*centre_coord], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax4.plot(self.z, self.ne[centre_coord[0],centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax5.plot(self.z, self.temp[centre_coord[0],centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
+            self.ax6.plot(self.z, self.vel[centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
         self.ax4.legend()
         self.ax5.legend()
         self.ax6.legend()
