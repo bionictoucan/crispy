@@ -499,7 +499,7 @@ class AtmosViewer:
     def _on_click(self, event):
         if self.fig.canvas.manager.toolbar.mode is not "":
             return
-        centre_coord = int(event.ydata), int(event.xdata)
+        centre_coord = [int(event.ydata), int(event.xdata)]
         self.px_coords.append(centre_coord)
         circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
         circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
