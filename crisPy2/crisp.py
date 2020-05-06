@@ -950,7 +950,7 @@ class CRISPWidebandSequence(CRISPSequence):
             time = [f.file.header["time-obs"] for f in self.list]
             data = self.list[0].file.header["date-obs"]
             shape = [str(f.file.header["dimensions"]) for f in self.list]
-            el = self.list[0].header["element"] for f in self.list
+            el = [self.list[0].header["element"] for f in self.list]
             pointing_x = str(self.list[0].file.header["crval"][-1])
             pointing_y = str(self.list[0].file.header["crval"][-2])
 
