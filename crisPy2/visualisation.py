@@ -440,7 +440,7 @@ class WidebandViewer:
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="I [DNs]")
 
 class AtmosViewer:
-    def __init__(self, filename, z=None, wcs=None, header=None):
+    def __init__(self, filename, z=None, wcs=None, header=None, eb=False):
         if type(filename) == str:
             assert z is not None
             assert wcs is not None
@@ -451,6 +451,7 @@ class AtmosViewer:
         self.coords = []
         self.px_coords = []
         self.colour_idx = 0
+        self.eb = eb
 
         self.fig = plt.figure(figsize=(8,10))
         self.gs = self.fig.add_gridspec(nrows=5, ncols=3)
