@@ -109,8 +109,10 @@ class ResBlock(nn.Module):
             nn.init.constant_(self.conv1.bias, 0.01)
             nn.init.constant_(self.conv2.bias, 0.01)
 
-        if in_channels < out_channels:
+        if in_channels != out_channels and not upsample:
             self.downsample = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False)
+        elif in_channels != out_channels and upsample:
+            self.downsample = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
         else:
             self.downsample = None
 
@@ -131,7 +133,7 @@ class ResBlock(nn.Module):
             out = self.norm2(out)
         
         if self.downsample is not None:
-            identity = self.downsample(inp.clone())
+            identity = self.downsample(identity)
 
         out = out + identity
         out = self.act(out)
