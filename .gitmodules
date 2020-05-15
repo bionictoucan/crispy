@@ -1,0 +1,6 @@
+[submodule "Shaun2"]
+	path = Shaun2
+	url = https://github.com/rhero12/Shaun2
+[submodule "Shaun"]
+	path = Shaun
+	url = https://github.com/rhero12/Shaun2
