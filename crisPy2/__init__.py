@@ -6,4 +6,5 @@ from .mixin import *
 from .neural_network import *
 from .spectral import *
 from .visualisation import *
-__version__ = "0.1.6"
+from . import Shaun
+__version__ = "0.1.7"
