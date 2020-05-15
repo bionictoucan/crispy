@@ -1,3 +1,3 @@
-[submodule "Shaun"]
-	path = Shaun
+[submodule "crisPy2/Shaun"]
+	path = crisPy2/Shaun
 	url = https://github.com/rhero12/Shaun2
