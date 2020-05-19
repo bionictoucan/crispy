@@ -49,8 +49,8 @@ def bar_lambda(intensity_vector, wavelengths):
        \\bar{\lambda} = \\frac{\int I(\lambda) ~\lambda ~d\lambda}{\int I (\lambda) ~ d\lambda}
     """
 
-    num = trapz(intensity_vector*wavelengths, wavelengths)
-    den = trapz(intensity_vector, wavelengths)
+    num = simps(intensity_vector*wavelengths, wavelengths)
+    den = simps(intensity_vector, wavelengths)
 
     return num / den
 
@@ -62,8 +62,8 @@ def variance(intensity_vector, wavelengths, bar_l):
        \sigma^{2} = \\frac{\int I (\lambda) ~ (\lambda - \\bar{\lambda})^{2} ~ d\lambda}{\int I (\lambda) ~ d\lambda}
     """
 
-    num = trapz(intensity_vector*(wavelengths-bar_l)**2, wavelengths)
-    den = trapz(intensity_vector, wavelengths)
+    num = simps(intensity_vector*(wavelengths-bar_l)**2, wavelengths)
+    den = simps(intensity_vector, wavelengths)
 
     return num / den
 
