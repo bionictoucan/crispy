@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.interpolate import interp1d
-from scipy.integrate import trapz
+from scipy.integrate import simps
 
 def integrated_intensity(intensity_vector, wavelengths, idx_range="all"):
     """
@@ -20,9 +20,9 @@ def integrated_intensity(intensity_vector, wavelengths, idx_range="all"):
     """
 
     if idx_range == "all":
-        return trapz(intensity_vector, wavelengths)
+        return simps(intensity_vector, wavelengths)
     else:
-        return trapz(integrated_intensity[idx_range], wavelengths[idx_range])
+        return simps(intensity_vector[idx_range], wavelengths[idx_range])
 
 def intensity_ratio(I_1, I_2):
     """
