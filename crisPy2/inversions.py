@@ -7,15 +7,15 @@ from .utils import ObjDict
 
 class Inversion(InversionSlicingMixin):
     def __init__(self, filename, wcs, z, header=None):
-        if type(filename) == "str":
-            f = h5py.File(filename, "r")
-            self.ne = f["ne"]
-            self.temp = f["temperature"]
-            self.vel = f["vel"]
-            self.err = f["mad"]
+        if type(filename) == str:
+            self.f = h5py.File(filename, "r")
+            self.ne = self.f["ne"]
+            self.temp = self.f["temperature"]
+            self.vel = self.f["vel"]
+            self.err = self.f["mad"]
             self.wcs = wcs
-            if type(z) == "str":
-                z = h5py.File(z, "r").get("z")
+            if type(z) == str:
+                self.z = h5py.File(z, "r").get("z")
             else:
                 self.z = z
             self.header = header
