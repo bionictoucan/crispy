@@ -54,3 +54,5 @@ class InversionSlicingMixin(NDSlicingMixin):
         kwargs["wcs"] = self._slice_wcs(item)
         kwargs["z"] = self.z
         kwargs["header"] = self.header
+
+        return kwargs
