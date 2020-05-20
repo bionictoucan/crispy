@@ -9,10 +9,10 @@ class Inversion(InversionSlicingMixin):
     def __init__(self, filename, wcs, z, header=None):
         if type(filename) == str:
             self.f = h5py.File(filename, "r")
-            self.ne = self.f["ne"]
-            self.temp = self.f["temperature"]
-            self.vel = self.f["vel"]
-            self.err = self.f["mad"]
+            self.ne = self.f["ne"][:,:,:]
+            self.temp = self.f["temperature"][:,:,:]
+            self.vel = self.f["vel"][:,:,:]
+            self.err = self.f["mad"][:,:,:,:]
             self.wcs = wcs
             if type(z) == str:
                 self.z = h5py.File(z, "r").get("z")
