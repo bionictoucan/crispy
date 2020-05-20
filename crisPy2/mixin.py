@@ -52,5 +52,5 @@ class InversionSlicingMixin(NDSlicingMixin):
         kwargs["filename"]["vel"] = self.vel[item]
         kwargs["filename"]["mad"] = self.err[item]
         kwargs["wcs"] = self._slice_wcs(item)
-        kwargs["z"] = z
-        kwargs["header"] = header
+        kwargs["z"] = self.z
+        kwargs["header"] = self.header
