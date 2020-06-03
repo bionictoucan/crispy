@@ -5,7 +5,7 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
 import astropy.units as u
-import astropy
+from astropy.io.fits.header import Header
 from specutils.utils.wcs_utils import vac_to_air
 from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
 from .utils import ObjDict
@@ -37,9 +37,10 @@ class CRISP(CRISPSlicingMixin):
         self.a = html.unescape("&alpha;")
         self.l = html.unescape("&lambda;")
         self.D = html.unescape("&Delta;")
+        self.shape = self.file.data.shape
 
     def __str__(self):
-        if type(self.file.header) == astropy.io.header.Header:
+        if type(self.file.header) == Header:
             time = self.file.header.get("DATE-AVG")[-12:]
             date = self.file.header.get("DATE-AVG")[:-13]
             cl = str(np.round(self.file.header.get("TWAVE1"), decimals=2))
@@ -849,7 +850,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         self.list = [CRISP(**f) for f in files]
 
     def __str__(self):
-        if type(self.list[0].file.header) == astropy.io.header.Header:
+        if type(self.list[0].file.header) == Header:
             time = self.list[0].file.header.get("DATE-AVG")[-12:]
             date = self.list[0].file.header.get("DATE-AVG")[:-13]
             cl = [str(np.round(f.file.header.get("TWAVE1"), decimals=2)) for f in self.list]
@@ -892,7 +893,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
 
 class CRISPWideband(CRISP):
     def __str__(self):
-        if type(self.file.header) == astropy.io.header.Header:
+        if type(self.file.header) == Header:
             time = self.file.header.get("DATE-AVG")[-12:]
             date = self.file.header.get("DATE-AVG")[:-13]
             shape = str([self.file.header.get(f"NAXIS{j+1}") for j in reversed(range(self.file.data.ndim))])
@@ -941,7 +942,7 @@ class CRISPWidebandSequence(CRISPSequence):
         self.list = [CRISPWideband(**f) for f in files]
 
     def __str__(self):
-        if type(self.list[0].file.header) == astropy.io.header.Header:
+        if type(self.list[0].file.header) == Header:
             time = [f.file.header.get("DATE-AVG")[-12:] for f in self.list]
             date = self.list[0].file.header.get("DATE-AVG")[:-13]
             shape = [str([f.file.header.get(f"NAXIS{j+1}") for j in reversed(range(f.file.data.ndim))]) for f in self.list]
@@ -977,7 +978,7 @@ class CRISPNonU(CRISP):
             self.wvls = self.file.header["spect_pos"]
 
     def __str__(self):
-        if type(self.file.header) == astropy.io.header.Header:
+        if type(self.file.header) == Header:
             time = self.file.header.get("DATE-AVG")[-12:]
             date = self.file.header.get("DATE-AVG")[:-13]
             cl = str(np.round(self.file.header.get("TWAVE1"), decimals=2))
@@ -1268,7 +1269,7 @@ class CRISPNonUSequence(CRISPSequence):
         self.list = [CRISPNonU(**f) for f in files]
 
     def __str__(self):
-        if type(self.list[0].file.header) == astropy.io.header.Header:
+        if type(self.list[0].file.header) == Header:
             time = self.list[0].file.header.get("DATE-AVG")[-12:]
             date = self.list[0].file.header.get("DATE-AVG")[:-13]
             cl = [str(np.round(f.file.header.get("TWAVE1"), decimals=2)) for f in self.list]

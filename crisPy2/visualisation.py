@@ -23,7 +23,7 @@ class SpectralViewer:
             self.wvls = self.cube.wcs.all_pix2world([0.], [0.], np.arange(self.cube.file.data.shape[0]),0)[2] << u.m
             self.wvls <<= u.Angstrom
         elif type(data) == list:
-            self.cube = CRISPSequence(list=data)
+            self.cube = CRISPSequence(files=data)
             self.wvls1 = self.cube.list[0].wcs.all_pix2world([0.], [0.], np.arange(self.cube.list[0].file.data.shape[0]),0)[2] << u.m
             self.wvls1 <<= u.Angstrom
             self.wvls2 = self.cube.list[1].wcs.all_pix2world([0.], [0.], np.arange(self.cube.list[1].file.data.shape[0]),0)[2] << u.m
@@ -84,12 +84,12 @@ class SpectralViewer:
 
             ll1 = widgets.SelectionSlider(
                 options=[np.round(l - np.median(self.wvls1), decimals=2).value for l in self.wvls1],
-                description=self.cube.list[0].file.header["WDESC1"]+f"{self.aa} {self.D} {self.l} [{self.aa}]",
+                description=fr"{self.aa} {self.D} {self.l}$_{1}$ [{self.aa}]",
                 style={"description_width" : "initial"}
             )
             ll2 = widgets.SelectionSlider(
                 options=[np.round(l - np.median(self.wvls2), decimals=2).value for l in self.wvls2],
-                description=self.cube.list[1].file.header["WDESC1"]+f"{self.aa} {self.D} {self.l} [{self.aa}]",
+                description=fr"{self.aa} {self.D} {self.l}$_{2}$ [{self.aa}]",
                 style={"description_width" : "initial"}
             )
 
@@ -211,7 +211,11 @@ class SpectralViewer:
         ll_idx = int(np.where(np.round(self.wvls, decimals=2).value == np.round(np.median(self.wvls).value + ll, decimals=2))[0])
 
         im1 = self.ax1.imshow(self.cube.file.data[ll_idx], cmap="Greys_r")
-        self.ax1.set_title(self.cube.file.header["WDESC1"]+f"{self.aa} {self.D} {self.l} = {ll} {self.aa}")
+        try:
+            el = self.cube.file.header["WDESC1"]
+        except KeyError:
+            el = self.cube.file.header["element"]
+        self.ax1.set_title(fr"{el} {self.aa} {self.D} {self.l}$_{1}$ = {ll} {self.aa}")
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
 
     def _img_plot2(self, ll1, ll2):
@@ -230,8 +234,14 @@ class SpectralViewer:
 
         im1 = self.ax1.imshow(self.cube.list[0].file.data[ll1_idx], cmap="Greys_r")
         im2 = self.ax2.imshow(self.cube.list[1].file.data[ll2_idx], cmap="Greys_r")
-        self.ax1.set_title(self.cube.list[0].file.header["WDESC1"]+f"{self.aa} {self.D} {self.l} = {ll1} {self.aa}")
-        self.ax2.set_title(self.cube.list[1].file.header["WDESC1"]+f"{self.aa} {self.D} {self.l} = {ll2} {self.aa}")
+        try:
+            el1 = self.cube.list[0].file.header["WDESC1"]
+            el2 = self.cube.list[1].file.header["WDESC1"]
+        except KeyError:
+            el1 = self.cube.list[0].file.header["element"]
+            el2 = self.cube.list[1].file.header["element"]
+        self.ax1.set_title(fr"{el1} {self.aa} {self.D} {self.l}$_{1}$ = {ll1} {self.aa}")
+        self.ax2.set_title(fr"{el2} {self.aa} {self.D} {self.l}$_{2}$ = {ll2} {self.aa}")
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="Intensity [DNs]")
 
@@ -248,7 +258,10 @@ class WidebandViewer:
         elif type(files) == list and type(files[0]) == CRISPWideband:
             self.cube = files
         if type(self.cube) is not list:
-            self.time = [f.file.header.get("DATE-AVG")[-12:] for f in self.cube.list]
+            try:
+                self.time = [f.file.header.get("DATE-AVG")[-12:] for f in self.cube.list]
+            except KeyError:
+                self.time = [f.file.header["time-obs"] for f in self.cube.list]
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(1, 2, 1, projection=self.cube.list[0].wcs)
             self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
@@ -265,8 +278,12 @@ class WidebandViewer:
 
             widgets.interact(self._img_plot1, t = t)
         else:
-            self.time1 = [f.file.header.get("DATE-AVG")[-12:] for f in self.cube[0].list]
-            self.time2 = [f.file.header.get("DATE-AVG")[-12:] for f in self.cube[1].list]
+            try:
+                self.time1 = [f.file.header.get("DATE-AVG")[-12:] for f in self.cube[0].list]
+                self.time2 = [f.file.header.get("DATE-AVG")[-12:] for f in self.cube[1].list]
+            except KeyError:
+                self.time1 = [f.file.header["time-obs"] for f in self.cube[0].list]
+                self.time2 = [f.file.header["time-obs"] for f in self.cube[1].list]
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(2, 2, 1, projection=self.cube[0].list[0].wcs)
             self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
