@@ -8,7 +8,7 @@ import astropy.units as u
 from astropy.io.fits.header import Header
 from specutils.utils.wcs_utils import vac_to_air
 from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
-from .utils import ObjDict
+from .utils import ObjDict, pt_bright
 from .io import hdf5_header_to_wcs
 
 class CRISP(CRISPSlicingMixin):
@@ -94,7 +94,7 @@ class CRISP(CRISPSlicingMixin):
 
         fig = plt.figure()
         ax1 = fig.gca()
-        ax1.plot(wavelength, self.file.data)
+        ax1.plot(wavelength, self.file.data, c=pt_bright["blue"])
         ax1.set_ylabel("Intensity [DNs]")
         ax1.set_xlabel(xlabel)
         ax1.set_title(self.file.header.get("WDESC1"))
@@ -122,7 +122,7 @@ class CRISP(CRISPSlicingMixin):
 
             fig = plt.figure()
             ax1 = fig.gca()
-            ax1.plot(wavelength, self.file.data)
+            ax1.plot(wavelength, self.file.data, c=pt_bright["blue"], marker="o")
             if stokes == "I":
                 ax1.set_ylabel("Intensity [DNs]")
                 ax1.set_xlabel(xlabel)
@@ -162,22 +162,22 @@ class CRISP(CRISPSlicingMixin):
 
             if stokes == "all":
                 fig, ax = plt.subplots(nrows=2, ncols=2)
-                ax[0,0].plot(wavelength, self.file.data[0])
+                ax[0,0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0,0].set_ylabel("I [DNs]")
                 ax[0,0].tick_params(labelbottom=False, direction="in")
 
-                ax[0,1].plot(wavelength, self.file.data[1])
+                ax[0,1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[0,1].set_ylabel("Q [DNs]")
                 ax[0,1].yaxis.set_label_position("right")
                 ax[0,1].yaxis.tick_right()
                 ax[0,1].tick_params(labelbottom=False, direction="in")
 
-                ax[1,0].plot(wavelength, self.file.data[2])
+                ax[1,0].plot(wavelength, self.file.data[2], c=pt_bright["blue"], marker="o")
                 ax[1,0].set_ylabel("U [DNs]")
                 ax[1,0].set_xlabel(xlabel)
                 ax[1,0].tick_params(direction="in")
 
-                ax[1,1].plot(wavelength, self.file.data[3])
+                ax[1,1].plot(wavelength, self.file.data[3], c=pt_bright["blue"], marker="o")
                 ax[1,1].set_ylabel("V [DNs]")
                 ax[1,1].set_xlabel(xlabel)
                 ax[1,1].yaxis.set_label_position("right")
@@ -186,140 +186,140 @@ class CRISP(CRISPSlicingMixin):
             elif stokes == "IQU":
                 fig, ax = plt.subplots(nrows=1, ncols=3)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("I [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("Q [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
 
-                ax[2].plot(wavelength, self.file.data[2])
+                ax[2].plot(wavelength, self.file.data[2], c=pt_bright["blue"], marker="o")
                 ax[2].set_ylabel("U [DNs]")
                 ax[2].set_xlabel(xlabel)
                 ax[2].tick_params(direction="in")
             elif stokes == "QUV":
                 fig, ax = plt.subplots(nrows=1, ncols=3)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("Q [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("U [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
 
-                ax[2].plot(wavelength, self.file.data[2])
+                ax[2].plot(wavelength, self.file.data[2], c=pt_bright["blue"], marker="o")
                 ax[2].set_ylabel("V [DNs]")
                 ax[2].set_xlabel(xlabel)
                 ax[2].tick_params(direction="in")
             elif stokes == "IQV":
                 fig, ax = plt.subplots(nrows=1, ncols=3)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("I [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("Q [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
 
-                ax[2].plot(wavelength, self.file.data[2])
+                ax[2].plot(wavelength, self.file.data[2], c=pt_bright["blue"], marker="o")
                 ax[2].set_ylabel("V [DNs]")
                 ax[2].set_xlabel(xlabel)
                 ax[2].tick_params(direction="in")
             elif stokes == "IUV":
                 fig, ax = plt.subplots(nrows=1, ncols=3)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("I [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("U [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
 
-                ax[2].plot(wavelength, self.file.data[2])
+                ax[2].plot(wavelength, self.file.data[2], c=pt_bright["blue"], marker="o")
                 ax[2].set_ylabel("V [DNs]")
                 ax[2].set_xlabel(xlabel)
                 ax[2].tick_params(direction="in")
             elif stokes == "IQ":
                 fig, ax = plt.subplots(nrows=1, ncols=2)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("I [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("Q [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
             elif stokes == "IU":
                 fig, ax = plt.subplots(nrows=1, ncols=2)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("I [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("U [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
             elif stokes == "IV":
                 fig, ax = plt.subplots(nrows=1, ncols=2)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("I [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("V [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
             elif stokes == "QU":
                 fig, ax = plt.subplots(nrows=1, ncols=2)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("Q [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("U [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
             elif stokes == "QV":
                 fig, ax = plt.subplots(nrows=1, ncols=2)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("Q [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("V [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
             elif stokes == "UV":
                 fig, ax = plt.subplots(nrows=1, ncols=2)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("U [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("V [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
@@ -1034,7 +1034,7 @@ class CRISPNonU(CRISP):
 
         fig = plt.figure()
         ax1 = fig.gca()
-        ax1.plot(wavelength, self.file.data)
+        ax1.plot(wavelength, self.file.data, c=pt_bright["blue"], marker="o")
         ax1.set_ylabel("Intensity [DNs]")
         ax1.set_xlabel(xlabel)
         ax1.set_title(self.file.header.get("WDESC1"))
@@ -1062,7 +1062,7 @@ class CRISPNonU(CRISP):
 
             fig = plt.figure()
             ax1 = fig.gca()
-            ax1.plot(wavelength, self.file.data)
+            ax1.plot(wavelength, self.file.d, c=pt_bright["blue"], marker="o"ata)
             if stokes == "I":
                 ax1.set_ylabel("Intensity [DNs]")
                 ax1.set_xlabel(xlabel)
@@ -1102,22 +1102,22 @@ class CRISPNonU(CRISP):
 
             if stokes == "all":
                 fig, ax = plt.subplots(nrows=2, ncols=2)
-                ax[0,0].plot(wavelength, self.file.data[0])
+                ax[0,0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0,0].set_ylabel("I [DNs]")
                 ax[0,0].tick_params(labelbottom=False, direction="in")
 
-                ax[0,1].plot(wavelength, self.file.data[1])
+                ax[0,1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[0,1].set_ylabel("Q [DNs]")
                 ax[0,1].yaxis.set_label_position("right")
                 ax[0,1].yaxis.tick_right()
                 ax[0,1].tick_params(labelbottom=False, direction="in")
 
-                ax[1,0].plot(wavelength, self.file.data[2])
+                ax[1,0].plot(wavelength, self.file.data[2], c=pt_bright["blue"], marker="o")
                 ax[1,0].set_ylabel("U [DNs]")
                 ax[1,0].set_xlabel(xlabel)
                 ax[1,0].tick_params(direction="in")
 
-                ax[1,1].plot(wavelength, self.file.data[3])
+                ax[1,1].plot(wavelength, self.file.data[3], c=pt_bright["blue"], marker="o")
                 ax[1,1].set_ylabel("V [DNs]")
                 ax[1,1].set_xlabel(xlabel)
                 ax[1,1].yaxis.set_label_position("right")
@@ -1126,140 +1126,140 @@ class CRISPNonU(CRISP):
             elif stokes == "IQU":
                 fig, ax = plt.subplots(nrows=1, ncols=3)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("I [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("Q [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
 
-                ax[2].plot(wavelength, self.file.data[2])
+                ax[2].plot(wavelength, self.file.data[2], c=pt_bright["blue"], marker="o")
                 ax[2].set_ylabel("U [DNs]")
                 ax[2].set_xlabel(xlabel)
                 ax[2].tick_params(direction="in")
             elif stokes == "QUV":
                 fig, ax = plt.subplots(nrows=1, ncols=3)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("Q [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("U [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
 
-                ax[2].plot(wavelength, self.file.data[2])
+                ax[2].plot(wavelength, self.file.data[2], c=pt_bright["blue"], marker="o")
                 ax[2].set_ylabel("V [DNs]")
                 ax[2].set_xlabel(xlabel)
                 ax[2].tick_params(direction="in")
             elif stokes == "IQV":
                 fig, ax = plt.subplots(nrows=1, ncols=3)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("I [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("Q [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
 
-                ax[2].plot(wavelength, self.file.data[2])
+                ax[2].plot(wavelength, self.file.data[2], c=pt_bright["blue"], marker="o")
                 ax[2].set_ylabel("V [DNs]")
                 ax[2].set_xlabel(xlabel)
                 ax[2].tick_params(direction="in")
             elif stokes == "IUV":
                 fig, ax = plt.subplots(nrows=1, ncols=3)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("I [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("U [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
 
-                ax[2].plot(wavelength, self.file.data[2])
+                ax[2].plot(wavelength, self.file.data[2], c=pt_bright["blue"], marker="o")
                 ax[2].set_ylabel("V [DNs]")
                 ax[2].set_xlabel(xlabel)
                 ax[2].tick_params(direction="in")
             elif stokes == "IQ":
                 fig, ax = plt.subplots(nrows=1, ncols=2)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("I [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("Q [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
             elif stokes == "IU":
                 fig, ax = plt.subplots(nrows=1, ncols=2)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("I [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("U [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
             elif stokes == "IV":
                 fig, ax = plt.subplots(nrows=1, ncols=2)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("I [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("V [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
             elif stokes == "QU":
                 fig, ax = plt.subplots(nrows=1, ncols=2)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("Q [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("U [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
             elif stokes == "QV":
                 fig, ax = plt.subplots(nrows=1, ncols=2)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("Q [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("V [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
             elif stokes == "UV":
                 fig, ax = plt.subplots(nrows=1, ncols=2)
 
-                ax[0].plot(wavelength, self.file.data[0])
+                ax[0].plot(wavelength, self.file.data[0], c=pt_bright["blue"], marker="o")
                 ax[0].set_ylabel("U [DNs]")
                 ax[0].set_xlabel(xlabel)
                 ax[0].tick_params(direction="in")
 
-                ax[1].plot(wavelength, self.file.data[1])
+                ax[1].plot(wavelength, self.file.data[1], c=pt_bright["blue"], marker="o")
                 ax[1].set_ylabel("V [DNs]")
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")

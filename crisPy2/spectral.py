@@ -1,6 +1,11 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from scipy.integrate import simps
+from scipy.fft import fft2, fftfreq
+from scipy.stats import binned_statistic
+import html
+from .utils import pt_bright
 
 def integrated_intensity(intensity_vector, wavelengths, idx_range="all"):
     """
@@ -110,3 +115,79 @@ def interp_fine(spec_line):
     y_new = interp1d(x, y)(x_new)
 
     return np.array([x_new, y_new])
+
+def power_spectrum(image, plot=True):
+    """
+    This function calculates the azimuthally-average power spectrum for an image.
+
+    Parameters
+    ----------
+    image : numpy.ndarray
+        The image to calculate the power spectrum for.
+    plot : bool, optional
+        Whether or not to plot the the power spectrum. Default is True.
+    """
+
+    nu = html.unescape("&nu;")
+    h, w = image.shape
+
+    #First calculate the Fourier transform of the image which represents the distribution of the image in frequency space
+    ft = fft2(image)
+
+    #Then the Fourier amplitudes for each pixel can be calculated
+    fa = np.abs(ft)**2
+
+    if h == w:
+        nu_freq = fftfreq(h) * h
+        nu_freq2D = np.meshgrid(nu_freq,nu_freq)
+
+        nu_norm = np.sqrt(nu_freq2D[0]**2 + nu_freq2D[1]**2)
+
+        nu_norm = nu_norm.flatten()
+        fa = fa.flatten()
+
+        nu_bins = np.arange(0.5, h//2, 1) #this is the limits of the spatial frequency bins
+        nu_vals = 0.5 * (nu_bins[1:] + nu_bins[:-1]) #this calculates the midpoints of each spatial frequency bin
+
+        Abins, _, _ = binned_statistic(nu_norm, fa, statistic="mean", bins=nu_bins)
+
+        Abins *= 4*np.pi/3 * (nu_bins[1:]**3-nu_bins[:-1]**3) #the power in each bin is the average power from all cases of the spatial frequency multiplied by the volume of the bin (which in our case is just 1?)
+
+        if plot:
+            plt.figure()
+            plt.loglog(nu_vals, Abins, c=pt_bright["blue"])
+            plt.ylabel(f"P({nu})")
+            plt.xlabel(fr"{nu} [px$^{-1}$]")
+            plt.title("Power Spectrum of the Image")
+            plt.show()
+
+        return nu_vals, Abins
+    else:
+        nu_freqx = fftfreq(w) * w
+        nu_freqy = fftfreq(h) * h
+        nu_freq2D = np.meshgrid(nu_freqx,nu_freqy)
+
+        nu_norm = np.sqrt(nu_freq2D[0]**2 + nu_freq2D[1]**2)
+
+        nu_norm = nu_norm.flatten()
+        fa = fa.flatten()
+
+        if w < h:
+            nu_bins = np.arange(0.5, w//2, 1)
+        else:
+            nu_bins = np.arange(0.5, h//2, 1)
+        nu_vals = 0.5 * (nu_bins[1:] + nu_bins[:-1])
+
+        Abins, _, _ = binned_statistic(nu_norm, fa, statistic="mean", bins=nu_bins)
+
+        Abins *= 4*np.pi/3 * (nu_bins[1:]**3-nu_bins[:-1]**3)
+
+        if plot:
+            plt.figure()
+            plt.loglog(nu_vals, Abins, c=pt_bright["blue"])
+            plt.ylabel(f"P({nu})")
+            plt.xlabel(fr"{nu} [px$^{-1}$]")
+            plt.title("Power Spectrum of the Image")
+            plt.show()
+
+        return nu_vals, Abins

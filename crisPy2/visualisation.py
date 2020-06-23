@@ -10,6 +10,7 @@ from .inversions import Inversion
 from matplotlib import ticker
 import matplotlib.patheffects as PathEffects
 from matplotlib.lines import Line2D
+from .utils import pt_bright_cycler
 
 class SpectralViewer:
     def __init__(self, data, wcs=None, uncertainty=None, mask=None):
@@ -117,11 +118,11 @@ class SpectralViewer:
         if type(self.cube) == CRISP:
             centre_coord = int(event.ydata), int(event.xdata)
             self.px_coords.append(centre_coord)
-            circ = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+            circ = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
             self.ax1.add_patch(circ)
             font = {
                 "size" : 12,
-                "color" : f"C{self.colour_idx}"
+                "color" : pt_bright_cycler[self.colour_idx]
             }
             txt = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
             txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
@@ -134,13 +135,13 @@ class SpectralViewer:
         elif type(self.cube) == CRISPSequence:
             centre_coord = int(event.ydata), int(event.xdata) #with WCS, the event data is returned in pixels so we don't need to do the conversion from real world but rather to real world later on
             self.px_coords.append(centre_coord)
-            circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
-            circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+            circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
+            circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
             self.ax1.add_patch(circ1)
             self.ax2.add_patch(circ2)
             font = {
                 "size" : 12,
-                "color" : f"C{self.colour_idx}"
+                "color" : pt_bright_cycler[self.colour_idx]
             }
             txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
             txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
@@ -340,11 +341,11 @@ class WidebandViewer:
         if type(self.cube) == CRISPWidebandSequence:
             centre_coord = int(event.ydata), int(event.xdata)
             self.px_coords.append(centre_coord)
-            circ = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+            circ = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
             self.ax1.add_patch(circ)
             font = {
                 "size" : 12,
-                "color" : f"C{self.colour_idx}"
+                "color" : pt_bright_cycler[self.colour_idx]
             }
             txt = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
             txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
@@ -358,13 +359,13 @@ class WidebandViewer:
         elif type(self.cube) == list:
             centre_coord = int(event.ydata), int(event.xdata)
             self.px_coords.append(centre_coord)
-            circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
-            circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+            circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
+            circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
             self.ax1.add_patch(circ1)
             self.ax2.add_patch(circ2)
             font = {
                 "size" : 12,
-                "color" : f"C{self.colour_idx}"
+                "color" : pt_bright_cycler[self.colour_idx]
             }
             txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
             txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
@@ -518,15 +519,15 @@ class AtmosViewer:
             return
         centre_coord = int(event.ydata), int(event.xdata)
         self.px_coords.append(centre_coord)
-        circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
-        circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
-        circ3 = patches.Circle(centre_coord[::-1], radius=10, facecolor=f"C{self.colour_idx}", edgecolor="k", linewidth=1)
+        circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
+        circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
+        circ3 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
         self.ax1.add_patch(circ1)
         self.ax2.add_patch(circ2)
         self.ax3.add_patch(circ3)
         font = {
             "size" : 12,
-            "color" : f"C{self.colour_idx}"
+            "color" : pt_bright_cycler[self.colour_idx]
         }
         txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
         txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)

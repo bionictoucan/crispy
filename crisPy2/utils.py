@@ -1,3 +1,5 @@
+from cycler import cycler
+
 class ObjDict(dict):
     '''
     This is an abstract class for allowing the keys of a dictionary to be accessed like class attributes.
@@ -60,3 +62,11 @@ pt_muted = {
     "purple" : "#AA4499",
     "pale grey" : "#DDDDDD"
 }
+
+pt_bright_cycler = cycler(color=list(pt_bright.values()))
+
+pt_hic_cycler = cycler(color=list(pt_hic.values()))
+
+pt_vibrant_cycler = cycler(color=list(pt_vibrant.values()))
+
+pt_muted_cycler = cycler(color=list(pt_muted.values()))
