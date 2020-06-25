@@ -1062,7 +1062,7 @@ class CRISPNonU(CRISP):
 
             fig = plt.figure()
             ax1 = fig.gca()
-            ax1.plot(wavelength, self.file.d, c=pt_bright["blue"], marker="o"ata)
+            ax1.plot(wavelength, self.file.data, c=pt_bright["blue"], marker="o")
             if stokes == "I":
                 ax1.set_ylabel("Intensity [DNs]")
                 ax1.set_xlabel(xlabel)
