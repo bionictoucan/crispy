@@ -43,41 +43,79 @@ class Inversion(InversionSlicingMixin):
 
             Pointing: ({pointing_x}, {pointing_y})"""
 
-    def __repr__(self):
-        return self.__str__()
-
     def plot_ne(self):
+        point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind)]
+        if self.header is not None:
+            try:
+                datetime = self.header["DATE-AVG"]
+            except KeyError:
+                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+
+            title = f"{datetime} ({point[0]},{point[1]})"
+        else:
+            title = f"({point[0]}, {point[1]})"
         fig = plt.figure()
         ax1 = fig.gca()
         ax1.plot(self.z, self.ne)
         ax1.set_ylabel(r"log$_{10}$ n$_{\text{e}}$ \[cm$^{-3}$\]")
         ax1.set_xlabel("z [Mm]")
-        ax1.set_title("Electron Number Density")
+        ax1.set_title(f"Electron Number Density {title}")
         ax1.tick_params(direction="in")
         fig.show()
 
     def plot_temp(self):
+        point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind)]
+        if self.header is not None:
+            try:
+                datetime = self.header["DATE-AVG"]
+            except KeyError:
+                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+
+            title = f"{datetime} ({point[0]},{point[1]})"
+        else:
+            title = f"({point[0]}, {point[1]})"
         fig = plt.figure()
         ax1 = fig.gca()
         ax1.plot(self.z, self.temp)
         ax1.set_ylabel(r"log$_{10}$ T \[K\]")
         ax1.set_xlabel("z [Mm]")
-        ax1.set_title("Electron Temperature")
+        ax1.set_title(f"Electron Temperature {title}")
         ax1.tick_params(direction="in")
         fig.show()
 
     def plot_vel(self):
+        point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind)]
+        if self.header is not None:
+            try:
+                datetime = self.header["DATE-AVG"]
+            except KeyError:
+                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+
+            title = f"{datetime} ({point[0]},{point[1]})"
+        else:
+            title = f"({point[0]}, {point[1]})"
         fig = plt.figure()
         ax1 = fig.gca()
         ax1.plot(self.z, self.vel)
         ax1.set_ylabel(r"Bulk Plasma Flow \[km s$^{-1}$\]")
         ax1.set_xlabel("z [Mm]")
-        ax1.set_title("Bulk Plasma Flow")
+        ax1.set_title(f"Bulk Plasma Flow {title}")
         ax1.tick_params(direction="in")
         fig.show()
 
     def plot_params(self):
+        point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind)]
+        if self.header is not None:
+            try:
+                datetime = self.header["DATE-AVG"]
+            except KeyError:
+                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+
+            title = f"{datetime} ({point[0]},{point[1]})"
+        else:
+            title = f"({point[0]}, {point[1]})"
         fig = plt.figure()
+        fig.suptitle(title)
         ax1 = fig.add_subplot(1, 3, 1)
         ax1.plot(self.z, self.ne)
         ax1.set_ylabel(r"log$_{10}$ n$_{e}$ \[cm$^{-3}$\]")
@@ -101,13 +139,22 @@ class Inversion(InversionSlicingMixin):
         fig.show()
 
     def ne_map(self, frame=None):
+        height = np.round(self.z[self.ind], decimals=2)
+        if self.header is not None:
+            try:
+                datetime = self.header["DATE-AVG"]
+            except KeyError:
+                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+        else:
+            datetime = ""
+
         if frame is None:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs)
             ax1.imshow(self.ne, cmap="cividis")
             ax1.set_ylabel("Helioprojective Latitude [arcsec]")
             ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-            ax1.set_title("Electron Number Density")
+            ax1.set_title(f"Electron Number Density {datetime} z={height}Mm")
             fig.show()
         else:
             fig = plt.figure()
@@ -115,17 +162,25 @@ class Inversion(InversionSlicingMixin):
             ax1.imshow(self.ne, cmap="cividis")
             ax1.set_ylabel("y [pixels]")
             ax1.set_xlabel("x [pixels]")
-            ax1.set_title("Electron Number Density")
+            ax1.set_title(f"Electron Number Density {datetime} z={height}Mm")
             fig.show()
 
     def temp_map(self, frame=None):
+        height = np.round(self.z[self.ind], decimals=2)
+        if self.header is not None:
+            try:
+                datetime = self.header["DATE-AVG"]
+            except KeyError:
+                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+        else:
+           datetime = ""
         if frame is None:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs)
             ax1.imshow(self.temp, cmap="hot")
             ax1.set_ylabel("Helioprojective Latitude [arcsec]")
             ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-            ax1.set_title("Electron Temperature")
+            ax1.set_title(f"Electron Temperature {datetime} z={height}Mm")
             fig.show()
         else:
             fig = plt.figure()
@@ -133,17 +188,25 @@ class Inversion(InversionSlicingMixin):
             ax1.imshow(self.temp, cmap="cividis")
             ax1.set_ylabel("y [pixels]")
             ax1.set_xlabel("x [pixels]")
-            ax1.set_title("Electron Temperature")
+            ax1.set_title(f"Electron Temperature {datetime} z={height}Mm")
             fig.show()
 
     def vel_map(self, frame=None):
+        height = np.round(self.z[self.ind], decimals=2)
+        if self.header is not None:
+            try:
+                datetime = self.header["DATE-AVG"]
+            except KeyError:
+                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+        else:
+            datetime = ""
         if frame is None:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs)
             ax1.imshow(self.vel, cmap="RdBu", norm=SymLogNorm(1))
             ax1.set_ylabel("Helioprojective Latitude [arcsec]")
             ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-            ax1.set_title("Bulk Velocity Flow")
+            ax1.set_title(f"Bulk Velocity Flow {datetime} z={height}Mm")
             fig.show()
         else:
             fig = plt.figure()
@@ -151,12 +214,21 @@ class Inversion(InversionSlicingMixin):
             ax1.imshow(self.vel, cmap="RdBu", norm=SymLogNorm(1))
             ax1.set_ylabel("y [pixels]")
             ax1.set_xlabel("x [pixels]")
-            ax1.set_title("Bulk Velocity Flow")
+            ax1.set_title(f"Bulk Velocity Flow {datetime} z={height}Mm")
             fig.show()
 
     def params_map(self, frame=None):
+        height = np.round(self.z[self.ind], decimals=2)
+        if self.header is not None:
+            try:
+                datetime = self.header["DATE-AVG"]
+            except KeyError:
+                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+        else:
+            datetime = ""
         if frame is None:
             fig = plt.figure()
+            fig.suptitle(f"{datetime} z={height}Mm")
             ax1 = fig.add_subplot(1, 3, 1, projection=self.wcs)
             ax1.imshow(self.ne, cmap="cividis")
             ax1.set_ylabel("Helioprojective Latitude [arcsec]")

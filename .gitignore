@@ -11,3 +11,4 @@
 *.pdf
 /docs/_templates
 .DS_Store
+*.ipynb

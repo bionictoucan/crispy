@@ -13,32 +13,27 @@ from matplotlib.lines import Line2D
 from .utils import pt_bright_cycler
 
 class SpectralViewer:
-    def __init__(self, data, wcs=None, uncertainty=None, mask=None):
+    def __init__(self, data, wcs=None, uncertainty=None, mask=None, nonu=False):
         plt.style.use("ggplot")
         self.aa = html.unescape("&#8491;")
         self.l = html.unescape("&lambda;")
         self.a = html.unescape("&alpha;")
         self.D = html.unescape("&Delta;")
+        shape = widgets.Dropdown(options=["point", "box"], value="point", description="Shape: ")
         if type(data) == str:
-            self.cube = CRISP(file=data, wcs=wcs, uncertainty=uncertainty, mask=mask)
-            self.wvls = self.cube.wcs.all_pix2world([0.], [0.], np.arange(self.cube.file.data.shape[0]),0)[2] << u.m
-            self.wvls <<= u.Angstrom
+            self.cube = CRISP(filename=data, wcs=wcs, uncertainty=uncertainty, mask=mask)
+            self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
         elif type(data) == list:
             self.cube = CRISPSequence(files=data)
-            self.wvls1 = self.cube.list[0].wcs.all_pix2world([0.], [0.], np.arange(self.cube.list[0].file.data.shape[0]),0)[2] << u.m
-            self.wvls1 <<= u.Angstrom
-            self.wvls2 = self.cube.list[1].wcs.all_pix2world([0.], [0.], np.arange(self.cube.list[1].file.data.shape[0]),0)[2] << u.m
-            self.wvls2 <<= u.Angstrom
+            self.wvls1 = self.cube.list[0].wave(np.arange(self.cube.list[0].shape[0]))
+            self.wvls2 = self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
         elif type(data) == CRISP:
             self.cube = data
-            self.wvls = self.cube.wcs.all_pix2world([0.], [0.], np.arange(self.cube.file.data.shape[0]),0)[2] << u.m
-            self.wvls <<= u.Angstrom
+            self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
         elif type(data) == CRISPSequence:
             self.cube = data
-            self.wvls1 = self.cube.list[0].wcs.all_pix2world([0.], [0.], np.arange(self.cube.list[0].file.data.shape[0]),0)[2] << u.m
-            self.wvls1 <<= u.Angstrom
-            self.wvls2 = self.cube.list[1].wcs.all_pix2world([0.], [0.], np.arange(self.cube.list[1].file.data.shape[0]), 0)[2] << u.m
-            self.wvls2 <<= u.Angstrom
+            self.wvls1 = self.cube.list[0].wave(np.arange(self.cube.list[0].shape[0]))
+            self.wvls2 = self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
 
         if type(self.cube) == CRISP:
             self.fig = plt.figure(figsize=(8,10))
@@ -47,14 +42,18 @@ class SpectralViewer:
             self.ax1.set_xlabel("Helioprojective Longitude [arcsec]")
             self.ax2 = self.fig.add_subplot(1, 2, 2)
             self.ax2.yaxis.set_label_position("right")
-            self.ax2.yaxis.ticks_right()
+            self.ax2.yaxis.tick_right()
             self.ax2.set_ylabel("I [DNs]")
             self.ax2.set_xlabel(f"{self.l} [{self.aa}]")
             self.ax2.tick_params(direction="in")
 
             ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2).value for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
 
-            widgets.interact(self._img_plot1, ll = ll)
+            out1 = widgets.interactive_output(self._img_plot1, {"ll" : ll})
+            out2 = widgets.interactive_output(self._shape, {"opts" : shape})
+
+            display(widgets.HBox([ll, shape]))
+                
         elif type(self.cube) == CRISPSequence:
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(2, 2, 1, projection=self.cube.list[0].wcs.dropaxis(-1))
@@ -94,13 +93,25 @@ class SpectralViewer:
                 style={"description_width" : "initial"}
             )
 
-            widgets.interact(self._img_plot2, ll1=ll1, ll2=ll2)
+            out1 = widgets.interactive_output(self._img_plot2, {"ll1" : ll1, "ll2" : ll2})
+            out2 = widgets.interactive_output(self._shape, {"opts" : shape})
+
+            display(widgets.HBox([widgets.VBox([ll1, ll2]), shape]))
 
         self.coords = []
         self.px_coords = []
+        self.shape_type = []
+        self.box_coords = []
         self.colour_idx = 0
+        self.n = 0
 
         self.receiver = self.fig.canvas.mpl_connect("button_press_event", self._on_click)
+
+        x = widgets.IntText(value=1, min=1, max=self.cube.shape[-1], description="x [pix]")
+        y = widgets.IntText(value=1, min=1, max=self.cube.shape[-2], description="y [pix]")
+        outx = widgets.interactive_output(self._boxx, {"x" : x})
+        outy = widgets.interactive_output(self._boxy, {"y" : y})
+        display(widgets.HBox([x, y]))
 
         done_button = widgets.Button(description="Done")
         done_button.on_click(self._disconnect_matplotlib)
@@ -109,52 +120,149 @@ class SpectralViewer:
         save_button = widgets.Button(description="Save")
         save_button.on_click(self._save)
         display(widgets.HBox([done_button, clear_button, save_button]))
-        widgets.interact(self._file_name, fn= widgets.Text(description="Filename to save as: "), style={"description_width" : "initial"}, layout=widgets.Layout(width="50%"))
+        widgets.interact(self._file_name, fn= widgets.Text(description="Filename to save as: "), style={"description_width" : "initial"}, layout=widgets.Layout(width="100%"))
 
     def _on_click(self, event):
         if self.fig.canvas.manager.toolbar.mode is not "":
             return
 
         if type(self.cube) == CRISP:
-            centre_coord = int(event.ydata), int(event.xdata)
-            self.px_coords.append(centre_coord)
-            circ = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
-            self.ax1.add_patch(circ)
-            font = {
-                "size" : 12,
-                "color" : pt_bright_cycler[self.colour_idx]
-            }
-            txt = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
-            txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
-            px = self.cube.wcs.array_index_to_world(*centre_coord) << u.arcsec
-            self.ax2.plot(self.wvls, self.cube.file.data[:, centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax2.legend()
-            self.coords.append(px)
-            self.colour_idx += 1
-            self.fig.canvas.draw()
+            if self.shape == "point":
+                if self.colour_idx > len(pt_bright_cycler)-1:
+                    self.colour_idx = 0
+                    self.n += 1
+                centre_coord = int(event.ydata), int(event.xdata)
+                self.px_coords.append(centre_coord)
+                self.shape_type.append("point")
+                circ = patches.Circle(centre_coord[::-1], radius=10, facecolor=list(pt_bright_cycler)[self.colour_idx]["color"], edgecolor="k", linewidth=1)
+                self.ax1.add_patch(circ)
+                font = {
+                    "size" : 12,
+                    "color" : list(pt_bright_cycler)[self.colour_idx]["color"]
+                }
+                txt = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                px = self.cube.to_lonlat(*centre_coord) << u.arcsec
+                self.ax2.plot(self.wvls, self.cube.file.data[:, centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax2.legend()
+                self.coords.append(px)
+                self.colour_idx += 1
+                self.fig.canvas.draw()
+            elif self.shape == "box":
+                if self.colour_idx > len(pt_bright_cycler)-1:
+                    self.colour_idx = 0
+                    self.n += 1
+                box_anchor = int(event.ydata), int(event.xdata)
+                self.px_coords.append(box_anchor)
+                self.shape_type.append("box")
+                # obtain the coordinates of the box on a grid with pixels the size of the box to make sure there is not copies of the same box
+                box_coord = box_anchor[0] // self.boxy, box_anchor[1] // self.boxx
+                if box_coord in self.box_coords:
+                    coords = [p.get_xy() for p in self.ax.patches]
+                    for p in self.ax.patches:
+                        if p.get_xy() == box_anchor:
+                            p.remove()
+                    
+                    idx = self.box_coords.index(box_coord)
+                    del self.box_coords[idx]
+                    del self.px_coords[idx]
+                    del self.shape_type[idx]
+                    del self.coords[idx]
+                    return
+                
+                self.coords.append(self.cube.to_lonlat(*box_anchor) << u.arcsec)
+                rect = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
+                rect.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                self.ax1.add_patch(rect)
+                font = {
+                    "size" : 12,
+                    "color" : list(pt_bright_cycler)[self.colour_idx]["color"]
+                }
+                txt = self.ax1.text(box_anchor[1]-50, box_anchor[0]-10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                self.ax2.plot(self.wvls, np.mean(self.cube.file.data[:,box_anchor[0]:box_anchor[0]+self.boxy,box_anchor[1]:box_anchor[1]+self.boxx],axis=(1,2)), marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax2.legend()
+                self.colour_idx += 1
+                self.fig.canvas.draw()
         elif type(self.cube) == CRISPSequence:
-            centre_coord = int(event.ydata), int(event.xdata) #with WCS, the event data is returned in pixels so we don't need to do the conversion from real world but rather to real world later on
-            self.px_coords.append(centre_coord)
-            circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
-            circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
-            self.ax1.add_patch(circ1)
-            self.ax2.add_patch(circ2)
-            font = {
-                "size" : 12,
-                "color" : pt_bright_cycler[self.colour_idx]
-            }
-            txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
-            txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
-            txt_1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
-            txt_2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
-            px = self.cube.list[0].wcs.dropaxis(-1).array_index_to_world(*centre_coord) << u.arcsec
-            self.ax3.plot(self.wvls1, self.cube.list[0].file.data[:, centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax4.plot(self.wvls2, self.cube.list[1].file.data[:, centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax3.legend()
-            self.ax4.legend()
-            self.coords.append(px)
-            self.colour_idx += 1
-            self.fig.canvas.draw()
+            if self.shape == "point":
+                if self.colour_idx > len(pt_bright_cycler)-1:
+                    self.colour_idx = 0
+                    self.n += 1
+                centre_coord = int(event.ydata), int(event.xdata) #with WCS, the event data is returned in pixels so we don't need to do the conversion from real world but rather to real world later on
+                self.px_coords.append(centre_coord)
+                circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=list(pt_bright_cycler)[self.colour_idx]["color"], edgecolor="k", linewidth=1)
+                circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=list(pt_bright_cycler)[self.colour_idx]["color"], edgecolor="k", linewidth=1)
+                self.ax1.add_patch(circ1)
+                self.ax2.add_patch(circ2)
+                font = {
+                    "size" : 12,
+                    "color" : list(pt_bright_cycler)[self.colour_idx]["color"]
+                }
+                txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt_1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                txt_2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                px = self.cube.list[0].to_lonlat(*centre_coord) << u.arcsec
+                self.ax3.plot(self.wvls1, self.cube.list[0].file.data[:, centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax4.plot(self.wvls2, self.cube.list[1].file.data[:, centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax3.legend()
+                self.ax4.legend()
+                self.coords.append(px)
+                self.colour_idx += 1
+                self.fig.canvas.draw()
+            elif self.shape == "box":
+                if self.colour_idx > len(pt_bright_cycler)-1:
+                    self.colour_idx = 0
+                    self.n += 1
+                box_anchor = int(event.ydata), int(event.xdata)
+                self.px_coords.append(box_anchor)
+                self.shape_type.append("box")
+                # obtain the coordinates of the box on a grid with pixels the size of the box to make sure there is not copies of the same box
+                box_coord = box_anchor[0] // self.boxy, box_anchor[1] // self.boxx
+                if box_coord in self.box_coords:
+                    coords = [p.get_xy() for p in self.ax.patches]
+                    for p in self.ax.patches:
+                        if p.get_xy() == box_anchor:
+                            p.remove()
+                    
+                    idx = self.box_coords.index(box_coord)
+                    del self.box_coords[idx]
+                    del self.px_coords[idx]
+                    del self.shape_type[idx]
+                    del self.coords[idx]
+                    return
+                
+                self.coords.append(self.cube.to_lonlat(*box_anchor) << u.arcsec)
+                rect1 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
+                rect1.set_path_effects([PathEffects(linewidth=3, foreground="k")])
+                rect2 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
+                rect2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                self.ax1.add_patch(rect1)
+                self.ax2.add_patch(rect2)
+                font = {
+                    "size" : 12,
+                    "color" : list(pt_bright_cycler)[self.colour_idx]["color"]
+                }
+                txt1 = self.ax1.text(box_anchor[1]-50, box_anchor[0]-10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt1.set_path_effects([PathEffects(linewidth=3, foreground="k")])
+                txt2 = self.ax2.text(box_anchor[1]-50, box_anchor[0]-1, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt2.set_path_effect([PathEffects(linewidth=3, foreground="k")])
+                self.ax3.plot(self.wvls1, np.mean(self.cube.list[0].file.data[:, box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx], axis=(1,2)), marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax4.plot(self.wvls2, np.mean(self.cube.list[1].file.data[:, box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx], axis=(1,2)), marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax3.legend()
+                self.ax4.legend()
+                self.colour_idx += 1
+                self.fig.canvas.draW()
+
+    def _shape(self, opts):
+        self.shape = opts
+
+    def _boxx(self, x):
+        self.boxx = x
+
+    def _boxy(self, y):
+        self.boxy = y
 
     def _disconnect_matplotlib(self, _):
         self.fig.canvas.mpl_disconnect(self.receiver)
@@ -162,7 +270,10 @@ class SpectralViewer:
     def _clear(self, _):
         self.coords = []
         self.px_coords = []
+        self.shape_type = []
+        self.box_coords = []
         self.colour_idx = 0
+        self.n = 0
         if type(self.cube) == CRISP:
             while len(self.ax1.patches) > 0:
                 for p in self.ax1.patches:
@@ -249,6 +360,7 @@ class SpectralViewer:
 class WidebandViewer:
     def __init__(self, files):
         plt.style.use("ggplot")
+        shape = widgets.Dropdown(options=["point", "box"], value="point", description="Shape: ")
         if type(files) == CRISPWidebandSequence:
             self.cube = files
         elif type(files) == list and type(files[0]) == dict:
@@ -256,7 +368,7 @@ class WidebandViewer:
         elif type(files) == list and type(files[0]) == str:
             files = [{"file" : f} for f in files]
             self.cube = CRISPWidebandSequence(files)
-        elif type(files) == list and type(files[0]) == CRISPWideband:
+        elif type(files) == list and type(files[0]) == CRISPWidebandSequence:
             self.cube = files
         if type(self.cube) is not list:
             try:
@@ -269,7 +381,7 @@ class WidebandViewer:
             self.ax1.set_xlabel("Helioprojective Longitude [arcsec]")
             self.ax2 = self.fig.add_subplot(1, 2, 2)
             self.ax2.yaxis.set_label_position("right")
-            self.ax2.yaxis.ticks_right()
+            self.ax2.yaxis.tick_right()
             self.ax2.set_ylabel("I [DNs]")
             self.ax2.set_xlabel("Time [UTC]")
             self.ax2.xaxis.set_major_locator(plt.MaxNLocator(4))
@@ -321,9 +433,20 @@ class WidebandViewer:
 
         self.coords = []
         self.px_coords = []
+        self.shape_type = []
+        self.box_coords = []
         self.colour_idx = 0
+        self.n = 0
 
         self.reveiver = self.fig.canvas.mpl_connect("button_press_event", self._on_click)
+
+        widgets.interact(self._shape, opts=shape)
+
+        x = widgets.IntText(value=1, min=1, max=self.cube.shape[-1], description="x [pix]")
+        y = widgets.IntText(value=1, min=1, max=self.cube.shape[-2], description="y [pix]")
+        outx = widgets.interactive_output(self._boxx, {"x" : x})
+        outy = widgets.interactive_output(self._boxy, {"y" : y})
+        display(widgets.HBox([x, y]))
 
         done_button = widgets.Button(description="Done")
         done_button.on_click(self._disconnect_matplotlib)
@@ -339,48 +462,148 @@ class WidebandViewer:
             return
 
         if type(self.cube) == CRISPWidebandSequence:
-            centre_coord = int(event.ydata), int(event.xdata)
-            self.px_coords.append(centre_coord)
-            circ = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
-            self.ax1.add_patch(circ)
-            font = {
-                "size" : 12,
-                "color" : pt_bright_cycler[self.colour_idx]
-            }
-            txt = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
-            txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
-            px = self.cube.list[0].wcs.array_index_to_world(*centre_coord) << u.arcsec
-            prof = [f.file.data[centre_coord[0], centre_coord[1]] for f in self.cube.list]
-            self.ax2.plot(self.time, prof, marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax2.legend()
-            self.coords.append(px)
-            self.colour_idx += 1
-            self.fig.canvas.draw()
+            if self.shape == "point":
+                if self.colour_idx > len(pt_bright_cycler)-1:
+                    self.colour_idx = 0
+                    self.n += 1
+                centre_coord = int(event.ydata), int(event.xdata)
+                self.px_coords.append(centre_coord)
+                self.shape_type.append("point")
+                circ = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
+                self.ax1.add_patch(circ)
+                font = {
+                    "size" : 12,
+                    "color" : pt_bright_cycler[self.colour_idx]
+                }
+                txt = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                px = self.cube.list[0].wcs.array_index_to_world(*centre_coord) << u.arcsec
+                prof = [f.file.data[centre_coord[0], centre_coord[1]] for f in self.cube.list]
+                self.ax2.plot(self.time, prof, marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax2.legend()
+                self.coords.append(px)
+                self.colour_idx += 1
+                self.fig.canvas.draw()
+            elif self.shape == "box":
+                if self.colour_idx > len(pt_bright_cycler)-1:
+                    self.colour_idx = 0
+                    self.n += 1
+                box_anchor = int(event.ydata), int(event.xdata)
+                self.px_coords.append(box_anchor)
+                self.shape_type.append("box")
+                # obtain the coordinates of the box on a grid with pixels the size of the box to make sure there is not copies of the same box
+                box_coord = box_anchor[0] // self.boxy, box_anchor[1] // self.boxx
+                if box_coord in self.box_coords:
+                    coords = [p.get_xy() for p in self.ax.patches]
+                    for p in self.ax.patches:
+                        if p.get_xy() == box_anchor:
+                            p.remove()
+                    
+                    idx = self.box_coords.index(box_coord)
+                    del self.box_coords[idx]
+                    del self.px_coords[idx]
+                    del self.shape_type[idx]
+                    del self.coords[idx]
+                    return
+                
+                self.coords.append(self.cube.to_lonlat(*box_anchor) << u.arcsec)
+                rect = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
+                rect.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                self.ax1.add_patch(rect)
+                font = {
+                    "size" : 12,
+                    "color" : list(pt_bright_cycler)[self.colour_idx]["color"]
+                }
+                txt = self.ax1.text(box_anchor[1]-50, box_anchor[0]-10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                prof = [np.mean(f.file.data[box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx]) for f in self.cube.list]
+                self.ax2.plot(self.time, prof, marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax2.legend()
+                self.colour_idx += 1
+                self.fig.canvas.draw()
         elif type(self.cube) == list:
-            centre_coord = int(event.ydata), int(event.xdata)
-            self.px_coords.append(centre_coord)
-            circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
-            circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
-            self.ax1.add_patch(circ1)
-            self.ax2.add_patch(circ2)
-            font = {
-                "size" : 12,
-                "color" : pt_bright_cycler[self.colour_idx]
-            }
-            txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
-            txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
-            txt_1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
-            txt_2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
-            px = self.cube[0].list[0].wcs.array_index_to_world(*centre_coord) << u.arcsec
-            prof_1 = [f.file.data[centre_coord[0], centre_coord[1]] for f in self.cube[0].list]
-            prof_2 = [f.file.data[centre_coord[0], centre_coord[1]] for f in self.cube[1].list]
-            self.ax3.plot(self.time1, prof_1, marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax4.plot(self.time2, prof_2, marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax3.legend()
-            self.ax4.legend()
-            self.coords.append(px)
-            self.colour_idx += 1
-            self.fig.canvas.draw()
+            if self.shape == "point":
+                if self.colour_idx > len(pt_bright_cycler)-1:
+                    self.colour_idx = 0
+                    self.n += 1
+                centre_coord = int(event.ydata), int(event.xdata)
+                self.px_coords.append(centre_coord)
+                circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
+                circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
+                self.ax1.add_patch(circ1)
+                self.ax2.add_patch(circ2)
+                font = {
+                    "size" : 12,
+                    "color" : pt_bright_cycler[self.colour_idx]
+                }
+                txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt_1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                txt_2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                px = self.cube[0].list[0].wcs.array_index_to_world(*centre_coord) << u.arcsec
+                prof_1 = [f.file.data[centre_coord[0], centre_coord[1]] for f in self.cube[0].list]
+                prof_2 = [f.file.data[centre_coord[0], centre_coord[1]] for f in self.cube[1].list]
+                self.ax3.plot(self.time1, prof_1, marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax4.plot(self.time2, prof_2, marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax3.legend()
+                self.ax4.legend()
+                self.coords.append(px)
+                self.colour_idx += 1
+                self.fig.canvas.draw()
+            elif self.shape == "box":
+                if self.colour_idx > len(pt_bright_cycler)-1:
+                    self.colour_idx = 0
+                    self.n += 1
+                box_anchor = int(event.ydata), int(event.xdata)
+                self.px_coords.append(box_anchor)
+                self.shape_type.append("box")
+                # obtain the coordinates of the box on a grid with pixels the size of the box to make sure there is not copies of the same box
+                box_coord = box_anchor[0] // self.boxy, box_anchor[1] // self.boxx
+                if box_coord in self.box_coords:
+                    coords = [p.get_xy() for p in self.ax.patches]
+                    for p in self.ax.patches:
+                        if p.get_xy() == box_anchor:
+                            p.remove()
+                    
+                    idx = self.box_coords.index(box_coord)
+                    del self.box_coords[idx]
+                    del self.px_coords[idx]
+                    del self.shape_type[idx]
+                    del self.coords[idx]
+                    return
+                
+                self.coords.append(self.cube.to_lonlat(*box_anchor) << u.arcsec)
+                rect1 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
+                rect1.set_path_effects([PathEffects(linewidth=3, foreground="k")])
+                rect2 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
+                rect2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                self.ax1.add_patch(rect1)
+                self.ax2.add_patch(rect2)
+                font = {
+                    "size" : 12,
+                    "color" : list(pt_bright_cycler)[self.colour_idx]["color"]
+                }
+                txt1 = self.ax1.text(box_anchor[1]-50, box_anchor[0]-10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt1.set_path_effects([PathEffects(linewidth=3, foreground="k")])
+                txt2 = self.ax2.text(box_anchor[1]-50, box_anchor[0]-1, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt2.set_path_effect([PathEffects(linewidth=3, foreground="k")])
+                prof_1 = [np.mean(f.file.data[box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx]) for f in self.cube[0].list]
+                prof_2 = [np.mean(f.file.data[box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx]) for f in self.cube[1].list]
+                self.ax3.plot(self.time1, prof_1, marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax4.plot(self.time2, prof_2, marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax3.legend()
+                self.ax4.legend()
+                self.colour_idx += 1
+                self.fig.canvas.draW()
+
+    def _shape(self, opts):
+        self.shape = opts
+
+    def _boxx(self, x):
+        self.boxx = x
+
+    def _boxy(self, y):
+        self.boxy = y
 
     def _disconnect_matplotlib(self, _):
         self.fig.canvas.mpl_disconnect(self.receiver)
@@ -388,7 +611,10 @@ class WidebandViewer:
     def _clear(self, _):
         self.coords = []
         self.px_coords = []
+        self.shape_type = []
+        self.box_coords = []
         self.colour_idx = 0
+        self.n = 0
         if type(self.cube) == CRISPWidebandSequence:
             while len(self.ax1.patches) > 0:
                 for p in self.ax1.patches:
@@ -459,6 +685,7 @@ class WidebandViewer:
 
 class AtmosViewer:
     def __init__(self, filename, z=None, wcs=None, header=None, eb=False):
+        shape = widgets.Dropdown(options=["point", "box"], value="point", description="Shape: ")
         if type(filename) == str:
             assert z is not None
             assert wcs is not None
@@ -468,7 +695,10 @@ class AtmosViewer:
 
         self.coords = []
         self.px_coords = []
+        self.shape_type = []
+        self.box_coords = []
         self.colour_idx = 0
+        self.n = 0
         self.eb = eb
 
         self.fig = plt.figure(figsize=(8,10))
@@ -503,6 +733,14 @@ class AtmosViewer:
         widgets.interact(self._img_plot,
                         z = widgets.SelectionSlider(options=np.round(self.inv.z, decimals=2), description="Image height [Mm]: ", style={"description_width" : "initial"}, layout=widgets.Layout(width="75%")))
         
+        widgets.interact(self._shape, opts=shape)
+
+        x = widgets.IntText(value=1, min=1, max=self.cube.shape[-1], description="x [pix]")
+        y = widgets.IntText(value=1, min=1, max=self.cube.shape[-2], description="y [pix]")
+        outx = widgets.interactive_output(self._boxx, {"x" : x})
+        outy = widgets.interactive_output(self._boxy, {"y" : y})
+        display(widgets.HBox([x, y]))
+
         self.receiver = self.fig.canvas.mpl_connect("button_press_event", self._on_click)
         
         done_button = widgets.Button(description="Done")
@@ -517,47 +755,119 @@ class AtmosViewer:
     def _on_click(self, event):
         if self.fig.canvas.manager.toolbar.mode is not "":
             return
-        centre_coord = int(event.ydata), int(event.xdata)
-        self.px_coords.append(centre_coord)
-        circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
-        circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
-        circ3 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
-        self.ax1.add_patch(circ1)
-        self.ax2.add_patch(circ2)
-        self.ax3.add_patch(circ3)
-        font = {
-            "size" : 12,
-            "color" : pt_bright_cycler[self.colour_idx]
-        }
-        txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
-        txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
-        txt_3 = self.ax3.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1}", fontdict=font)
-        txt_1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
-        txt_2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
-        txt_3.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
-        if self.eb:
-            self.ax4.errorbar(self.z, self.ne[centre_coord[0], centre_coord[1]], yerr=self.err[centre_coord[0],centre_coord[1],0], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax5.errorbar(self.z, self.temp[centre_coord[0], centre_coord[1]], yerr=self.err[centre_coord[0],centre_coord[1],1], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax6.errorbar(self.z, self.vel[centre_coord[0],centre_coord[1]], yerr=self.err[centre_coord[0],centre_coord[1],2], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-        else:
-            self.ax4.plot(self.z, self.ne[centre_coord[0],centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax5.plot(self.z, self.temp[centre_coord[0],centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-            self.ax6.plot(self.z, self.vel[centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx], label=f"{self.colour_idx+1}")
-        self.ax4.legend()
-        self.ax5.legend()
-        self.ax6.legend()
-        px = self.inv.wcs.array_index_to_world(*centre_coord) << u.arcsec
-        self.colour_idx += 1
-        self.coords.append(px)
-        self.fig.canvas.draw()
+
+        if self.shape == "point":
+            if self.colour_idx > len(pt_bright_cycler)-1:
+                self.colour_idx = 0
+                self.n += 1
+            centre_coord = int(event.ydata), int(event.xdata)
+            self.px_coords.append(centre_coord)
+            circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
+            circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
+            circ3 = patches.Circle(centre_coord[::-1], radius=10, facecolor=pt_bright_cycler[self.colour_idx], edgecolor="k", linewidth=1)
+            self.ax1.add_patch(circ1)
+            self.ax2.add_patch(circ2)
+            self.ax3.add_patch(circ3)
+            font = {
+                "size" : 12,
+                "color" : pt_bright_cycler[self.colour_idx]
+            }
+            txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+            txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+            txt_3 = self.ax3.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+            txt_1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+            txt_2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+            txt_3.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+            if self.eb:
+                self.ax4.errorbar(self.z, self.ne[centre_coord[0], centre_coord[1]], yerr=self.err[centre_coord[0],centre_coord[1],0], marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax5.errorbar(self.z, self.temp[centre_coord[0], centre_coord[1]], yerr=self.err[centre_coord[0],centre_coord[1],1], marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax6.errorbar(self.z, self.vel[centre_coord[0],centre_coord[1]], yerr=self.err[centre_coord[0],centre_coord[1],2], marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+            else:
+                self.ax4.plot(self.z, self.ne[centre_coord[0],centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax5.plot(self.z, self.temp[centre_coord[0],centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax6.plot(self.z, self.vel[centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+            self.ax4.legend()
+            self.ax5.legend()
+            self.ax6.legend()
+            px = self.inv.wcs.array_index_to_world(*centre_coord) << u.arcsec
+            self.colour_idx += 1
+            self.coords.append(px)
+            self.fig.canvas.draw()
+        elif self.shape == "box":
+            if self.colour_idx > len(pt_bright_cycler)-1:
+                self.colour_idx = 0
+                self.n += 1
+            box_anchor = int(event.ydata), int(event.xdata)
+            self.px_coords.append(box_anchor)
+            self.shape_type.append("box")
+            # obtain the coordinates of the box on a grid with pixels the size of the box to make sure there is not copies of the same box
+            box_coord = box_anchor[0] // self.boxy, box_anchor[1] // self.boxx
+            if box_coord in self.box_coords:
+                coords = [p.get_xy() for p in self.ax.patches]
+                for p in self.ax.patches:
+                    if p.get_xy() == box_anchor:
+                        p.remove()
+                
+                idx = self.box_coords.index(box_coord)
+                del self.box_coords[idx]
+                del self.px_coords[idx]
+                del self.shape_type[idx]
+                del self.coords[idx]
+                return
+            
+            self.coords.append(self.cube.to_lonlat(*box_anchor) << u.arcsec)
+            rect1 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
+            rect1.set_path_effects([PathEffects(linewidth=3, foreground="k")])
+            rect2 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
+            rect2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+            rect3 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
+            rect3.set_path_effects([PathEffects(linewidth=3, foreground="k")])
+            self.ax1.add_patch(rect1)
+            self.ax2.add_patch(rect2)
+            self.ax3.add_patch(rect2)
+            font = {
+                "size" : 12,
+                "color" : list(pt_bright_cycler)[self.colour_idx]["color"]
+            }
+            txt1 = self.ax1.text(box_anchor[1]-50, box_anchor[0]-10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+            txt1.set_path_effects([PathEffects(linewidth=3, foreground="k")])
+            txt2 = self.ax2.text(box_anchor[1]-50, box_anchor[0]-1, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+            txt2.set_path_effect([PathEffects(linewidth=3, foreground="k")])
+            txt3 = self.ax3.text(box_anchor[1]-50, box_anchor[0]-10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+            txt3.set_path_effects([PathEffects(linewidth=3, foreground="k")])
+            if self.eb:
+                self.ax4.errorbar(self.z, np.mean(self.ne[box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx], axis=(0,1)), yerr=np.mean(self.err[box_anchor[0]:box_anchor[0]+self.boxy,box_anchor[1]:box_anchor[1]+self.boxx,0], axis=(0,1)), marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax5.errorbar(self.z, np.mean(self.temp[box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx], axis=(0,1)), yerr=np.mean(self.err[box_anchor[0]:box_anchor[0]+self.boxy,box_anchor[1]:box_anchor[1]+self.boxx,1], axis=(0,1)), marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax6.errorbar(self.z, np.mean(self.vel[box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx], axis=(0,1)), yerr=np.mean(self.err[box_anchor[0]:box_anchor[0]+self.boxy,box_anchor[1]:box_anchor[1]+self.boxx,2], axis=(0,1)), marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+            else:
+                self.ax4.plot(self.z, np.mean(self.ne[box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx], axis=(0,1)), marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax5.plot(self.z, np.mean(self.temp[box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx], axis=(0,1)), marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax6.plot(self.z, np.mean(self.vel[box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx], axis=(0,1)), marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+            self.ax4.legend()
+            self.ax5.legend()
+            self.ax6.legend()
+            self.colour_idx += 1
+            self.fig.canvas.draW()
         
+    def _shape(self, opts):
+        self.shape = opts
+
+    def _boxx(self, x):
+        self.boxx = x
+
+    def _boxy(self, y):
+        self.boxy = y
+
     def _disconnect_matplotlib(self, _):
         self.fig.canvas.mpl_disconnect(self.receiver)
         
     def _clear(self, _):
         self.coords = []
         self.px_coords = []
+        self.shape_type = []
+        self.box_coords = []
         self.colour_idx = 0
+        self.n = 0
         while len(self.ax1.patches) > 0:
             for p in self.ax1.patches:
                 p.remove()

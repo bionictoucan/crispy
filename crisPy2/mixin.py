@@ -8,7 +8,9 @@ class CRISPSlicingMixin(NDSlicingMixin):
 
     def __getitem__(self, item):
         kwargs = self._slice(item)
-        return self.__class__(**kwargs)
+        cl = self.__class__(**kwargs)
+        cl.ind = item
+        return cl
 
     def _slice(self, item):
         kwargs = {}
@@ -42,7 +44,9 @@ class InversionSlicingMixin(NDSlicingMixin):
 
     def __getitem__(self, item):
         kwargs = self._slice(item)
-        return self.__class__(**kwargs)
+        cl = self.__class__(**kwargs)
+        cl.ind = item
+        return cl
 
     def _slice(self, item):
         kwargs = {}

@@ -1,4 +1,7 @@
 import codecs, os, sys, re, setuptools
+from sphinx.setup_command import BuildDoc
+
+cmdclass = {"build_sphinx" : BuildDoc}
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -32,5 +35,13 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent"
     ],
-    python_requires=">3.6"
+    python_requires=">3.6",
+    cmdclass=cmdclass,
+    command_options={
+        "build_sphinx" : {
+            "project" : ("setup.py", "crisPy2"),
+            "version" : ("setup.py", find_version("crisPy2/__init__.py")),
+            "source_dir" : ("setup.py", "docs")
+        }
+    }
 )
