@@ -12,6 +12,31 @@ from .utils import ObjDict, pt_bright
 from .io import hdf5_header_to_wcs
 
 class CRISP(CRISPSlicingMixin):
+    """
+    Class for a single narrowband CRISP observation. This object is intended to be for narrowband observations of a single spectral line. This can be sliced directly by virtue of inheriting from `astropy`'s `N-dimensional data slicing <https://docs.astropy.org/en/stable/nddata/>`_.
+
+    :param filename: The file to be represented by the class. This can be in the form of a fits file or hdf5 file or an ObjDict object (see ``crisPy2.utils`` for more information on ObjDicts). For fits files, the imaging spectroscopy/spectropolarimetry is assumed to be in the PrimaryHDU of the fits file. For hdf5 it is assumed to have a hdf5 dataset called "data".
+    :type filename: str or ObjDict
+    :param wcs: Defines the World Coordinate System (WCS) of the observation. If None, the WCS is constructed from the header information in the file. If a WCS is provided then it will be used by the class instead.
+    :type wcs: astropy.wcs.WCS or None, optional
+    :param uncertainty: The uncertainty in the observable. Default is None.
+    :type uncertainty: numpy.ndarray or None, optional
+    :param mask: The mask to be applied to the data. Default is None.
+    :type mask: numpy.ndarray or None, optional
+    :param nonu: Whether or not the :math:`\\Delta \\lambda` on the wavelength axis is uniform. This is helpful when constructing the WCS but if True, then the ``CRISPNonU`` class should be used. Default is False.
+    :type nonu:  bool, optional
+
+    :cvar file: This is where the data and header are stored as attributes to this attribute. e.g. ``file.data`` returns the data and ``file.header`` returns the header
+    :cvar wcs: This stores the WCS.
+    :cvar nonu: This is either True or False depending what is passed to the nonu kwarg.
+    :cvar uncertainty: This is the uncertainty array.
+    :cvar mask: The mask to be used on the data.
+    :cvar aa: The html symbol for Angstrom because it looks nicer in plotting than the LaTeX one that matplotlib renders.
+    :cvar a: The html symbol for alpha.
+    :cvar l: The html symbol for lambda.
+    :cvar D: The html symbol for Delta.
+    :cvar shape: The shape of the data from ``file``. Much easier than doing ``file.data.shape``.
+    """
     def __init__(self, filename, wcs=None, uncertainty=None, mask=None, nonu=False):
         if type(filename) == str and ".fits" in filename:
             self.file = fits.open(filename)[0]
@@ -70,6 +95,18 @@ class CRISP(CRISPSlicingMixin):
         Shape: {shape}"""
 
     def plot_spectrum(self, unit=None, air=False, d=False):
+        """
+        Plots the intensity spectrum for a specified coordinate by slicing.
+
+        Parameters
+        ----------
+        unit : astropy.units.Unit or None, optional
+            The unit to have the wavelength axis in. Default is None which changes the units to Angstrom.
+        air : bool, optional
+            Whether or not to convert the wavelength axis to air wavelength (if it is not already been converted). e.g. for the Ca II 8542  spectral line, 8542 is the rest wavelength of the spectral line measured in air. It is possible that the header data (and by proxy the WCS) will have the value of the rest wavelength in vacuum (which in this case is 8544). Default is False.
+        d : bool, optional
+            Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
+        """
         plt.style.use("ggplot")
         if self.file.data.ndim != 1:
             raise IndexError("If you are using Stokes data please use the plot_stokes method.")
@@ -107,6 +144,20 @@ class CRISP(CRISPSlicingMixin):
         fig.show()
 
     def plot_stokes(self, stokes, unit=None, air=False, d=False):
+        """
+        Plots the Stokes profiles for a given slice of the data.
+
+        Parameters
+        ----------
+        stokes : str
+            This is to ensure the plots are labelled correctly. Choose "all" to plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or single letter to plot just one of the Stokes parameters e.g. "U".
+        unit : astropy.units.Unit or None, optional
+            The unit to have the wavelength axis in. Default is None which changes the units to Angstrom.
+        air : bool, optional
+            Whether or not to convert the wavelength axis to air wavelength (if it is not already been converted). e.g. for the Ca II 8542  spectral line, 8542 is the rest wavelength of the spectral line measured in air. It is possible that the header data (and by proxy the WCS) will have the value of the rest wavelength in vacuum (which in this case is 8544). Default is False.
+        d : bool, optional
+            Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
+        """
 
         point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(*self.ind[-2:])]
         try:
@@ -349,6 +400,14 @@ class CRISP(CRISPSlicingMixin):
                 ax[1].tick_params(direction="in")
 
     def intensity_map(self, frame=None):
+        """
+        This plots the image for a certain wavelength depending on a specific slice.
+
+        Parameters
+        ----------
+        frame : str or None, optional
+            The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+        """
         plt.style.use("ggplot")
         
         wvl = np.round(self.wave(self.ind) << u.Angstrom, decimals=2).value
@@ -378,6 +437,16 @@ class CRISP(CRISPSlicingMixin):
             fig.show()
 
     def stokes_map(self, stokes, frame=None):
+        """
+        This plots the Stokes images for certain wavelength.
+
+        Parameters
+        ----------
+        stokes : str
+            This is to ensure the plots are labelled correctly. Choose "all" to plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or single letter to plot just one of the Stokes parameters e.g. "U".
+        frame : str or None, optional
+            The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+        """
         plt.style.use("ggplot")
 
         wvl = np.round(self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(self.ind[1]) << u.Angstrom, decimals=2).value
@@ -972,6 +1041,14 @@ class CRISP(CRISPSlicingMixin):
                     fig.colorbar(im2, ax=ax2, orientation="horizontal", label="V [DNs]")
 
     def wave(self, idx):
+        """
+        This function will take an index number or range and return the wavelength in Angstroms.
+
+        Parameters
+        ----------
+        idx : int or numpy.ndarray of ints
+            The index or indices along the wavelength axis to be converted to physical units.
+        """
         if len(self.wcs.low_level_wcs.array_shape) == 4:
             if hasattr(self, "ind") and type(self.ind[1]) == slice:
                 return self.wcs.low_level_wcs._wcs[0,self.ind[1],0,0].array_index_to_world(idx) << u.Angstrom
@@ -1009,6 +1086,16 @@ class CRISP(CRISPSlicingMixin):
             raise NotImplementedError("This is way too many dimensions for me to handle.")
 
     def to_lonlat(self, y, x):
+        """
+        This function will take a y, x coordinate in pixel space and map it to Helioprojective Longitude, Helioprojective Latitude according to the transform in the WCS. This will return the Helioprojective coordinates in units of arcseconds. Note this function takes arguments in the order of numpy indexing (y,x) but returns a pair longitude/latitude which is Solar-X, Solar-Y.
+
+        Parameters
+        ----------
+        y : int
+            The y-index to be converted to Helioprojective Latitude.
+        x : int
+            The x-index to be converted to Helioprojective Longitude.
+        """
         if len(self.wcs.low_level_wcs.array_shape) == 4:
             if hasattr(self, "ind"):
                 if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
@@ -1049,6 +1136,16 @@ class CRISP(CRISPSlicingMixin):
             raise NotImplementedError("Too many or too little dimensions.")
 
     def from_lonlat(self,lon,lat):
+        """
+        This function takes a Helioprojective Longitude, Helioprojective Latitude pair and converts them to the y, x indices to index the object correctly. The function takes its arguments in the order Helioprojective Longitude, Helioprojective Latitude but returns the indices in the (y,x) format so that the output of this function can be used to directly index the object.
+
+        Parameters
+        ----------
+        lon : float
+            The Helioprojective Longitude in arcseconds.
+        lat : float
+            The Helioprojective Latitude in arcseconds.
+        """
         lon, lat = lon << u.arcsec, lat << u.arcsec
         if len(self.wcs.low_level_wcs.array_shape) == 4:
             if hasattr(self, "ind"):
@@ -1090,6 +1187,14 @@ class CRISP(CRISPSlicingMixin):
             raise NotImplementedError("Too many or too little dimensions.")
 
 class CRISPSequence(CRISPSequenceSlicingMixin):
+    """
+    Class for multiple narrowband CRISP observations.
+
+    :param files: A list of dictionaries containing the parameters for individual ``CRISP`` instances. The function ``crisPy2.utils.CRISP_sequence_generator`` can be used to generate this list.
+    :type files: list[dict]
+
+    :cvar list: A list of ``CRISP`` instances.
+    """
     def __init__(self, files):
         self.list = [CRISP(**f) for f in files]
 
@@ -1124,6 +1229,20 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         Shape: {shape}"""
 
     def plot_spectrum(self, idx, unit=None, air=False, d=False):
+        """
+        Function for plotting the intensity spectrum for a given slice. Can be done either for all of the instances or for a single instance.
+
+        Parameters
+        ----------
+        idx : str or int
+            If "all" then the spectrum for a specific slice is plotted for all instances. If an int, then the spectrum for a specific slice for a specific instance is plotted.
+        unit : astropy.units.Unit or None, optional
+            The unit to have the wavelength axis in. Default is None which changes the units to Angstrom.
+        air : bool, optional
+            Whether or not to convert the wavelength axis to air wavelength (if it is not already been converted). e.g. for the Ca II 8542  spectral line, 8542 is the rest wavelength of the spectral line measured in air. It is possible that the header data (and by proxy the WCS) will have the value of the rest wavelength in vacuum (which in this case is 8544). Default is False.
+        d : bool, optional
+            Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
+        """
         if idx != "all":
             self.list[idx].plot_spectrum(unit=unit, air=air, d=d)
         else:
@@ -1131,6 +1250,22 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
                 f.plot_spectrum(unit=unit, air=air, d=d)
 
     def plot_stokes(self, idx, stokes, unit=None, air=False, d=False):
+        """
+        Function for plotting the Stokes profiles for a given slice. Can be done either for all of the instances or for a single instance.
+
+        Parameters
+        ----------
+        idx : str or int
+            If "all" then the spectrum for a specific slice is plotted for all instances. If an int, then the spectrum for a specific slice for a specific instance is plotted.
+        stokes : str
+            This is to ensure the plots are labelled correctly. Choose "all" to plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or single letter to plot just one of the Stokes parameters e.g. "U".
+        unit : astropy.units.Unit or None, optional
+            The unit to have the wavelength axis in. Default is None which changes the units to Angstrom.
+        air : bool, optional
+            Whether or not to convert the wavelength axis to air wavelength (if it is not already been converted). e.g. for the Ca II 8542  spectral line, 8542 is the rest wavelength of the spectral line measured in air. It is possible that the header data (and by proxy the WCS) will have the value of the rest wavelength in vacuum (which in this case is 8544). Default is False.
+        d : bool, optional
+            Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
+        """
         if idx != "all":
             self.list[idx].plot_stokes(stokes, unit=unit, air=air, d=d)
         else:
@@ -1138,6 +1273,16 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
                 f.plot_stokes(stokes, unit=unit, air=air, d=d)
 
     def intensity_map(self, idx, frame=None):
+        """
+        Function for plotting the intensity image for a given wavelength. Can be done either for all of the instances or for a single instance.
+
+        Parameters
+        ----------
+        idx : str or int
+            If "all" then the spectrum for a specific slice is plotted for all instances. If an int, then the spectrum for a specific slice for a specific instance is plotted.
+        frame : str or None, optional
+            The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+        """
         if idx != "all":
             self.list[idx].intensity_map(frame=frame)
         else:
@@ -1145,6 +1290,18 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
                 f.intensity_map(frame=frame)
 
     def stokes_map(self, idx, stokes, frame=None):
+        """
+        Function to plot the Stokes maps for a given wavelength. Can be done either for all of the instances or for a single instance.
+
+        Parameters
+        ----------
+        idx : str or int
+            If "all" then the spectrum for a specific slice is plotted for all instances. If an int, then the spectrum for a specific slice for a specific instance is plotted.
+        stokes : str
+            This is to ensure the plots are labelled correctly. Choose "all" to plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or single letter to plot just one of the Stokes parameters e.g. "U".
+        frame : str or None, optional
+            The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+        """
         if idx != "all":
             self.list[idx].stokes_map(stokes, frame=frame)
         else:

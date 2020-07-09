@@ -43,7 +43,7 @@ class Inversion(InversionSlicingMixin):
 
             Pointing: ({pointing_x}, {pointing_y})"""
 
-    def plot_ne(self):
+    def plot_ne(self, eb=False):
         point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind)]
         if self.header is not None:
             try:
@@ -56,14 +56,17 @@ class Inversion(InversionSlicingMixin):
             title = f"({point[0]}, {point[1]})"
         fig = plt.figure()
         ax1 = fig.gca()
-        ax1.plot(self.z, self.ne)
+        if eb:
+            ax1.errorbar(self.z, self.ne, yerr=self.mad[0])
+        else:
+            ax1.plot(self.z, self.ne)
         ax1.set_ylabel(r"log$_{10}$ n$_{\text{e}}$ \[cm$^{-3}$\]")
         ax1.set_xlabel("z [Mm]")
         ax1.set_title(f"Electron Number Density {title}")
         ax1.tick_params(direction="in")
         fig.show()
 
-    def plot_temp(self):
+    def plot_temp(self, eb=False):
         point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind)]
         if self.header is not None:
             try:
@@ -76,14 +79,17 @@ class Inversion(InversionSlicingMixin):
             title = f"({point[0]}, {point[1]})"
         fig = plt.figure()
         ax1 = fig.gca()
-        ax1.plot(self.z, self.temp)
+        if eb:
+            ax1.errorbar(self.z, self.temp, yerr=self.mad[1])
+        else:
+            ax1.plot(self.z, self.temp)
         ax1.set_ylabel(r"log$_{10}$ T \[K\]")
         ax1.set_xlabel("z [Mm]")
         ax1.set_title(f"Electron Temperature {title}")
         ax1.tick_params(direction="in")
         fig.show()
 
-    def plot_vel(self):
+    def plot_vel(self, eb=False):
         point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind)]
         if self.header is not None:
             try:
@@ -96,7 +102,10 @@ class Inversion(InversionSlicingMixin):
             title = f"({point[0]}, {point[1]})"
         fig = plt.figure()
         ax1 = fig.gca()
-        ax1.plot(self.z, self.vel)
+        if eb:
+            ax1.errorbar(self.z, self.vel, yerr=self.mad[2])
+        else:
+            ax1.plot(self.z, self.vel)
         ax1.set_ylabel(r"Bulk Plasma Flow \[km s$^{-1}$\]")
         ax1.set_xlabel("z [Mm]")
         ax1.set_title(f"Bulk Plasma Flow {title}")

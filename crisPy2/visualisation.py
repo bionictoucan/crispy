@@ -20,22 +20,38 @@ class SpectralViewer:
         self.a = html.unescape("&alpha;")
         self.D = html.unescape("&Delta;")
         shape = widgets.Dropdown(options=["point", "box"], value="point", description="Shape: ")
-        if type(data) == str:
-            self.cube = CRISP(filename=data, wcs=wcs, uncertainty=uncertainty, mask=mask)
-            self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
-        elif type(data) == list:
-            self.cube = CRISPSequence(files=data)
-            self.wvls1 = self.cube.list[0].wave(np.arange(self.cube.list[0].shape[0]))
-            self.wvls2 = self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
-        elif type(data) == CRISP:
-            self.cube = data
-            self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
-        elif type(data) == CRISPSequence:
-            self.cube = data
-            self.wvls1 = self.cube.list[0].wave(np.arange(self.cube.list[0].shape[0]))
-            self.wvls2 = self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
+        if not nonu:
+            if type(data) == str:
+                self.cube = CRISP(filename=data, wcs=wcs, uncertainty=uncertainty, mask=mask)
+                self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
+            elif type(data) == list:
+                self.cube = CRISPSequence(files=data)
+                self.wvls1 = self.cube.list[0].wave(np.arange(self.cube.list[0].shape[0]))
+                self.wvls2 = self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
+            elif type(data) == CRISP:
+                self.cube = data
+                self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
+            elif type(data) == CRISPSequence:
+                self.cube = data
+                self.wvls1 = self.cube.list[0].wave(np.arange(self.cube.list[0].shape[0]))
+                self.wvls2 = self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
+        else:
+            if type(data) == str:
+                self.cube = CRISPNonU(filename=data, wcs=wcs, uncertainty=uncertainty, mask=mask)
+                self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
+            elif type(data) == list:
+                self.cube = CRISPNonUSequence(files=data)
+                self.wvls1 = self.cube.list[0].wave(np.arange(self.cube.list[0].shape[0]))
+                self.wvls2 = self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
+            elif type(data) == CRISPNonU:
+                self.cube = data
+                self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
+            elif type(data) == CRISPNonUSequence:
+                self.cube = data
+                self.wvls1 = self.cube.list[0].wave(np.arange(self.cube.list[0].shape[0]))
+                self.wvls2 = self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
 
-        if type(self.cube) == CRISP:
+        if type(self.cube) == CRISP or CRISPNonU:
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(1, 2, 1, projection=self.cube.wcs.dropaxis(-1))
             self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
@@ -54,7 +70,7 @@ class SpectralViewer:
 
             display(widgets.HBox([ll, shape]))
                 
-        elif type(self.cube) == CRISPSequence:
+        elif type(self.cube) == CRISPSequence or CRISPNonUSequence:
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(2, 2, 1, projection=self.cube.list[0].wcs.dropaxis(-1))
             self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
