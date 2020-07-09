@@ -23,7 +23,7 @@ copyright = '2020, John A. Armstrong'
 author = 'John A. Armstrong'
 
 # The full version, including alpha/beta/rc tags
-release = '0.5.0'
+release = '0.4.0'
 
 
 # -- General configuration ---------------------------------------------------
