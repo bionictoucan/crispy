@@ -70,3 +70,21 @@ pt_hic_cycler = cycler(color=list(pt_hic.values()))
 pt_vibrant_cycler = cycler(color=list(pt_vibrant.values()))
 
 pt_muted_cycler = cycler(color=list(pt_muted.values()))
+
+def CRISP_sequence_constructor(files, wcs=None, uncertainty=None, mask=None, nonu=False):
+    file_dict_list = []
+
+    for j, f in enumerate(files):
+        d = {}
+        d["filename"] = f
+        if wcs is not None:
+            d["wcs"] = wcs[j]
+        if uncertainty is not None:
+            d["uncertainty"] = uncertainty[j]
+        if mask is not None:
+            d["mask"] = mask[j]
+        d["nonu"] = nonu
+
+        file_dict_list.append(d)
+
+    return file_dict_list
