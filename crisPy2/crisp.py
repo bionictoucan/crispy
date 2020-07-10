@@ -410,17 +410,28 @@ class CRISP(CRISPSlicingMixin):
         """
         plt.style.use("ggplot")
         
-        wvl = np.round(self.wave(self.ind) << u.Angstrom, decimals=2).value
+        if type(self.ind) == int:
+            idx = self.ind
+        elif self.wcs.low_level_wcs._wcs.naxis == 4:
+            idx = self.ind[1]
+        else:
+            idx = self.ind[0]
+        wvl = np.round(self.wave(idx) << u.Angstrom, decimals=2).value
         del_wvl = np.round(wvl - (self.wave(self.wcs.low_level_wcs._wcs.array_shape[0]//2) << u.Angstrom).value, decimals=2)
         try:
             datetime = self.file.header["DATE-AVG"]
         except KeyError:
             datetime = self.file.header["date-obs"] + "T" + self.file.header["time-obs"]
+
+        if self.file.data.min() < 0:
+            vmin = 0
+        else:
+            vmin = self.file.data.min()
         
         if frame is None:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
-            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=0)
+            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin)
             ax1.set_ylabel("Helioprojective Latitude [arcsec]")
             ax1.set_xlabel("Helioprojective Longitude [arcsec]")
             ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
@@ -429,7 +440,7 @@ class CRISP(CRISPSlicingMixin):
         elif frame == "pix":
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1)
-            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=0, origin="lower")
+            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin, origin="lower")
             ax1.set_ylabel("y [pixels]")
             ax1.set_xlabel("x [pixels]")
             ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
@@ -462,7 +473,7 @@ class CRISP(CRISPSlicingMixin):
                 fig = plt.figure()
                 ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
                 if stokes == "I":
-                    im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data, cmap="Greys_r")
                     ax1.set_title("Stokes I "+title)
                     fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
                 elif stokes == "Q":
@@ -488,7 +499,7 @@ class CRISP(CRISPSlicingMixin):
                     fig = plt.figure()
                     fig.suptitle(title)
                     ax1 = fig.add_subplot(2, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.xaxis.set_label_position("top")
@@ -531,7 +542,7 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
@@ -585,7 +596,7 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
@@ -612,7 +623,7 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
@@ -639,7 +650,7 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
@@ -658,7 +669,7 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
@@ -677,7 +688,7 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
@@ -753,7 +764,7 @@ class CRISP(CRISPSlicingMixin):
                 fig = plt.figure()
                 ax1 = fig.add_subplot(1, 1, 1) 
                 if stokes == "I":
-                    im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data, cmap="Greys_r", origin="lower")
                     ax1.set_title("Stokes I "+title)
                     fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
                 elif stokes == "Q":
@@ -779,7 +790,7 @@ class CRISP(CRISPSlicingMixin):
                     fig = plt.figure()
                     fig.suptitle(title)
                     ax1 = fig.add_subplot(2, 2, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.xaxis.set_label_position("top")
@@ -822,7 +833,7 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes I")
@@ -876,7 +887,7 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes I")
@@ -903,7 +914,7 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes I")
@@ -930,7 +941,7 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes I")
@@ -949,7 +960,7 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes I")
@@ -968,7 +979,7 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes I")
@@ -1342,10 +1353,15 @@ class CRISPWideband(CRISP):
             datetime = self.file.header["date-obs"] + "T" + self.file.header["time-obs"]
             el = self.file.header["element"]
 
+        if self.file.data.min() < 0:
+            vmin = 0
+        else:
+            vmin = self.file.data.min()
+
         if frame is None:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs)
-            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=0)
+            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin)
             ax1.set_ylabel("Helioprojective Latitude [arcsec]")
             ax1.set_xlabel("Helioprojective Longitude [arcsec]")
             ax1.set_title(f"{datetime} {el} {self.aa}")
@@ -1354,7 +1370,7 @@ class CRISPWideband(CRISP):
         elif frame == "pix":
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1)
-            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=0, origin="lower")
+            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin, origin="lower")
             ax1.set_ylabel("y [arcsec]")
             ax1.set_xlabel("x [arcsec]")
             ax1.set_title(f"{datetime} {el} {self.aa}")
@@ -1712,17 +1728,28 @@ class CRISPNonU(CRISP):
     def intensity_map(self, frame=None):
         plt.style.use("ggplot")
         
-        wvl = np.round(self.wvls[self.ind], decimals=2)
+        if type(self.ind) == int:
+            idx = self.ind
+        elif self.wcs.low_level_wcs._wcs.naxis == 4:
+            idx = self.ind[1]
+        else:
+            idx = self.ind[0]
+        wvl = np.round(self.wvls[idx], decimals=2)
         del_wvl = np.round(wvl - np.median(self.wvls), decimals=2)
         try:
             datetime = self.file.header["DATE-AVG"]
         except KeyError:
             datetime = self.file.header["date-obs"] + "T" + self.file.header["time-obs"]
+
+        if self.file.data.min() < 0:
+            vmin = 0
+        else:
+            vmin = self.file.data.min()
         
         if frame is None:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
-            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=0)
+            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin)
             ax1.set_ylabel("Helioprojective Latitude [arcsec]")
             ax1.set_xlabel("Helioprojective Longitude [arcsec]")
             ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
@@ -1731,7 +1758,7 @@ class CRISPNonU(CRISP):
         elif frame == "pix":
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1)
-            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=0, origin="lower")
+            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin, origin="lower")
             ax1.set_ylabel("y [pixels]")
             ax1.set_xlabel("x [pixels]")
             ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
@@ -1754,7 +1781,7 @@ class CRISPNonU(CRISP):
                 fig = plt.figure()
                 ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
                 if stokes == "I":
-                    im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data, cmap="Greys_r")
                     ax1.set_title("Stokes I "+title)
                     fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
                 elif stokes == "Q":
@@ -1780,7 +1807,7 @@ class CRISPNonU(CRISP):
                     fig = plt.figure()
                     fig.suptitle(title)
                     ax1 = fig.add_subplot(2, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.xaxis.set_label_position("top")
@@ -1823,7 +1850,7 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
@@ -1877,7 +1904,7 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
@@ -1904,7 +1931,7 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
@@ -1931,7 +1958,7 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
@@ -1950,7 +1977,7 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
@@ -1969,7 +1996,7 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0)
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
@@ -2045,7 +2072,7 @@ class CRISPNonU(CRISP):
                 fig = plt.figure()
                 ax1 = fig.add_subplot(1, 1, 1) 
                 if stokes == "I":
-                    im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data, cmap="Greys_r", origin="lower")
                     ax1.set_title("Stokes I "+title)
                     fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
                 elif stokes == "Q":
@@ -2071,7 +2098,7 @@ class CRISPNonU(CRISP):
                     fig = plt.figure()
                     fig.suptitle(title)
                     ax1 = fig.add_subplot(2, 2, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.xaxis.set_label_position("top")
@@ -2114,7 +2141,7 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes I")
@@ -2168,7 +2195,7 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes I")
@@ -2195,7 +2222,7 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes I")
@@ -2222,7 +2249,7 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes I")
@@ -2241,7 +2268,7 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes I")
@@ -2260,7 +2287,7 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", vmin=0, origin="lower")
+                    im1 = ax1.imshow(self.file.data[0], cmap="Greys_r", origin="lower")
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes I")
