@@ -1169,7 +1169,7 @@ class CRISP(CRISPSlicingMixin):
                 else:
                     return self.wcs.low_level_wcs._wcs[0,0].world_to_array_index(lon,lat)
             else:
-                return self.wcs.low_level_wcs._wcs[0,0].world_to_array_index(lon,lat)
+                return self.wcs[0,0].world_to_array_index(lon,lat)
         elif len(self.wcs.low_level_wcs.array_shape) == 3:
             if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
                 if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
@@ -1191,7 +1191,7 @@ class CRISP(CRISPSlicingMixin):
                     else:
                         return self.wcs.low_level_wcs._wcs[0].world_to_array_index(lon,lat)
                 else:
-                    return self.wcs.low_level_wcs._wcs[0].world_to_array_index(lon,lat)
+                    return self.wcs[0].world_to_array_index(lon,lat)
         elif len(self.wcs.low_level_wcs.array_shape) == 2:
             return self.wcs.world_to_array_index(lon,lat)
         else:
@@ -1320,6 +1320,9 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
                 f.stokes_map(stokes, frame=frame)
 
 class CRISPWideband(CRISP):
+    """
+    Class for 
+    """
     def __str__(self):
         if type(self.file.header) == Header:
             time = self.file.header.get("DATE-AVG")[-12:]
