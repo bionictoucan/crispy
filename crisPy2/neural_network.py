@@ -83,7 +83,7 @@ class ResBlock(nn.Module):
         Whether or not to upsample the input to the layer. This is useful in decoder layers in autoencoders. Upsampling is done via a factor of 2 interpolation (it is only currently implemented assuming the size of the input is to be doubled, will be retconned to work for me if there is demand). Default is False.
     """
 
-    def __init__(self, in_channels, out_channels, kernel=3, stride=1, pad="reflect", bias=False, normal="batch", activation="relu", upsample=False):
+    def __init__(self, in_channels, out_channels, kernel=3, stride=1, pad="reflect", bias=False, normal="batch", activation="relu", upsample=False, use_dropout=False):
         super(ResBlock, self).__init__()
 
         self.upsample = upsample
@@ -115,6 +115,11 @@ class ResBlock(nn.Module):
             self.downsample = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
         else:
             self.downsample = None
+            
+        if use_dropout:
+            self.dropout = nn.Dropout(0.5)
+        else:
+            self.dropout = None
 
     def forward(self, inp):
         identity = inp.clone()
@@ -127,6 +132,9 @@ class ResBlock(nn.Module):
         if self.norm1 is not None:
             out = self.norm1(out)
         out = self.act(out)
+        
+        if self.dropout:
+            out = self.dropout(out)
 
         out = self.conv2(out)
         if self.norm2 is not None:
