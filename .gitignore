@@ -7,7 +7,6 @@
 /build/
 /*.ipynb
 /.ipynb_checkpoints/*
-*.png
 *.pdf
 .DS_Store
 *.ipynb
