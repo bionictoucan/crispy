@@ -5,3 +5,6 @@ API
    :maxdepth: 2
 
    datastructs
+   inversions
+   visualisation
+   neuralnetwork

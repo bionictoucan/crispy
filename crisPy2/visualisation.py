@@ -13,6 +13,27 @@ from matplotlib.lines import Line2D
 from .utils import pt_bright_cycler
 
 class SpectralViewer:
+    """
+    Imaging spectroscopic viewer. SpectralViewer should be used when one wants to click on points of an image and have the spectrum displayed for that point. This works **exclusively** in Jupyter notebook but can be a nice data exploration tool. This viewer utilises the data structures defined in `crisPy2.crisp` and has many variable options.
+
+    :param data: The data to explore, this can be either one or two spectral lines (support for more than two can be added if required). This is the only required argument to view the data.
+    :type data: str or list or CRISP or CRISPSequence or CRISPNonU or CRISPNonUSequence
+    :param wcs: A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.
+    :type wcs: astropy.wcs.WCS or None, optional
+    :param uncertainty: The uncertainty in the intensity values of the data. Default is None.
+    :type uncertainty: numpy.ndarray or None, optional
+    :param mask: A mask to be used on the data. Default is None.
+    :type mask: numpy.ndarray or None, optional
+    :param nonu: Whether or not the spectral axis is non-uniform. Default is False.
+    :type nonu: bool, optional
+
+    :cvar coords: The coordinates selected to produce spectra.
+    :type coords: list[tuple]
+    :cvar px_coords: The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.
+    :type px_coords: list[tuple]
+    :cvar shape_type: The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.
+    :type shape_type: list[str]
+    """
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, nonu=False):
         plt.style.use("ggplot")
         self.aa = html.unescape("&#8491;")
@@ -374,6 +395,19 @@ class SpectralViewer:
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="Intensity [DNs]")
 
 class WidebandViewer:
+    """
+    Wideband image viewer. This visualisation tool is useful for exploring the time series evolution of the wideband images.
+
+    :param files: The files to explore the time series for.
+    :type files: CRISPWidebandSequence or list
+
+    :cvar coords: The coordinates selected to produce spectra.
+    :type coords: list[tuple]
+    :cvar px_coords: The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.
+    :type px_coords: list[tuple]
+    :cvar shape_type: The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.
+    :type shape_type: list[str]
+    """
     def __init__(self, files):
         plt.style.use("ggplot")
         shape = widgets.Dropdown(options=["point", "box"], value="point", description="Shape: ")
@@ -700,6 +734,27 @@ class WidebandViewer:
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="I [DNs]")
 
 class AtmosViewer:
+    """
+    This visualisation tool is for the investigation of atmospheric parameters found via inversion techniques. This makes use of the ``Inversion`` class. This assumes that there are three atmospheric parameters in the inversion: electron number density, electron temperature and bulk line-of-sight velocity. These are the estimated quantities by RADYNVERSION.
+
+    :param filename: The inversion file to be used.
+    :type filename: str or Inversion
+    :param z: The physical height grid of the estimated atmospheric parameters in megametres. Can only be None if filename is already an ``Inversion`` instance. Default is None. (N.B. the RADYNVERSION height grid is available from ``crisPy2.radynversion.utils``).
+    :type z: numpy.ndarray or None, optional
+    :param wcs: The world coordinate system that the inversion parameters are defined by. Can be None only if filename is already an ``Inversion`` instance. Default is None.
+    :type wcs: astropy.wcs.WCS or None, optional
+    :param header: The additional header information from the observations. Default is None.
+    :type header: dict or None, optional
+    :param eb: Whether or not to plot the errorbars on the parameter profiles. Default is False.
+    :type eb: bool, optional
+
+    :cvar coords: The coordinates selected to produce spectra.
+    :type coords: list[tuple]
+    :cvar px_coords: The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.
+    :type px_coords: list[tuple]
+    :cvar shape_type: The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.
+    :type shape_type: list[str]
+    """
     def __init__(self, filename, z=None, wcs=None, header=None, eb=False):
         shape = widgets.Dropdown(options=["point", "box"], value="point", description="Shape: ")
         if type(filename) == str:

@@ -399,7 +399,7 @@ class CRISP(CRISPSlicingMixin):
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
 
-    def intensity_map(self, frame=None):
+    def intensity_map(self, frame=None, norm=None):
         """
         This plots the image for a certain wavelength depending on a specific slice.
 
@@ -407,6 +407,8 @@ class CRISP(CRISPSlicingMixin):
         ----------
         frame : str or None, optional
             The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+        norm : matplotlib.colors.Normalize or None, optional
+            The normalisation to use in the colourmap.
         """
         plt.style.use("ggplot")
         
@@ -431,7 +433,7 @@ class CRISP(CRISPSlicingMixin):
         if frame is None:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
-            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin)
+            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin, norm=norm)
             ax1.set_ylabel("Helioprojective Latitude [arcsec]")
             ax1.set_xlabel("Helioprojective Longitude [arcsec]")
             ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
@@ -440,7 +442,7 @@ class CRISP(CRISPSlicingMixin):
         elif frame == "pix":
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1)
-            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin, origin="lower")
+            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin, origin="lower", norm=norm)
             ax1.set_ylabel("y [pixels]")
             ax1.set_xlabel("x [pixels]")
             ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
@@ -1283,7 +1285,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             for f in self.list:
                 f.plot_stokes(stokes, unit=unit, air=air, d=d)
 
-    def intensity_map(self, idx, frame=None):
+    def intensity_map(self, idx, frame=None, norm=None):
         """
         Function for plotting the intensity image for a given wavelength. Can be done either for all of the instances or for a single instance.
 
@@ -1293,12 +1295,14 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             If "all" then the spectrum for a specific slice is plotted for all instances. If an int, then the spectrum for a specific slice for a specific instance is plotted.
         frame : str or None, optional
             The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+        norm : matplotlib.colors.Normalize or None, optional
+            The normalisation to use in the colourmap.
         """
         if idx != "all":
-            self.list[idx].intensity_map(frame=frame)
+            self.list[idx].intensity_map(frame=frame, norm=norm)
         else:
             for f in self.list:
-                f.intensity_map(frame=frame)
+                f.intensity_map(frame=frame, norm=norm)
 
     def stokes_map(self, idx, stokes, frame=None):
         """
@@ -1321,7 +1325,29 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
 
 class CRISPWideband(CRISP):
     """
-    Class for 
+    Class for wideband or single wavelength CRISP images. This class expects the data to be two-dimensional.
+
+    :param filename: The file to be represented by the class. This can be in the form of a fits file or hdf5 file or an ObjDict object (see ``crisPy2.utils`` for more information on ObjDicts). For fits files, the imaging spectroscopy/spectropolarimetry is assumed to be in the PrimaryHDU of the fits file. For hdf5 it is assumed to have a hdf5 dataset called "data".
+    :type filename: str or ObjDict
+    :param wcs: Defines the World Coordinate System (WCS) of the observation. If None, the WCS is constructed from the header information in the file. If a WCS is provided then it will be used by the class instead.
+    :type wcs: astropy.wcs.WCS or None, optional
+    :param uncertainty: The uncertainty in the observable. Default is None.
+    :type uncertainty: numpy.ndarray or None, optional
+    :param mask: The mask to be applied to the data. Default is None.
+    :type mask: numpy.ndarray or None, optional
+    :param nonu: Whether or not the :math:`\\Delta \\lambda` on the wavelength axis is uniform. This is helpful when constructing the WCS but if True, then the ``CRISPNonU`` class should be used. Default is False.
+    :type nonu:  bool, optional
+
+    :cvar file: This is where the data and header are stored as attributes to this attribute. e.g. ``file.data`` returns the data and ``file.header`` returns the header
+    :cvar wcs: This stores the WCS.
+    :cvar nonu: This is either True or False depending what is passed to the nonu kwarg.
+    :cvar uncertainty: This is the uncertainty array.
+    :cvar mask: The mask to be used on the data.
+    :cvar aa: The html symbol for Angstrom because it looks nicer in plotting than the LaTeX one that matplotlib renders.
+    :cvar a: The html symbol for alpha.
+    :cvar l: The html symbol for lambda.
+    :cvar D: The html symbol for Delta.
+    :cvar shape: The shape of the data from ``file``. Much easier than doing ``file.data.shape``.
     """
     def __str__(self):
         if type(self.file.header) == Header:
@@ -1347,7 +1373,17 @@ class CRISPWideband(CRISP):
         Pointing: ({pointing_x}, {pointing_y})
         Shape: {shape}"""
 
-    def intensity_map(self, frame=None):
+    def intensity_map(self, frame=None, norm=None):
+        """
+        This function plots the image in the same manner as the ``crisPy2.crisp.CRISP.intensity_map`` method.
+
+        Parameters
+        ----------
+        frame : str or None, optional
+            The frame to plot the data in. Default is None, meaning the WCS frame is used. The other option is "pix" to plot in the pixel plane.
+        norm : matplotlib.colors.Normalize or None, optional
+            The normalisation to use in the colourmap.
+        """
         plt.style.use("ggplot")
         try:
             datetime = self.file.header["DATE-AVG"]
@@ -1364,7 +1400,7 @@ class CRISPWideband(CRISP):
         if frame is None:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs)
-            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin)
+            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin, norm=norm)
             ax1.set_ylabel("Helioprojective Latitude [arcsec]")
             ax1.set_xlabel("Helioprojective Longitude [arcsec]")
             ax1.set_title(f"{datetime} {el} {self.aa}")
@@ -1373,7 +1409,7 @@ class CRISPWideband(CRISP):
         elif frame == "pix":
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1)
-            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin, origin="lower")
+            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin, origin="lower", norm=norm)
             ax1.set_ylabel("y [arcsec]")
             ax1.set_xlabel("x [arcsec]")
             ax1.set_title(f"{datetime} {el} {self.aa}")
@@ -1381,6 +1417,14 @@ class CRISPWideband(CRISP):
             fig.show()
 
 class CRISPWidebandSequence(CRISPSequence):
+    """
+    This class is for having a sequence of wideband or single wavelength images (preferrably chronologically but no limit is placed on this so y'know be careful).
+
+    :param files: A list of dictionaries containing the parameters for individual ``CRISPWideband`` instances. The function ``crisPy2.utils.CRISP_sequence_generator`` can be used to generate this list.
+    :type files: list[dict]
+
+    :cvar list: A list of ``CRISP`` instances.
+    """
     def __init__(self, files):
         self.list = [CRISPWideband(**f) for f in files]
 
@@ -1409,6 +1453,32 @@ class CRISPWidebandSequence(CRISPSequence):
         Shape: {shape}"""
 
 class CRISPNonU(CRISP):
+    """
+    This is a class for narrowband CRISP observations whose wavelength axis is sampled non-uniformly. What this means is that each pair of sampled wavelengths is not necessarily separated by the same :math:`\\Delta \\lambda` and thus the ``CDELT3`` fits keyword becomes meaningless as this can only comprehend constant changes in the third axis. This also means that the WCS does not work for the wavelength axis but is still constructed as it holds true in the y,x spatial plane. This class assumes that if the sampling is non-uniform then the true wavelengths that are sampled are stored in the first non-PrimaryHDU in the fits file.
+
+    :param filename: The file to be represented by the class. This can be in the form of a fits file or hdf5 file or an ObjDict object (see ``crisPy2.utils`` for more information on ObjDicts). For fits files, the imaging spectroscopy/spectropolarimetry is assumed to be in the PrimaryHDU of the fits file. For hdf5 it is assumed to have a hdf5 dataset called "data".
+    :type filename: str or ObjDict
+    :param wcs: Defines the World Coordinate System (WCS) of the observation. If None, the WCS is constructed from the header information in the file. If a WCS is provided then it will be used by the class instead.
+    :type wcs: astropy.wcs.WCS or None, optional
+    :param uncertainty: The uncertainty in the observable. Default is None.
+    :type uncertainty: numpy.ndarray or None, optional
+    :param mask: The mask to be applied to the data. Default is None.
+    :type mask: numpy.ndarray or None, optional
+    :param nonu: Whether or not the :math:`\\Delta \\lambda` on the wavelength axis is uniform. This is helpful when constructing the WCS but if True, then the ``CRISPNonU`` class should be used. Default is False.
+    :type nonu:  bool, optional
+
+    :cvar file: This is where the data and header are stored as attributes to this attribute. e.g. ``file.data`` returns the data and ``file.header`` returns the header
+    :cvar wvls: This is where the sampled wavelength points are read in to be used for plotting and ``wave`` methods.
+    :cvar wcs: This stores the WCS.
+    :cvar nonu: This is either True or False depending what is passed to the nonu kwarg.
+    :cvar uncertainty: This is the uncertainty array.
+    :cvar mask: The mask to be used on the data.
+    :cvar aa: The html symbol for Angstrom because it looks nicer in plotting than the LaTeX one that matplotlib renders.
+    :cvar a: The html symbol for alpha.
+    :cvar l: The html symbol for lambda.
+    :cvar D: The html symbol for Delta.
+    :cvar shape: The shape of the data from ``file``. Much easier than doing ``file.data.shape``.
+    """
     def __init__(self, filename, wcs=None, uncertainty=None, mask=None, nonu=True):
         super().__init__(filename=filename, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu)
 
@@ -1450,6 +1520,18 @@ class CRISPNonU(CRISP):
         Wavelengths sampled: {sampled_wvls}"""
 
     def plot_spectrum(self, unit=None, air=False, d=False):
+        """
+        Plots the intensity spectrum for a specified coordinate by slicing.
+
+        Parameters
+        ----------
+        unit : astropy.units.Unit or None, optional
+            The unit to have the wavelength axis in. Default is None which changes the units to Angstrom.
+        air : bool, optional
+            Whether or not to convert the wavelength axis to air wavelength (if it is not already been converted). e.g. for the Ca II 8542  spectral line, 8542 is the rest wavelength of the spectral line measured in air. It is possible that the header data (and by proxy the WCS) will have the value of the rest wavelength in vacuum (which in this case is 8544). Default is False.
+        d : bool, optional
+            Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
+        """
         plt.style.use("ggplot")
         if self.file.data.ndim != 1:
             raise IndexError("If you are using Stokes data please use the plot_stokes method.")
@@ -1487,6 +1569,20 @@ class CRISPNonU(CRISP):
         fig.show()
 
     def plot_stokes(self, stokes, unit=None, air=False, d=False):
+        """
+        Plots the Stokes profiles for a given slice of the data.
+
+        Parameters
+        ----------
+        stokes : str
+            This is to ensure the plots are labelled correctly. Choose "all" to plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or single letter to plot just one of the Stokes parameters e.g. "U".
+        unit : astropy.units.Unit or None, optional
+            The unit to have the wavelength axis in. Default is None which changes the units to Angstrom.
+        air : bool, optional
+            Whether or not to convert the wavelength axis to air wavelength (if it is not already been converted). e.g. for the Ca II 8542  spectral line, 8542 is the rest wavelength of the spectral line measured in air. It is possible that the header data (and by proxy the WCS) will have the value of the rest wavelength in vacuum (which in this case is 8544). Default is False.
+        d : bool, optional
+            Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
+        """
 
         point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(*self.ind[-2:])]
         try:
@@ -1728,7 +1824,17 @@ class CRISPNonU(CRISP):
                 ax[1].set_xlabel(xlabel)
                 ax[1].tick_params(direction="in")
 
-    def intensity_map(self, frame=None):
+    def intensity_map(self, frame=None, norm=None):
+        """
+        This plots the image for a certain wavelength depending on a specific slice.
+
+        Parameters
+        ----------
+        frame : str or None, optional
+            The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+        norm : matplotlib.colors.Normalize or None, optional
+            The normalisation to use in the colourmap.
+        """
         plt.style.use("ggplot")
         
         if type(self.ind) == int:
@@ -1752,7 +1858,7 @@ class CRISPNonU(CRISP):
         if frame is None:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
-            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin)
+            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin, norm=norm)
             ax1.set_ylabel("Helioprojective Latitude [arcsec]")
             ax1.set_xlabel("Helioprojective Longitude [arcsec]")
             ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
@@ -1761,7 +1867,7 @@ class CRISPNonU(CRISP):
         elif frame == "pix":
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1)
-            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin, origin="lower")
+            im1 = ax1.imshow(self.file.data, cmap="Greys_r", vmin=vmin, origin="lower", norm=norm)
             ax1.set_ylabel("y [pixels]")
             ax1.set_xlabel("x [pixels]")
             ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
@@ -1769,6 +1875,16 @@ class CRISPNonU(CRISP):
             fig.show()
 
     def stokes_map(self, stokes, frame=None):
+        """
+        This plots the Stokes images for certain wavelength.
+
+        Parameters
+        ----------
+        stokes : str
+            This is to ensure the plots are labelled correctly. Choose "all" to plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or single letter to plot just one of the Stokes parameters e.g. "U".
+        frame : str or None, optional
+            The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+        """
         plt.style.use("ggplot")
 
         wvl = np.round(self.wvls[self.ind], decimals=2)
@@ -2363,9 +2479,25 @@ class CRISPNonU(CRISP):
                     fig.colorbar(im2, ax=ax2, orientation="horizontal", label="V [DNs]")
 
     def wave(self, idx):
+        """
+        Class method for returning the wavelength sampled at a given index.
+
+        Parameters
+        ----------
+        idx : int
+            The index along the wavelength axis to know the wavelength for.
+        """
         return self.wvls[idx]
 
 class CRISPNonUSequence(CRISPSequence):
+    """
+    This is a class for a sequence of ``CRISPNonU`` objects and operates identically to ``CRISPSequence``.
+
+    :param files: A list of dictionaries containing the parameters for individual ``CRISPNonU`` instances. The function ``crisPy2.utils.CRISP_sequence_generator`` can be used to generate this list.
+    :type files: list[dict]
+
+    :cvar list: A list of ``CRISPNonU`` instances.
+    """
     def __init__(self, files):
         self.list = [CRISPNonU(**f) for f in files]
 
