@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.ndimage import rotate
 from cycler import cycler
+from tqdm import tqdm
 
 class ObjDict(dict):
     '''
