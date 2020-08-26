@@ -57,6 +57,78 @@ class ConvBlock(nn.Module):
 
         return out
 
+class ConvTransBlock(nn.Module):
+    """
+    A modifiable transpose conovlutional layer.
+
+    Parameters
+    ----------
+    in_channels : int
+        The number of channels fed into the convolutional layer.
+    out_channels : int
+        The number of channels fed out of the convolutional layer.
+    kernel : int, optional
+        The size of the convolutional kernel. Default is 3 e.g. 3x3 convolutional kernel.
+    stride : int, optional
+        The stride of the convolution. Default is 1.
+    pad : str, optional
+        The type of padding to use when calculating the convolution. Default is "reflect".
+    bias : bool, optional
+        Whether or not to include a bias in the linear transformation. Default is False.
+    normal : str, optional
+        The type of normalisation layer to use. Default is "batch".
+    activation : str, optional
+        The activation function to use. Default is "relu" to use the Rectified Linear Unit (ReLU) activation function.
+    """
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel=3,
+        stride=1,
+        bias=False,
+        pad="reflect",
+        normal="batch",
+        activation="relu",
+        **kwargs
+    ):
+        super(ConvTransBlock, self).__init__()
+
+        self.convtrans = nn.ConvTranspose2d(
+            in_channles,
+            out_channels,
+            kernel_size=kernel,
+            stride=stride,
+            bias=bias,
+            pad=(kernel-1)//2,
+            padding_mode=pad,
+            output_padding=(kernel-1)//2,
+            **kwargs
+            )
+        if normal == "batch":
+            self.norm = nn.BatchNorm2d(out_channels)
+        elif normal == "instance":
+            self.norm = nn.InstanceNorm2d(out_channels)
+        elif normal == None:
+            self.norm = None
+
+        if activation.lower() == "relu":
+            self.act = nn.ReLU()
+        else:
+            raise NotImplementedError("Soon....")
+
+        nn.init.kaiming_normal_(self.convtrans.weight)
+        if bias:
+            nn.init.constant_(self.conv.bias, 0.01)
+
+    def forward(self, inp):
+        out = self.convtrans(inp)
+        if self.norm != None:
+            out = self.norm(out)
+        out = self.act(out)
+
+        return out
+
 class ResBlock(nn.Module):
     """
     A modifiable residual block for deep neural networks.

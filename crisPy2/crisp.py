@@ -94,6 +94,9 @@ class CRISP(CRISPSlicingMixin):
         Pointing: ({pointing_x}, {pointing_y})
         Shape: {shape}"""
 
+    def __repr__(self):
+        return self.file.data
+
     def plot_spectrum(self, unit=None, air=False, d=False):
         """
         Plots the intensity spectrum for a specified coordinate by slicing.

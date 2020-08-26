@@ -7,8 +7,6 @@ Neural networks have seen a rise in popularity in solar physics (see `Armstrong 
 
 Neural networks are composed of non-linear *layers* made up of a linear operation, a normalisation technique and an non-linear (known as activation) operation. Like Lego, neural network frameworks typically give each of these pieces individually and a mix and match process can ensue. The approach we take however is that these layers will always follow the linear -> normalisation -> non-linear path and therefore we combine these key building blocks together with the interchangeability being encapsulated by keyword arguments.
 
-For training and putting together of a full model, I recommend looking at `PyTorch Lightning <https://pytorch-lightning.readthedocs.io/en/latest/>`_ which all of these classes should be compatible with.
-
 The most commonly used type of neural network is known as a convolutional neural network (CNN). CNNs have layers as described above and so will utilise the ``ConvBlock`` object to build the layers.
 
 .. autoclass:: crisPy2.neural_network.ConvBlock
@@ -29,3 +27,9 @@ The inner structure of residual layers is also different from a normal convoluti
    A schematic diagram of a residual layer.
 
 .. autoclass:: crisPy2.neural_network.ResBlock
+
+In popular network architectures such as Autoencoders (AEs) or Variational Autoencoders (VAEs), the data is often downsampled to a latent representation of the data to be upsampled to the desired result. There are typically two approaches to this upsampling.
+ 1. Using a fixed interpolation by the desired scale factor which can be achieved by setting ``upsample=True`` in ``ConvBlock``/``ResBlock``
+ 2. Using *transpose* convolution which is a kind of learned upsampling. (For a better explanation of transpose convolution than I could provide see `here <https://medium.com/apache-mxnet/transposed-convolutions-explained-with-ms-excel-52d13030c7e8>`_). Transpose convolution is an interpolation using a sparse convolutional kernel where the non-zero numbers in that kernel are learnable parameters. This means that in training a network, the model should learn to do the optimal upsampling for the reconstruction of the data.
+
+ .. autoclass:: crisPy2.neural_network.ConvTransBlock

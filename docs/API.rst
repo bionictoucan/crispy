@@ -8,3 +8,4 @@ API
    inversions
    visualisation
    neuralnetwork
+   io
