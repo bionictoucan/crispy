@@ -4,8 +4,8 @@ API
 .. toctree::
    :maxdepth: 2
 
-   datastructs
-   inversions
-   visualisation
-   neuralnetwork
-   io
+   api/datastructs
+   api/inversions
+   api/visualisation
+   api/neuralnetwork
+   api/io
