@@ -13,6 +13,7 @@ This is a Python package for working with imaging spectroscopic/spectropolarimet
    :caption: Contents:
 
    API
+   Examples
 
 Indices and tables
 ==================

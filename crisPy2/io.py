@@ -1,12 +1,17 @@
 import numpy as np
-import os, yaml
+import os, yaml, h5py
 from astropy.wcs import WCS
 from scipy.io import readsav
 from tqdm import tqdm
 
-def memmmap_crisp_cube(path):
+def memmap_crisp_cube(path):
     """
-    This function memory maps a legacy La Palma data cube pulling metainformation from appropriate files.
+    This function memory maps a legacy La Palma data cube pulling metainformation from appropriate files. The function first looks for an ``assoc.pro`` file which contains important information about the first dimension. If this does not exist then the user will have to untangle the first dimension themselves. The first dimension is a multiplicative combination of time and wavelength (and Stokes) with the ``assoc.pro`` providing the necessary information to split these into distinct axes. When unable to access this information, the first dimension will be the multiplicative combination of time and wavelength (and Stokes) with the ordering of one time for all wavelengths sampled. N.B. when Stokes is present, the first axis takes the form of one time for wavelengths sampled of Stokes I, wavelengths sampled of Stokes Q etc.
+
+    Parameters
+    ----------
+    path : str
+        The path to the legacy La Palma cube.
     """
 
     if not os.path.exists(path):
@@ -55,6 +60,13 @@ def memmmap_crisp_cube(path):
 def hdf5_header_to_wcs(hdf5_header, nonu=False):
     """
     This function takes the hdf5 header information and converts it to a wcs object.
+
+    Parameters
+    ----------
+    hdf5_header : dict or yaml
+        The header information from the hdf5 observation file.
+    nonu : bool, optional
+        Whether or not the spectral points are sampled non-uniformly. Default is False.
     """
 
     if type(hdf5_header) is not dict:
@@ -150,6 +162,35 @@ def hdf5_header_to_wcs(hdf5_header, nonu=False):
 def la_palma_cube_to_hdf5(cube_path, tseries_path, spectfile, date_obs, telescope, instrument, pixel_scale, cadence, element, pointing, mu=None, start_idx=0, save_dir="./"):
     """
     This is a function to save a La Palma legacy cube as hdf5 files.
+
+    Parameters
+    ----------
+    cube_path : str
+        The path to the legacy La Palma data cube.
+    tseries_path : str
+        The path to the ``tseries`` file containing the information on the times of the observations.
+    spectfile : str
+        The path to the file containing the spectral positions sampled.
+    data_obs : str
+        The observation date.
+    telescope : str
+        The telescope used.
+    instrument : str
+        The instrument used.
+    pixel_scale : float
+        The size of a detector pixel in arcseconds.
+    cadence : float
+        The time sampling of the observations.
+    element : str
+        The transition observed.
+    pointing : tuple[float]
+        The pointing of the centre of the images in the Helioprojective plane.
+    mu : float or None, optional
+        The direction cosine of the observations. Default is None.
+    start_idx : int, optional
+        The time index to start making files from. Default is 0.
+    save_dir : str, optional
+        The directory to save the hdf5 files in. Default is the current directory.
     """
 
     header = {}

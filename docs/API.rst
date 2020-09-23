@@ -1,11 +1,15 @@
 API
 ===
 
+This is the portal page for the API of crisPy2. Here you will find access to all of the important classes/functions, their arguments (and attributes and methods for classes) and link to their source on GitHub.
+
 .. toctree::
    :maxdepth: 2
 
-   api/datastructs
-   api/inversions
-   api/visualisation
-   api/neuralnetwork
-   api/io
+   datastructs
+   inversions
+   visualisation
+   neuralnetwork
+   io
+   spectral
+   utils

@@ -75,6 +75,22 @@ pt_vibrant_cycler = cycler(color=list(pt_vibrant.values()))
 pt_muted_cycler = cycler(color=list(pt_muted.values()))
 
 def CRISP_sequence_constructor(files, wcs=None, uncertainty=None, mask=None, nonu=False):
+    """
+    This is a helper function for constructing the kind of dictionary needed to make a CRISPSequence or CRISPWidebandSequence or CRISPNonUSequence object.
+
+    Parameters
+    ----------
+    files : list
+        A list of paths to the files.
+    wcs : list [astropy.wcs.WCS] or None, optional
+        A list of WCS of each of the files. Default is None, the data classes will work out the WCS for the observations.
+    uncertainty : list [float] or None, optional
+        A list of the uncertainty associated with each observation. Default is None.
+    mask : list [numpy.ndarray] or None, optional
+        A list of the mask to use for each observation. Default is None.
+    nonu : bool, optional
+        Whether or not the spectral axis is sampled non-uniformly. Default is False.
+    """
     file_dict_list = []
 
     for j, f in enumerate(files):
