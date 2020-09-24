@@ -13,3 +13,13 @@ This is the portal page for the API of crisPy2. Here you will find access to all
    io
    spectral
    utils
+
+Related Projects
+----------------
+
+.. toctree::
+   :maxdepth: 3
+
+   Slic
+   Shaun
+   RADYNVERSION

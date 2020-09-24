@@ -1,0 +1,272 @@
+
+
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Utilities &#8212; crisPy2 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/greenblue.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/jupyter-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/thebelab.css" />
+    <link rel="stylesheet" href="_static/local_fonts.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="_static/thebelab-helper.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.18.0/dist/embed-amd.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="_static/jquery.cookie.js"></script>
+    <script src="_static/p_sphinx_theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="Slic.html" />
+    <link rel="prev" title="Spectrum Properties" href="spectral.html" /> 
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head><body>
+      <div class="relbar-top">
+            
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="Slic.html" title="&lt;no title&gt;"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="spectral.html" title="Spectrum Properties"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+      <li><a href="index.html">crisPy2 1.0.0 documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="API.html" accesskey="U">API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Utilities</a></li> 
+      </ul>
+    </div>
+      </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="utilities">
+<h1>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="sequence-construction">
+<h2>Sequence Construction<a class="headerlink" href="#sequence-construction" title="Permalink to this headline">¶</a></h2>
+<p>The way the input for the sequence data classes works is not the most opaque thing in the world. So we provide a function to generate a list of dictionaries to consturct the sequence data class.</p>
+<dl class="py function">
+<dt id="crisPy2.utils.CRISP_sequence_constructor">
+<code class="sig-prename descclassname">crisPy2.utils.</code><code class="sig-name descname">CRISP_sequence_constructor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">files</span></em>, <em class="sig-param"><span class="n">wcs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">uncertainty</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nonu</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/rhero12/crisPy2/blob/master/crisPy2/utils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crisPy2.utils.CRISP_sequence_constructor" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a helper function for constructing the kind of dictionary needed to make a CRISPSequence or CRISPWidebandSequence or CRISPNonUSequence object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>files</strong> (<em>list</em>) – A list of paths to the files.</p></li>
+<li><p><strong>wcs</strong> (<em>list</em><em> [</em><em>astropy.wcs.WCS</em><em>] or </em><em>None</em><em>, </em><em>optional</em>) – A list of WCS of each of the files. Default is None, the data classes will work out the WCS for the observations.</p></li>
+<li><p><strong>uncertainty</strong> (<em>list</em><em> [</em><em>float</em><em>] or </em><em>None</em><em>, </em><em>optional</em>) – A list of the uncertainty associated with each observation. Default is None.</p></li>
+<li><p><strong>mask</strong> (<em>list</em><em> [</em><em>numpy.ndarray</em><em>] or </em><em>None</em><em>, </em><em>optional</em>) – A list of the mask to use for each observation. Default is None.</p></li>
+<li><p><strong>nonu</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not the spectral axis is sampled non-uniformly. Default is False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="image-utilities">
+<h2>Image Utilities<a class="headerlink" href="#image-utilities" title="Permalink to this headline">¶</a></h2>
+<p>Oftentimes, the CRISP images need to be augmented in some way for their intended purpose. This could be rotating the images in the image plane to get rid of the background or chopping up the image into segments for work on smaller pieces of the field-of-view. Below is a list of functions to help do these things.</p>
+<dl class="py function">
+<dt id="crisPy2.utils.find_corners">
+<code class="sig-prename descclassname">crisPy2.utils.</code><code class="sig-name descname">find_corners</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span></em>, <em class="sig-param"><span class="n">rows</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">reverse</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/rhero12/crisPy2/blob/master/crisPy2/utils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crisPy2.utils.find_corners" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a function to find the corners of a CRISP observation since the images are rotated in the image plane.
+:param img: The image to be rotated. Since CRISP observations usually have multiple images, all of the images will be rotated the same amount in the image plane for a single observation so the corners only need to be found for one – this is usually taken as the core wavelength (for a waveband measurement).
+:type img: numpy.ndarray
+:param rows: Whether or not to search along the rows. Default searches down the columns.
+:type rows: bool, optional
+:param reverse: Determines which direction the search takes place. This also depends on the rows parameter. Default searches from top to bottom if rows is False and left to right if rows is True.
+:type reverse: bool, optional</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>corner</strong> (<em>numpy.ndarray</em>) – An array containing the image plane coordinates of the corner that is to be found. The coordinate is returned in (y,x) format.</p></li>
+<li><p><em>Since CRISP images are rectangular, only 3 of 4 corners are required to be able to obtain the whole image.</em></p></li>
+<li><p><em>If rows and reverse are both False, then the algorithm finds the top-left corner. If rows is True but reverse is False, the algorithm finds the top-right corner. If rows is False and reverse is True, the algorithm find the bottom-right corner. If rows and reverse are both True, then the algorithm finds the bottom-left corner.</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="crisPy2.utils.im_rotate">
+<code class="sig-prename descclassname">crisPy2.utils.</code><code class="sig-name descname">im_rotate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img_cube</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/rhero12/crisPy2/blob/master/crisPy2/utils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crisPy2.utils.im_rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a function that will find the corners of the image and rotate it with respect to the x-axis and crop so only the map is left in the array.
+:param img_cube: The image cube to be rotated.
+:type img_cube: numpy.ndarray</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>img_cube</strong> – The rotated image cube.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="crisPy2.utils.segmentation">
+<code class="sig-prename descclassname">crisPy2.utils.</code><code class="sig-name descname">segmentation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span></em>, <em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/rhero12/crisPy2/blob/master/crisPy2/utils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crisPy2.utils.segmentation" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a preprocessing function that will segment the images into segments with dimensions n x n.
+:param img: The image to be segmented.
+:type img: numpy.ndarray
+:param n: The dimension of the segments.
+:type n: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>segments</strong> – A numpy array of the segments of the image.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="crisPy2.utils.segment_cube">
+<code class="sig-prename descclassname">crisPy2.utils.</code><code class="sig-name descname">segment_cube</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img_cube</span></em>, <em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/rhero12/crisPy2/blob/master/crisPy2/utils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crisPy2.utils.segment_cube" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to segment a three-dimensional datacube.
+:param img_cube: The image cube to be segmented.
+:type img_cube: numpy.ndarray
+:param n: The dimension of the segments.
+:type n: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>segments</strong> – A numpy array of the segments of the image cube.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="crisPy2.utils.mosaic">
+<code class="sig-prename descclassname">crisPy2.utils.</code><code class="sig-name descname">mosaic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">segments</span></em>, <em class="sig-param"><span class="n">img_shape</span></em>, <em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/rhero12/crisPy2/blob/master/crisPy2/utils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crisPy2.utils.mosaic" title="Permalink to this definition">¶</a></dt>
+<dd><p>A processing function to mosaic the segments back together.
+:param segments: A numpy array of the segments of the image.
+:type segments: numpy.ndarray
+:param img_shape: The shape of the original image.
+:type img_shape: tuple
+:param n: The dimension of the segments.
+:type n: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>mosaic_img</strong> – The reconstructed image.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="crisPy2.utils.mosaic_cube">
+<code class="sig-prename descclassname">crisPy2.utils.</code><code class="sig-name descname">mosaic_cube</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">segments</span></em>, <em class="sig-param"><span class="n">img_shape</span></em>, <em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/rhero12/crisPy2/blob/master/crisPy2/utils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crisPy2.utils.mosaic_cube" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to mosaic a segment list into an image cube.
+:param segments: The segments to be mosaiced back into images.
+:type segments: numpy.ndarray
+:param img_shape: The dimensions of the images.
+:type img_shape: tuple
+:param n: The dimensions of the segments. Default is 64 e.g. 64 x 64.
+:type n: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>m_cube</strong> – The cube of mosaiced images.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sphinxlocaltoc">
+    <h3><a href="index.html">Page contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Utilities</a><ul>
+<li><a class="reference internal" href="#sequence-construction">Sequence Construction</a></li>
+<li><a class="reference internal" href="#image-utilities">Image Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/utils.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+      <div class="relbar-bottom">
+            
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="Slic.html" title="&lt;no title&gt;"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="spectral.html" title="Spectrum Properties"
+             >previous</a> &nbsp; &nbsp;</li>
+      <li><a href="index.html">crisPy2 1.0.0 documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="API.html" >API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Utilities</a></li> 
+      </ul>
+    </div>
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, John A. Armstrong.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+      <!-- PSphinxTheme -->
+  </body>
+</html>
