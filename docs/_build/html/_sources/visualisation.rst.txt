@@ -3,6 +3,13 @@ Visualisers
 
 The following is describing a unique point and click adventure for imaging spectropolarimetry data available using a Jupyter notebook.
 
+Image Viewer
+------------
+
+The following visualisation is for use when only the images are of interest.
+
+.. autoclass:: crisPy2.visualisation.ImageViewer
+
 Spectra Viewer
 --------------
 

@@ -30,6 +30,18 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/rhero12/crisPy2",
     packages=setuptools.find_packages(),
+    install_requires = [
+        "pytorch",
+        "astropy",
+        "matplotlib",
+        "ipywidgets",
+        "jupyterlab",
+        "h5py",
+        "pyyaml",
+        "tqdm",
+        "cycler",
+        "specutils"
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

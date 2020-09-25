@@ -61,6 +61,27 @@
   <div class="section" id="visualisers">
 <h1>Visualisers<a class="headerlink" href="#visualisers" title="Permalink to this headline">¶</a></h1>
 <p>The following is describing a unique point and click adventure for imaging spectropolarimetry data available using a Jupyter notebook.</p>
+<div class="section" id="image-viewer">
+<h2>Image Viewer<a class="headerlink" href="#image-viewer" title="Permalink to this headline">¶</a></h2>
+<p>The following visualisation is for use when only the images are of interest.</p>
+<dl class="py class">
+<dt id="crisPy2.visualisation.ImageViewer">
+<em class="property">class </em><code class="sig-prename descclassname">crisPy2.visualisation.</code><code class="sig-name descname">ImageViewer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">wcs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">uncertainty</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nonu</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/rhero12/crisPy2/blob/master/crisPy2/visualisation.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crisPy2.visualisation.ImageViewer" title="Permalink to this definition">¶</a></dt>
+<dd><p>This visualiser only views the images for data, not the spectra. For use when interested only in imaging data. Includes sliders to change the wavelength of the observation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>str</em><em> or </em><em>list</em><em> or </em><a class="reference internal" href="datastructs.html#crisPy2.crisp.CRISP" title="crisPy2.crisp.CRISP"><em>CRISP</em></a><em> or </em><a class="reference internal" href="datastructs.html#crisPy2.crisp.CRISPSequence" title="crisPy2.crisp.CRISPSequence"><em>CRISPSequence</em></a><em> or </em><a class="reference internal" href="datastructs.html#crisPy2.crisp.CRISPNonU" title="crisPy2.crisp.CRISPNonU"><em>CRISPNonU</em></a><em> or </em><a class="reference internal" href="datastructs.html#crisPy2.crisp.CRISPNonUSequence" title="crisPy2.crisp.CRISPNonUSequence"><em>CRISPNonUSequence</em></a>) – The data to explore, this can be either one or two spectral lines (support for more than two can be added if required). This is the only required argument to view the data.</p></li>
+<li><p><strong>wcs</strong> (<em>astropy.wcs.WCS</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.</p></li>
+<li><p><strong>uncertainty</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The uncertainty in the intensity values of the data. Default is None.</p></li>
+<li><p><strong>mask</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A mask to be used on the data. Default is None.</p></li>
+<li><p><strong>nonu</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not the spectral axis is non-uniform. Default is False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 <div class="section" id="spectra-viewer">
 <h2>Spectra Viewer<a class="headerlink" href="#spectra-viewer" title="Permalink to this headline">¶</a></h2>
 <p>The following visualisation tool is for use on <strong>imaging spectroscopic</strong> data and allows the user to explore up to 2 spectral lines simultaneously across an extended field-of-view.</p>
@@ -151,6 +172,7 @@
     <h3><a href="index.html">Page contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Visualisers</a><ul>
+<li><a class="reference internal" href="#image-viewer">Image Viewer</a></li>
 <li><a class="reference internal" href="#spectra-viewer">Spectra Viewer</a></li>
 <li><a class="reference internal" href="#wideband-lightcurve-viewer">Wideband Lightcurve Viewer</a></li>
 <li><a class="reference internal" href="#inversion-viewer">Inversion Viewer</a></li>

@@ -50,11 +50,17 @@ class InversionSlicingMixin(NDSlicingMixin):
 
     def _slice(self, item):
         kwargs = {}
+        if type(item) == tuple:
+            err_item = list(item)
+            err_item.insert(1, slice(None))
+            err_item = tuple(err_item)
+        else:
+            err_item = item
         kwargs["filename"] = ObjDict({})
         kwargs["filename"]["ne"] = self.ne[item]
         kwargs["filename"]["temperature"] = self.temp[item]
         kwargs["filename"]["vel"] = self.vel[item]
-        kwargs["filename"]["mad"] = self.err[item]
+        kwargs["filename"]["mad"] = self.err[err_item]
         kwargs["wcs"] = self._slice_wcs(item)
         kwargs["z"] = self.z
         kwargs["header"] = self.header

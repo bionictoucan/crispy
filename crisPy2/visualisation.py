@@ -35,7 +35,7 @@ class SpectralViewer:
     :type shape_type: list[str]
     """
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, nonu=False):
-        plt.style.use("ggplot")
+        plt.style.use("bhm")
         self.aa = html.unescape("&#8491;")
         self.l = html.unescape("&lambda;")
         self.a = html.unescape("&alpha;")
@@ -995,3 +995,153 @@ class AtmosViewer:
             self.ax3.images[-1].colorbar.remove()
         im3 = self.ax3.imshow(self.vel[:,:, np.argwhere(np.round(self.z, decimals=2) == z)].reshape(840,840), cmap="RdBu", norm=SymLogNorm(1), clim=(-np.max(self.file_obj["vel"][:, np.argwhere(np.round(self.z, decimals=2) == z)]), np.max(self.file_obj["vel"][:,np.argwhere(np.round(self.z, decimals=2) == z)])))
         self.fig.colorbar(im3, ax=self.ax3, orientation="horizontal", label=r"v [km s$^{-1}$]")
+
+class ImageViewer:
+    """
+    This visualiser only views the images for data, not the spectra. For use when interested only in imaging data. Includes sliders to change the wavelength of the observation.
+
+    :param data: The data to explore, this can be either one or two spectral lines (support for more than two can be added if required). This is the only required argument to view the data.
+    :type data: str or list or CRISP or CRISPSequence or CRISPNonU or CRISPNonUSequence
+    :param wcs: A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.
+    :type wcs: astropy.wcs.WCS or None, optional
+    :param uncertainty: The uncertainty in the intensity values of the data. Default is None.
+    :type uncertainty: numpy.ndarray or None, optional
+    :param mask: A mask to be used on the data. Default is None.
+    :type mask: numpy.ndarray or None, optional
+    :param nonu: Whether or not the spectral axis is non-uniform. Default is False.
+    :type nonu: bool, optional
+    """
+
+    def __init__(self, data, wcs=None, uncertainty=None, mask=None, nonu=False):
+        plt.style.use("bhm")
+        self.aa = html.unescape("&#8491;")
+        self.l = html.unescape("&lambda;")
+        self.a = html.unescape("&alpha;")
+        self.D = html.unescape("&Delta;")
+        if not nonu:
+            if type(data) == str:
+                self.cube = CRISP(filename=data, wcs=wcs, uncertainty=uncertainty, mask=mask)
+                self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
+            elif type(data) == list:
+                self.cube = CRISPSequence(files=data)
+                self.wvls1 = self.cube.list[0].wave(np.arange(self.cube.list[0].shape[0]))
+                self.wvls2 = self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
+            elif type(data) == CRISP:
+                self.cube = data
+                self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
+            elif type(data) == CRISPSequence:
+                self.cube = data
+                self.wvls1 = self.cube.list[0].wave(np.arange(self.cube.list[0].shape[0]))
+                self.wvls2 = self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
+        else:
+            if type(data) == str:
+                self.cube = CRISPNonU(filename=data, wcs=wcs, uncertainty=uncertainty, mask=mask)
+                self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
+            elif type(data) == list:
+                self.cube = CRISPNonUSequence(files=data)
+                self.wvls1 = self.cube.list[0].wave(np.arange(self.cube.list[0].shape[0]))
+                self.wvls2 = self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
+            elif type(data) == CRISPNonU:
+                self.cube = data
+                self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
+            elif type(data) == CRISPNonUSequence:
+                self.cube = data
+                self.wvls1 = self.cube.list[0].wave(np.arange(self.cube.list[0].shape[0]))
+                self.wvls2 = self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
+
+        if type(self.cube) == CRISP or CRISPNonU:
+            self.fig = plt.figure(figsize=(8,10))
+            self.ax1 = self.fig.add_subplot(1, 1, 1, projection=self.cube.wcs.dropaxis(-1))
+            self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
+            self.ax1.set_xlabel("Helioprojective Longitude [arcsec]")
+
+            ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls), decimals=2).value for l in self.wvls], description = f"{self.D} {self.l} [{self.aa}]")
+
+            out1 = widgets.interactive_output(self._img_plot1, {"ll" : ll})
+
+            display(widgets.HBox([ll]))
+                
+        elif type(self.cube) == CRISPSequence or CRISPNonUSequence:
+            self.fig = plt.figure(figsize=(8,10))
+            self.ax1 = self.fig.add_subplot(1, 2, 1, projection=self.cube.list[0].wcs.dropaxis(-1))
+            self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
+            self.ax1.set_xlabel("Helioprojective Longitude [arcsec]")
+
+            self.ax2 = self.fig.add_subplot(1, 2, 2, projection=self.cube.list[1].wcs.dropaxis(-1))
+            self.ax2.set_ylabel("Helioprojective Latitude [arcsec]")
+            self.ax2.set_xlabel("Helioprojective Longitude [arcsec]")
+
+            ll1 = widgets.SelectionSlider(
+                options=[np.round(l - np.median(self.wvls1), decimals=2).value for l in self.wvls1],
+                description=fr"{self.aa} {self.D} {self.l}$_{1}$ [{self.aa}]",
+                style={"description_width" : "initial"}
+            )
+            ll2 = widgets.SelectionSlider(
+                options=[np.round(l - np.median(self.wvls2), decimals=2).value for l in self.wvls2],
+                description=fr"{self.aa} {self.D} {self.l}$_{2}$ [{self.aa}]",
+                style={"description_width" : "initial"}
+            )
+
+            out1 = widgets.interactive_output(self._img_plot2, {"ll1" : ll1, "ll2" : ll2})
+
+            display(widgets.HBox([widgets.VBox([ll1, ll2])]))
+
+        done_button = widgets.Button(description="Done")
+        done_button.on_click(self._disconnect_matplotlib)
+        save_button = widgets.Button(description="Save")
+        save_button.on_click(self._save)
+        display(widgets.HBox([done_button, save_button]))
+        widgets.interact(self._file_name, fn= widgets.Text(description="Filename to save as: "), style={"description_width" : "initial"}, layout=widgets.Layout(width="100%"))
+
+    def _disconnect_matplotlib(self, _):
+        self.fig.canvas.mpl_disconnect(self.receiver)
+
+
+    def _save(self, _):
+        self.fig.savefig(self.filename, dpi=300)
+
+    def _file_name(self, fn):
+        self.filename = fn
+
+    def _img_plot1(self, ll):
+        if self.ax1.images == []:
+            pass
+        elif self.ax1.images[-1].colorbar is not None:
+            self.ax1.images[-1].colorbar.remove()
+
+        ll_idx = int(np.where(np.round(self.wvls, decimals=2).value == np.round(np.median(self.wvls).value + ll, decimals=2))[0])
+
+        im1 = self.ax1.imshow(self.cube.file.data[ll_idx], cmap="Greys_r")
+        try:
+            el = self.cube.file.header["WDESC1"]
+        except KeyError:
+            el = self.cube.file.header["element"]
+        self.ax1.set_title(fr"{el} {self.aa} {self.D} {self.l}$_{1}$ = {ll} {self.aa}")
+        self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
+
+    def _img_plot2(self, ll1, ll2):
+        if self.ax1.images == []:
+            pass
+        elif self.ax1.images[-1].colorbar is not None:
+            self.ax1.images[-1].colorbar.remove()
+
+        if self.ax2.images == []:
+            pass
+        elif self.ax2.images[-1].colorbar is not None:
+            self.ax2.images[-1].colorbar.remove()
+
+        ll1_idx = int(np.where(np.round(self.wvls1, decimals=2).value == np.round(np.median(self.wvls1).value + ll1, decimals=2))[0])
+        ll2_idx = int(np.where(np.round(self.wvls2, decimals=2).value == np.round(np.median(self.wvls2).value + ll2, decimals=2))[0])
+
+        im1 = self.ax1.imshow(self.cube.list[0].file.data[ll1_idx], cmap="Greys_r")
+        im2 = self.ax2.imshow(self.cube.list[1].file.data[ll2_idx], cmap="Greys_r")
+        try:
+            el1 = self.cube.list[0].file.header["WDESC1"]
+            el2 = self.cube.list[1].file.header["WDESC1"]
+        except KeyError:
+            el1 = self.cube.list[0].file.header["element"]
+            el2 = self.cube.list[1].file.header["element"]
+        self.ax1.set_title(fr"{el1} {self.aa} {self.D} {self.l}$_{1}$ = {ll1} {self.aa}")
+        self.ax2.set_title(fr"{el2} {self.aa} {self.D} {self.l}$_{2}$ = {ll2} {self.aa}")
+        self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
+        self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="Intensity [DNs]")
