@@ -5,7 +5,7 @@ import h5py, yaml, html
 import matplotlib.patches as patches
 from matplotlib.colors import SymLogNorm
 import astropy.units as u
-from .crisp import CRISP, CRISPSequence, CRISPWideband, CRISPWidebandSequence
+from .crisp import CRISP, CRISPSequence, CRISPWideband, CRISPWidebandSequence, CRISPNonU, CRISPNonUSequence
 from .inversions import Inversion
 from matplotlib import ticker
 import matplotlib.patheffects as PathEffects
@@ -160,7 +160,7 @@ class SpectralViewer:
         widgets.interact(self._file_name, fn= widgets.Text(description="Filename to save as: "), style={"description_width" : "initial"}, layout=widgets.Layout(width="100%"))
 
     def _on_click(self, event):
-        if self.fig.canvas.manager.toolbar.mode is not "":
+        if self.fig.canvas.manager.toolbar.mode != "":
             return
 
         if type(self.cube) == CRISP:
@@ -354,7 +354,7 @@ class SpectralViewer:
     def _img_plot1(self, ll):
         if self.ax1.images == []:
             pass
-        elif self.ax1.images[-1].colorbar is not None:
+        elif self.ax1.images[-1].colorbar != None:
             self.ax1.images[-1].colorbar.remove()
 
         ll_idx = int(np.where(np.round(self.wvls, decimals=2).value == np.round(np.median(self.wvls).value + ll, decimals=2))[0])
@@ -370,12 +370,12 @@ class SpectralViewer:
     def _img_plot2(self, ll1, ll2):
         if self.ax1.images == []:
             pass
-        elif self.ax1.images[-1].colorbar is not None:
+        elif self.ax1.images[-1].colorbar != None:
             self.ax1.images[-1].colorbar.remove()
 
         if self.ax2.images == []:
             pass
-        elif self.ax2.images[-1].colorbar is not None:
+        elif self.ax2.images[-1].colorbar != None:
             self.ax2.images[-1].colorbar.remove()
 
         ll1_idx = int(np.where(np.round(self.wvls1, decimals=2).value == np.round(np.median(self.wvls1).value + ll1, decimals=2))[0])
@@ -1145,3 +1145,453 @@ class ImageViewer:
         self.ax2.set_title(fr"{el2} {self.aa} {self.D} {self.l}$_{2}$ = {ll2} {self.aa}")
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="Intensity [DNs]")
+
+class SpectralTimeViewer:
+    """
+    Imaging spectroscopic viewer. SpectralTimeViewer should be used when one wants to click on points of an image and have the spectrum displayed for that point and the time series for a certain time range of observations. This works **exclusively** in Jupyter notebook but can be a nice data exploration tool. This viewer utilises the data structures defined in `crisPy2.crisp` and has many variable options.
+
+    :param data1: The data to explore, this is one spectral line. This is the only required argument to view the data.
+    :type data1: list or CRISPSequence or CRISPNonUSequence
+    :param data2: If there is a second set of data to explore.
+    :type data2: list or CRISPSequence or CRISPNonUSequence
+    :param wcs: A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.
+    :type wcs: astropy.wcs.WCS or None, optional
+    :param uncertainty: The uncertainty in the intensity values of the data. Default is None.
+    :type uncertainty: numpy.ndarray or None, optional
+    :param mask: A mask to be used on the data. Default is None.
+    :type mask: numpy.ndarray or None, optional
+    :param nonu: Whether or not the spectral axis is non-uniform. Default is False.
+    :type nonu: bool, optional
+
+    :cvar coords: The coordinates selected to produce spectra.
+    :type coords: list[tuple]
+    :cvar px_coords: The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.
+    :type px_coords: list[tuple]
+    :cvar shape_type: The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.
+    :type shape_type: list[str]
+    """
+    def __init__(self, data1, data2=None, wcs=None, uncertainty=None, mask=None, nonu=False):
+        plt.style.use("bmh")
+        self.aa = html.unescape("&#8491;")
+        self.l = html.unescape("&lambda;")
+        self.a = html.unescape("&alpha;")
+        self.D = html.unescape("&Delta;")
+        shape = widgets.Dropdown(options=["point", "box"], value="point", description="Shape: ")
+        if not nonu:
+            if type(data1) == list:
+                self.cube1 = CRISPSequence(files=CRISP_sequence_constructor(data1))
+                self.wvls1 = self.cube1.list[0].wave(np.arange(self.cube1.list[0].shape[0]))
+            elif type(data1) == CRISPSequence:
+                self.cube1 = data1
+                self.wvls1 = self.cube1.list[0].wave(np.arange(self.cube1.list[0].shape[0]))
+            if data2 == None:
+                pass
+            elif type(data2) == list:
+                self.cube2 = CRISPSequence(files=CRISP_sequence_constructor(data2))
+                self.wvls2 = self.cube2.list[0].wave(np.arange(self.cube2.list[0].shape[0]))
+            elif type(data2) == CRISPSequence:
+                self.cube2 = data2
+                self.wvls2 = self.cube2.list[0].wave(np.arange(self.cube2.list[0].shape[0]))
+        else:
+            if type(data1) == list:
+                self.cube1 = CRISPNonUSequence(files=CRISP_sequence_constructor(data1))
+                self.wvls1 = self.cube1.list[0].wave(np.arange(self.cube1.list[0].shape[0]))
+            elif type(data) == CRISPNonUSequence:
+                self.cube1 = data
+                self.wvls1 = self.cube1.list[0].wave(np.arange(self.cube1.list[0].shape[0]))
+            if data2 == None:
+                pass
+            elif type(data2) == list:
+                self.cube2 = CRISPNonUSequence(files=CRISP_sequence_constructor(data2))
+                self.wvls2 = self.cube2.list[0].wave(np.arange(self.cube2.list[0].shape[0]))
+            elif type(data2) == CRISPNonUSequence:
+                self.cube2 = data2
+                self.wvls2 = self.cube2.list[0].wave(np.arange(self.cube2.list[0].shape[0]))
+
+        if data2 == None:
+            self.fig = plt.figure(figsize=(8,10))
+            self.gs = self.fig.add_gridspec(nrows=2, ncols=2)
+            self.ax1 = self.fig.add_subplot(self.gs[0,0], projection=self.cube1.list[0].wcs.dropaxis(-1))
+            self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
+            self.ax1.set_xlabel("Helioprojective Longitude [arcsec]")
+            self.ax2 = self.fig.add_subplot(self.gs[0,1])
+            self.ax2.yaxis.set_label_position("right")
+            self.ax2.yaxis.tick_right()
+            self.ax2.set_ylabel("I [DNs]")
+            self.ax2.set_xlabel(f"{self.l} [{self.aa}]")
+            self.ax2.tick_params(direction="in")
+            self.ax3 = self.fig.add_subplot(self.gs[1,:])
+            self.ax3.set_ylabel("I [DNs]")
+            self.ax3.set_xlabel("Time [UTC]")
+
+            self.ll = widgets.SelectionSlider(options=[np.round(l - np.median(self.wvls1), decimals=2).value for l in self.wvls1], description = f"{self.D} {self.l} [{self.aa}]")
+
+            self.t = widgets.IntSlider(value=0, min=0, max=len(self.cube1.list)-1, step=1, description="Time index: ", disabled=False)
+
+            try:
+                self.times1 = [date2num(f.file.header["DATE-AVG"]) for f in self.cube1.list]
+            except KeyError:
+                self.times1 = [date2num(f.file.header["time-obs"]) for f in self.cube1.list]
+            
+            out1 = widgets.interactive_output(self._img_plot1, {"ll" : self.ll, "t" : self.t})
+            out2 = widgets.interactive_output(self._shape, {"opts" : shape})
+
+            display(widgets.HBox([widgets.VBox([self.ll,self.t]), shape]))
+                
+        else:
+            self.fig = plt.figure(figsize=(8,10))
+            self.gs = self.fig.add_gridspec(nrows=3, ncols=2)
+            self.ax1 = self.fig.add_subplot(self.gs[0,0], projection=self.cube1.list[0].wcs.dropaxis(-1))
+            self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
+            self.ax1.set_xlabel("Helioprojective Longitude [arcsec]")
+            self.ax1.xaxis.set_label_position("top")
+            self.ax1.xaxis.tick_top()
+
+            self.ax2 = self.fig.add_subplot(self.gs[1,0], projection=self.cube2.list[0].wcs.dropaxis(-1))
+            self.ax2.set_ylabel("Helioprojective Latitude [arcsec]")
+            self.ax2.set_xlabel("Helioprojective Longitude [arcsec]")
+
+            self.ax3 = self.fig.add_subplot(self.gs[0,1])
+            self.ax3.yaxis.set_label_position("right")
+            self.ax3.yaxis.tick_right()
+            self.ax3.set_ylabel("Intensity [DNs]")
+            self.ax3.set_xlabel(f"{self.l} [{self.aa}]")
+            self.ax3.xaxis.set_label_position("top")
+            self.ax3.xaxis.tick_top()
+            self.ax3.tick_params(direction="in")
+
+            self.ax4 = self.fig.add_subplot(self.gs[1,1])
+            self.ax4.yaxis.set_label_position("right")
+            self.ax4.yaxis.tick_right()
+            self.ax4.set_ylabel("Intensity [DNs]")
+            self.ax4.set_xlabel(f"{self.l} [{self.aa}]")
+            self.ax4.tick_params(direction="in")
+            
+            self.ax5 = self.fig.add_subplot(self.gs[2,:])
+            self.ax5.set_ylabel("Intensity [DNs]")
+            self.ax5.set_xlabel("Time [UTC]")
+
+            self.ll1 = widgets.SelectionSlider(
+                options=[np.round(l - np.median(self.wvls1), decimals=2).value for l in self.wvls1],
+                description=fr"{self.aa} {self.D} {self.l}$_{1}$ [{self.aa}]",
+                style={"description_width" : "initial"}
+            )
+            self.ll2 = widgets.SelectionSlider(
+                options=[np.round(l - np.median(self.wvls2), decimals=2).value for l in self.wvls2],
+                description=fr"{self.aa} {self.D} {self.l}$_{2}$ [{self.aa}]",
+                style={"description_width" : "initial"}
+            )
+
+            self.t1 = widgets.IntSlider(value=0, min=0, max=len(self.cube1.list)-1, step=1, disabled=False, description=r"t$_{1}$ index: ")
+            self.t2 = widgets.IntSlider(value=0, min=0, max=len(self.cube2.list)-1, step=1, disabled=False, description=r"t$_{2}$ index: ")
+            
+            try:
+                self.times1 = [date2num(f.file.header["DATE-AVG"]) for f in self.cube1.list]
+                self.times2 = [date2num(f.file.header["DATE-AVG"]) for f in self.cube2.list]
+            except KeyError:
+                self.times1 = [date2num(f.file.header["time-obs"]) for f in self.cube1.list]
+                self.times2 = [date2num(f.file.header["time-obs"]) for f in self.cube2.list]
+            
+            out1 = widgets.interactive_output(self._img_plot2, {"ll1" : self.ll1, "ll2" : self.ll2, "t1" : self.t1, "t2" : self.t2})
+            out2 = widgets.interactive_output(self._shape, {"opts" : shape})
+
+            display(widgets.HBox([widgets.VBox([widgets.HBox([self.ll1, self.ll2]),widgets.HBox([self.t1, self.t2])]), shape]))
+
+        self.coords = []
+        self.px_coords = []
+        self.shape_type = []
+        self.box_coords = []
+        self.colour_idx = 0
+        self.n = 0
+
+        self.receiver = self.fig.canvas.mpl_connect("button_press_event", self._on_click)
+
+        x = widgets.IntText(value=1, min=1, max=self.cube1.list[0].shape[-1], description="x [pix]")
+        y = widgets.IntText(value=1, min=1, max=self.cube1.list[0].shape[-2], description="y [pix]")
+        outx = widgets.interactive_output(self._boxx, {"x" : x})
+        outy = widgets.interactive_output(self._boxy, {"y" : y})
+        display(widgets.HBox([x, y]))
+
+        done_button = widgets.Button(description="Done")
+        done_button.on_click(self._disconnect_matplotlib)
+        clear_button = widgets.Button(description="Clear")
+        clear_button.on_click(self._clear)
+        save_button = widgets.Button(description="Save")
+        save_button.on_click(self._save)
+        display(widgets.HBox([done_button, clear_button, save_button]))
+        widgets.interact(self._file_name, fn= widgets.Text(description="Filename to save as: "), style={"description_width" : "initial"}, layout=widgets.Layout(width="100%"))
+
+    def _on_click(self, event):
+        if self.fig.canvas.manager.toolbar.mode != "":
+            return
+
+        if not hasattr(self, "cube2"):
+            if self.shape == "point":
+                if self.colour_idx > len(pt_bright_cycler)-1:
+                    self.colour_idx = 0
+                    self.n += 1
+                centre_coord = int(event.ydata), int(event.xdata)
+                self.px_coords.append(centre_coord)
+                self.shape_type.append("point")
+                circ = patches.Circle(centre_coord[::-1], radius=10, facecolor=list(pt_bright_cycler)[self.colour_idx]["color"], edgecolor="k", linewidth=1)
+                self.ax1.add_patch(circ)
+                font = {
+                    "size" : 12,
+                    "color" : list(pt_bright_cycler)[self.colour_idx]["color"]
+                }
+                txt = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                px = self.cube1.list[self.t.value].to_lonlat(*centre_coord) << u.arcsec
+                self.ax2.plot(self.wvls1, self.cube1.list[self.t.value].file.data[:, centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax2.legend()
+                ll_idx = int(np.where(np.round(self.wvls1, decimals=2).value == np.round(np.median(self.wvls1).value + self.ll.value, decimals=2))[0])
+                i_time1 = [f.file.data[ll_idx, centre_coord[0], centre_coord[1]] for f in self.cube1.list]
+                self.ax3.plot(self.times1, i_time1,  marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax3.xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
+                for label in self.ax3.get_xticklabels():
+                    label.set_rotation(40)
+                    label.set_horizontalalignment('right')
+                self.coords.append(px)
+                self.colour_idx += 1
+                self.fig.canvas.draw()
+            elif self.shape == "box":
+                if self.colour_idx > len(pt_bright_cycler)-1:
+                    self.colour_idx = 0
+                    self.n += 1
+                box_anchor = int(event.ydata), int(event.xdata)
+                self.px_coords.append(box_anchor)
+                self.shape_type.append("box")
+                # obtain the coordinates of the box on a grid with pixels the size of the box to make sure there is not copies of the same box
+                box_coord = box_anchor[0] // self.boxy, box_anchor[1] // self.boxx
+                if box_coord in self.box_coords:
+                    coords = [p.get_xy() for p in self.ax1.patches]
+                    for p in self.ax.patches:
+                        if p.get_xy() == box_anchor:
+                            p.remove()
+                    
+                    idx = self.box_coords.index(box_coord)
+                    del self.box_coords[idx]
+                    del self.px_coords[idx]
+                    del self.shape_type[idx]
+                    del self.coords[idx]
+                    return
+                
+                self.coords.append(self.cube1.list[0].to_lonlat(*box_anchor) << u.arcsec)
+                rect = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
+                rect.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                self.ax1.add_patch(rect)
+                font = {
+                    "size" : 12,
+                    "color" : list(pt_bright_cycler)[self.colour_idx]["color"]
+                }
+                txt = self.ax1.text(box_anchor[1]-50, box_anchor[0]-10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                self.ax2.plot(self.wvls1, np.mean(self.cube1.list[self.t.value].file.data[:,box_anchor[0]:box_anchor[0]+self.boxy,box_anchor[1]:box_anchor[1]+self.boxx],axis=(1,2)), marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax2.legend()
+                ll_idx = int(np.where(np.round(self.wvls1, decimals=2).value == np.round(np.median(self.wvls1).value + self.ll.value, decimals=2))[0])
+                i_time1 = [np.mean(f.file.data[ll_idx,box_anchor[0]:box_anchor[0]+self.boxy,box_anchor[1]:box_anchor[1]+self.boxx]) for f in self.cube1.list]
+                self.ax3.plot(self.times1, i_time1,  marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax3.xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
+                for label in self.ax3.get_xticklabels():
+                    label.set_rotation(40)
+                    label.set_horizontalalignment('right')
+                self.colour_idx += 1
+                self.fig.canvas.draw()
+        else:
+            if self.shape == "point":
+                if self.colour_idx > len(pt_bright_cycler)-1:
+                    self.colour_idx = 0
+                    self.n += 1
+                centre_coord = int(event.ydata), int(event.xdata) #with WCS, the event data is returned in pixels so we don't need to do the conversion from real world but rather to real world later on
+                self.px_coords.append(centre_coord)
+                circ1 = patches.Circle(centre_coord[::-1], radius=10, facecolor=list(pt_bright_cycler)[self.colour_idx]["color"], edgecolor="k", linewidth=1)
+                circ2 = patches.Circle(centre_coord[::-1], radius=10, facecolor=list(pt_bright_cycler)[self.colour_idx]["color"], edgecolor="k", linewidth=1)
+                self.ax1.add_patch(circ1)
+                self.ax2.add_patch(circ2)
+                font = {
+                    "size" : 12,
+                    "color" : list(pt_bright_cycler)[self.colour_idx]["color"]
+                }
+                txt_1 = self.ax1.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt_2 = self.ax2.text(centre_coord[1]+20, centre_coord[0]+10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt_1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                txt_2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                px = self.cube1.list[0].to_lonlat(*centre_coord) << u.arcsec
+                self.ax3.plot(self.wvls1, self.cube1.list[self.t1.value].file.data[:, centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax4.plot(self.wvls2, self.cube2.list[self.t2.value].file.data[:, centre_coord[0], centre_coord[1]], marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax3.legend()
+                self.ax4.legend()
+                ll_idx1 = int(np.where(np.round(self.wvls1, decimals=2).value == np.round(np.median(self.wvls1).value + self.ll1.value, decimals=2))[0])
+                ll_idx2 = int(np.where(np.round(self.wvls2, decimals=2).value == np.round(np.median(self.wvls2).value + self.ll2.value, decimals=2))[0])
+                i_time1 = [f.file.data[ll_idx1, centre_coord[0], centre_coord[1]] for f in self.cube1.list]
+                i_time2 = [f.file.data[ll_idx2, centre_coord[0], centre_coord[1]] for f in self.cube2.list]
+                self.ax5.plot(self.times1, i_time1,  marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax5.plot(self.times2, i_time2, linestyle="--",  marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax5.xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
+                for label in self.ax5.get_xticklabels():
+                    label.set_rotation(40)
+                    label.set_horizontalalignment('right')
+                self.coords.append(px)
+                self.colour_idx += 1
+                self.fig.canvas.draw()
+            elif self.shape == "box":
+                if self.colour_idx > len(pt_bright_cycler)-1:
+                    self.colour_idx = 0
+                    self.n += 1
+                box_anchor = int(event.ydata), int(event.xdata)
+                self.px_coords.append(box_anchor)
+                self.shape_type.append("box")
+                # obtain the coordinates of the box on a grid with pixels the size of the box to make sure there is not copies of the same box
+                box_coord = box_anchor[0] // self.boxy, box_anchor[1] // self.boxx
+                if box_coord in self.box_coords:
+                    coords = [p.get_xy() for p in self.ax1.patches]
+                    for p in self.ax.patches:
+                        if p.get_xy() == box_anchor:
+                            p.remove()
+                    
+                    idx = self.box_coords.index(box_coord)
+                    del self.box_coords[idx]
+                    del self.px_coords[idx]
+                    del self.shape_type[idx]
+                    del self.coords[idx]
+                    return
+                
+                self.coords.append(self.cube1.list[0].to_lonlat(*box_anchor) << u.arcsec)
+                rect1 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
+                rect1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                rect2 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
+                rect2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                self.ax1.add_patch(rect1)
+                self.ax2.add_patch(rect2)
+                font = {
+                    "size" : 12,
+                    "color" : list(pt_bright_cycler)[self.colour_idx]["color"]
+                }
+                txt1 = self.ax1.text(box_anchor[1]-50, box_anchor[0]-10, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                txt2 = self.ax2.text(box_anchor[1]-50, box_anchor[0]-1, s=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", fontdict=font)
+                txt2.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
+                self.ax3.plot(self.wvls1, np.mean(self.cube1.list[self.t1.value].file.data[:, box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx], axis=(1,2)), marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax4.plot(self.wvls2, np.mean(self.cube2.list[self.t2.value].file.data[:, box_anchor[0]:box_anchor[0]+self.boxy, box_anchor[1]:box_anchor[1]+self.boxx], axis=(1,2)), marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax3.legend()
+                self.ax4.legend()
+                ll_idx1 = int(np.where(np.round(self.wvls1, decimals=2).value == np.round(np.median(self.wvls1).value + self.ll1.value, decimals=2))[0])
+                ll_idx2 = int(np.where(np.round(self.wvls2, decimals=2).value == np.round(np.median(self.wvls2).value + self.ll2.value, decimals=2))[0])
+                i_time1 = [np.mean(f.file.data[ll_idx1,box_anchor[0]:box_anchor[0]+self.boxy,box_anchor[1]:box_anchor[1]+self.boxx]) for f in self.cube1.list]
+                i_time2 = [np.mean(f.file.data[ll_idx2,box_anchor[0]:box_anchor[0]+self.boxy,box_anchor[1]:box_anchor[1]+self.boxx]) for f in self.cube2.list]
+                self.ax5.plot(self.times1, i_time1,  marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax5.plot(self.times2, i_time2, linestyle="--",  marker=Line2D.filled_markers[self.colour_idx+self.n*len(pt_bright_cycler)], label=f"{self.colour_idx+1+(self.n*len(pt_bright_cycler))}", c=list(pt_bright_cycler)[self.colour_idx]["color"])
+                self.ax5.xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
+                for label in self.ax5.get_xticklabels():
+                    label.set_rotation(40)
+                    label.set_horizontalalignment('right')
+                self.colour_idx += 1
+                self.fig.canvas.draW()
+
+    def _shape(self, opts):
+        self.shape = opts
+
+    def _boxx(self, x):
+        self.boxx = x
+
+    def _boxy(self, y):
+        self.boxy = y
+
+    def _disconnect_matplotlib(self, _):
+        self.fig.canvas.mpl_disconnect(self.receiver)
+
+    def _clear(self, _):
+        self.coords = []
+        self.px_coords = []
+        self.shape_type = []
+        self.box_coords = []
+        self.colour_idx = 0
+        self.n = 0
+        if not hasattr(self, "cube2"):
+            while len(self.ax1.patches) > 0:
+                for p in self.ax1.patches:
+                    p.remove()
+            while len(self.ax1.texts) > 0:
+                for t in self.ax1.texts:
+                    t.remove()
+            self.ax2.clear()
+            self.ax2.set_ylabel("Intensity [DNs]")
+            self.ax2.set_xlabel(f"{self.l} [{self.aa}]")
+            self.ax3.clear()
+            self.ax3.set_ylabel("I [DNs]")
+            self.ax3.set_xlabel("Time [UTC]")
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+        else:
+            while len(self.ax1.patches) > 0:
+                for p in self.ax1.patches:
+                    p.remove()
+            while len(self.ax2.patches) > 0:
+                for p in self.ax2.patches:
+                    p.remove()
+            while len(self.ax1.texts) > 0:
+                for t in self.ax1.texts:
+                    t.remove()
+            while len(self.ax2.texts) > 0:
+                for t in self.ax2.texts:
+                    t.remove()
+            self.ax3.clear()
+            self.ax3.set_ylabel("Intensity [DNs]")
+            self.ax3.set_xlabel(f"{self.l} [{self.aa}]")
+            self.ax4.clear()
+            self.ax4.set_ylabel("Intensity [DNs]")
+            self.ax4.set_xlabel(f"{self.l} [{self.aa}]")
+            self.ax5.clear()
+            self.ax5.set_ylabel("I [DNs]")
+            self.ax5.set_xlabel("Time [UTC]")
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+
+    def _save(self, _):
+        self.fig.savefig(self.filename, dpi=300)
+
+    def _file_name(self, fn):
+        self.filename = fn
+
+    def _img_plot1(self, ll, t):
+        if self.ax1.images == []:
+            pass
+        elif self.ax1.images[-1].colorbar != None:
+            self.ax1.images[-1].colorbar.remove()
+
+        ll_idx = int(np.where(np.round(self.wvls1, decimals=2).value == np.round(np.median(self.wvls1).value + ll, decimals=2))[0])
+
+        im1 = self.ax1.imshow(self.cube1.list[t].file.data[ll_idx], cmap="Greys_r")
+        try:
+            el = self.cube1.list[0].file.header["WDESC1"]
+        except KeyError:
+            el = self.cube1.list[0].file.header["element"]
+        self.ax1.set_title(fr"{el} {self.aa} {self.D} {self.l}$_{1}$ = {ll} {self.aa}")
+        self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
+
+    def _img_plot2(self, ll1, ll2, t1, t2):
+        if self.ax1.images == []:
+            pass
+        elif self.ax1.images[-1].colorbar != None:
+            self.ax1.images[-1].colorbar.remove()
+
+        if self.ax2.images == []:
+            pass
+        elif self.ax2.images[-1].colorbar != None:
+            self.ax2.images[-1].colorbar.remove()
+
+        ll1_idx = int(np.where(np.round(self.wvls1, decimals=2).value == np.round(np.median(self.wvls1).value + ll1, decimals=2))[0])
+        ll2_idx = int(np.where(np.round(self.wvls2, decimals=2).value == np.round(np.median(self.wvls2).value + ll2, decimals=2))[0])
+
+        im1 = self.ax1.imshow(self.cube1.list[t1].file.data[ll1_idx], cmap="Greys_r")
+        im2 = self.ax2.imshow(self.cube2.list[t2].file.data[ll2_idx], cmap="Greys_r")
+        try:
+            el1 = self.cube1.list[0].file.header["WDESC1"]
+            el2 = self.cube2.list[0].file.header["WDESC1"]
+        except KeyError:
+            el1 = self.cube1.list[0].file.header["element"]
+            el2 = self.cube2.list[0].file.header["element"]
+        self.ax1.set_title(fr"{el1} {self.aa} {self.D} {self.l}$_{1}$ = {ll1} {self.aa}")
+        self.ax2.set_title(fr"{el2} {self.aa} {self.D} {self.l}$_{2}$ = {ll2} {self.aa}")
+        self.fig.colorbar(im1, ax=self.ax1, orientation="vertical", label="Intensity [DNs]")
+        self.fig.colorbar(im2, ax=self.ax2, orientation="vertical", label="Intensity [DNs]")
