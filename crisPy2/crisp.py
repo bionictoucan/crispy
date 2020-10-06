@@ -81,7 +81,7 @@ class CRISP(CRISPSlicingMixin):
             wwidth = str(self.file.header["dimensions"][-3])
             shape = str(self.file.header["dimensions"])
             el = self.file.header["element"]
-            pointinig_x = str(self.file.header["crval"][-1])
+            pointing_x = str(self.file.header["crval"][-1])
             pointing_y = str(self.file.header["crval"][-2])
 
         return f"""CRISP Observation
@@ -93,9 +93,6 @@ class CRISP(CRISPSlicingMixin):
         Wavelengths sampled: {wwidth}
         Pointing: ({pointing_x}, {pointing_y})
         Shape: {shape}"""
-
-    def __repr__(self):
-        return self.file.data
 
     def plot_spectrum(self, unit=None, air=False, d=False):
         """

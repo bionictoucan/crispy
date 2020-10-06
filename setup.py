@@ -31,7 +31,7 @@ setuptools.setup(
     url="https://github.com/rhero12/crisPy2",
     packages=setuptools.find_packages(),
     install_requires = [
-        "pytorch",
+        "torch",
         "astropy",
         "matplotlib",
         "ipywidgets",
