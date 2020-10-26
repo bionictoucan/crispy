@@ -1,0 +1,9 @@
+[submodule "crisPy/Shaun"]
+	path = crisPy/Shaun
+	url = https://github.com/rhero12/Shaun2
+[submodule "crisPy/Slic"]
+	path = crisPy/Slic
+	url = https://github.com/rhero12/Slic
+[submodule "crisPy/Radynversion"]
+	path = crisPy/Radynversion
+	url = https://github.com/Goobley/Radynversion
