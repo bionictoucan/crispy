@@ -1,11 +1,11 @@
-Examples Using the Main Data Wrappers from crisPy2
-==================================================
+Examples Using the Main Data Wrappers from crisPy
+=================================================
 
-Here, we provide a brief introduction on how to use the main data structures defined in crisPy2.crisp. Specifically, these examples will cover the CRISP, CRISPNonU, and CRISPWideband structures.
+Here, we provide a brief introduction on how to use the main data structures defined in crisPy.crisp. Specifically, these examples will cover the CRISP, CRISPNonU, and CRISPWideband structures.
 
 .. jupyter-execute::
 
-   from crisPy2.crisp import CRISP, CRISPWideband, CRISPNonU
+   from crisPy.crisp import CRISP, CRISPWideband, CRISPNonU
 
 CRISP
 -----

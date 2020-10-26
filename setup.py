@@ -22,7 +22,7 @@ def find_version(*file_paths):
 
 setuptools.setup(
     name="crisPy2",
-    version=find_version("crisPy2/__init__.py"),
+    version=find_version("crisPy/__init__.py"),
     author="John Armstrong",
     author_email="j.armstrong.2@research.gla.ac.uk",
     description="A Python package for using data from the Swedish 1 m Solar Telescope's CRisp Imaging SpectroPolarimeter instrument.",
@@ -51,8 +51,8 @@ setuptools.setup(
     cmdclass=cmdclass,
     command_options={
         "build_sphinx" : {
-            "project" : ("setup.py", "crisPy2"),
-            "version" : ("setup.py", find_version("crisPy2/__init__.py")),
+            "project" : ("setup.py", "crisPy"),
+            "version" : ("setup.py", find_version("crisPy/__init__.py")),
             "source_dir" : ("setup.py", "docs")
         }
     }
