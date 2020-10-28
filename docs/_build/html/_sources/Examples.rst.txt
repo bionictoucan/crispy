@@ -1,7 +1,7 @@
-Examples of crisPy2 in Use
+Examples of crisPy in Use
 ==========================
 
-Please find below examples of how to use the main features of crisPy2 with imaging spectropolarimetry data.
+Please find below examples of how to use the main features of crisPy with imaging spectropolarimetry data.
 
 .. toctree::
    :maxdepth: 2
