@@ -8,7 +8,7 @@ import astropy.units as u
 from astropy.io.fits.header import Header
 from specutils.utils.wcs_utils import vac_to_air
 from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
-from .utils import ObjDict, pt_bright
+from .utils import ObjDict, pt_bright, rotate_crop_data
 from .io import hdf5_header_to_wcs
 
 class CRISP(CRISPSlicingMixin):
@@ -93,6 +93,26 @@ class CRISP(CRISPSlicingMixin):
         Wavelengths sampled: {wwidth}
         Pointing: ({pointing_x}, {pointing_y})
         Shape: {shape}"""
+
+    def rotate_crop(self):
+        """
+        For an image containing the data as a rotated subframe this method
+        returns the data after rotation and cropping in addition to the
+        metadata required to reconstruct the full frame (excluding a small
+        border that is removed during refinement of the data corners).
+
+        Returns
+        -------
+        crop : numpy.ndarray
+            3 or 4D array containing the rotated and cropped data from the image.
+        cropData : dict
+            Dictionary containing the metadata necessary to reconstruct these
+            cropped images into their full-frame input using
+            utils.reconstruct_full_frame (excluding the border lost to the
+            crop).
+        """
+
+        return rotate_crop_data(self.file.data)
 
     def plot_spectrum(self, unit=None, air=False, d=False):
         """
@@ -414,7 +434,7 @@ class CRISP(CRISPSlicingMixin):
             The normalisation to use in the colourmap.
         """
         plt.style.use("bmh")
-        
+
         if type(self.ind) == int:
             idx = self.ind
         elif self.wcs.low_level_wcs._wcs.naxis == 4:
@@ -432,7 +452,7 @@ class CRISP(CRISPSlicingMixin):
             vmin = 0
         else:
             vmin = self.file.data.min()
-        
+
         if frame is None:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
@@ -782,7 +802,7 @@ class CRISP(CRISPSlicingMixin):
         elif frame == "pix":
             if self.file.data.ndim == 2:
                 fig = plt.figure()
-                ax1 = fig.add_subplot(1, 1, 1) 
+                ax1 = fig.add_subplot(1, 1, 1)
                 if stokes == "I":
                     data = self.file.data
                     data[data < 0] = np.nan
@@ -1874,7 +1894,7 @@ class CRISPNonU(CRISP):
             The normalisation to use in the colourmap.
         """
         plt.style.use("bmh")
-        
+
         if type(self.ind) == int:
             idx = self.ind
         elif self.wcs.low_level_wcs._wcs.naxis == 4:
@@ -2242,7 +2262,7 @@ class CRISPNonU(CRISP):
         elif frame == "pix":
             if self.file.data.ndim == 2:
                 fig = plt.figure(constrained_layout=True)
-                ax1 = fig.add_subplot(1, 1, 1) 
+                ax1 = fig.add_subplot(1, 1, 1)
                 if stokes == "I":
                     data = self.file.data
                     data[data < 0] = np.nan

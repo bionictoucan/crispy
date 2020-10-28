@@ -2,6 +2,7 @@ import numpy as np
 from scipy.ndimage import rotate
 from cycler import cycler
 from tqdm import tqdm
+from numba import njit
 
 class ObjDict(dict):
     '''
@@ -108,90 +109,443 @@ def CRISP_sequence_constructor(files, wcs=None, uncertainty=None, mask=None, non
 
     return file_dict_list
 
-def find_corners(img, rows=False, reverse=False):
+
+@njit
+def scanline_search_corners(im, size=10):
     '''
-    This is a function to find the corners of a CRISP observation since the images are rotated in the image plane.
+    Finds the corners of the embedded image by scanning through lines
+    (rows/columns) and looking for a run of pixels different to each other
+    and the background.
+
     Parameters
     ----------
-    img : numpy.ndarray
-        The image to be rotated. Since CRISP observations usually have multiple images, all of the images will be rotated the same amount in the image plane for a single observation so the corners only need to be found for one -- this is usually taken as the core wavelength (for a waveband measurement).
-    rows : bool, optional
-        Whether or not to search along the rows. Default searches down the columns.
-    reverse : bool, optional
-        Determines which direction the search takes place. This also depends on the rows parameter. Default searches from top to bottom if rows is False and left to right if rows is True.
+    im : numpy.ndarray
+        2D array in which to find the sub-image corners. Best results usually
+        obtained from line-core observations.
+    size : int, optional
+        The number of consecutive pixels in a "run" for the sub-image to be
+        detected (default: 10).
+
     Returns
     -------
-    corner : numpy.ndarray
-        An array containing the image plane coordinates of the corner that is to be found. The coordinate is returned in (y,x) format.
-    Since CRISP images are rectangular, only 3 of 4 corners are required to be able to obtain the whole image.
-    If rows and reverse are both False, then the algorithm finds the top-left corner. If rows is True but reverse is False, the algorithm finds the top-right corner. If rows is False and reverse is True, the algorithm find the bottom-right corner. If rows and reverse are both True, then the algorithm finds the bottom-left corner.
+    corners : numpy.ndarray
+        2D array containing the (x,y) coordinates of the corners in order
+        [top, left, right, bottom].
     '''
+    bgRef = im[0,0]
+    corners = []
+    def top():
+        for y in range(im.shape[0]):
+            for x in range(im.shape[1] - size):
+                chunk = im[y, x:x+size]
+                if np.all(chunk != bgRef) and not np.all(chunk == chunk[0]):
+                    return (x+size//2, y)
+        return (0,0)
 
-    if reverse and not rows:
-        y_range = range(img.shape[0])
-        x_range = reversed(range(img.shape[1]))
-    elif reverse and rows:
-        y_range = reversed(range(img.shape[0]))
-        x_range = range(img.shape[1])
-    else:
-        y_range = range(img.shape[0])
-        x_range = range(img.shape[1])
+    def bottom():
+        for y in range(im.shape[0]-1, -1, -1):
+            for x in range(im.shape[1] - size):
+                chunk = im[y, x:x+size]
+                if np.all(chunk != bgRef) and not np.all(chunk == chunk[0]):
+                    return (x+size//2, y)
+        return (0,0)
 
-    if not rows:
-        for i in x_range:
-            for j in y_range:
-                if img[j, i] != img[0, 0]:
-                    if img[j, i] == img[0, 0] + 1 or img[j, i] == img[0, 0] - 1:
-                        pass
-                    else:
-                        corner = np.array([j, i])
-                        return corner
-    else:
-        for j in y_range:
-            for i in x_range:
-                if img[j, i] != img[0, 0]:
-                    if img[j, i] == img[0, 0] + 1 or img[j, i] == img[0, 0] - 1:
-                        pass
-                    else:
-                        corner = np.array([j, i])
-                        return corner
+    def left():
+        for x in range(im.shape[1]):
+            for y in range(im.shape[0] - size):
+                chunk = im[y:y+size, x]
+                if np.all(chunk != bgRef) and not np.all(chunk == chunk[0]):
+                    return (x, y+size//2)
+        return (0,0)
 
-def im_rotate(img_cube):
+    def right():
+        for x in range(im.shape[1]-1, -1, -1):
+            for y in range(im.shape[0] - size):
+                chunk = im[y:y+size, x]
+                if np.all(chunk != bgRef) and not np.all(chunk == chunk[0]):
+                    return (x, y+size//2)
+        return (0,0)
+
+
+    corners = np.array((top(), left(), right(), bottom()))
+    return corners
+
+
+def towards_centroid(vec, centroid, dist=2):
     '''
-    This is a function that will find the corners of the image and rotate it with respect to the x-axis and crop so only the map is left in the array.
+    Moves a point towards another point by a certain distance
+
     Parameters
     ----------
-    img_cube : numpy.ndarray
-        The image cube to be rotated.
+    vec : numpy.ndarray
+        1D, 2 element vector representing the floating point coordinate to
+        move. Will be modified in place.
+    centroid : numpy.ndarray
+        1D, 2 element vector representing the floating point coordinate to
+        move towards.
+    dist : float, optional
+        The distance to move vec along the (vec, centroid) line (default: 2).
+    '''
+    dvec = centroid - vec
+    dvec /= np.linalg.norm(dvec)
+    vec += dist * dvec
+
+
+def refine_corners(corners):
+    '''
+    Refine the corners found by the scanline algorithm so that the edges of
+    the quadrilateral defined are perpendicular and guaranteed to remain
+    within the image region.
+
+    Parameters
+    ----------
+    corners : List[Tuple[int]]
+        The corners found by the scanline algorithm.
+
     Returns
     -------
-    img_cube : numpy.ndarray
-        The rotated image cube.
+    refinedCorners: List[numpy.ndarray]
+        The locations of the refined floating point corners (order: top,
+        left, right, bottom)
     '''
+    corners = [c.astype('<f8') for c in corners]
+    top, left, right, bottom = corners
+    v = right - bottom
+    v /= np.linalg.norm(v)
 
-    mid_wvl = img_cube.shape[0] // 2
-    #we need to find three corners to be able to rotate and crop properly and two of these need to be the bottom corners
-    bl_corner = find_corners(img_cube[mid_wvl], rows=True, reverse=True)
-    br_corner = find_corners(img_cube[mid_wvl], reverse=True)
-    tr_corner = find_corners(img_cube[mid_wvl], rows=True)
-    unit_vec = (br_corner - bl_corner) / np.linalg.norm(br_corner - bl_corner)
-    angle = np.arccos(np.vdot(unit_vec, np.array([0, 1]))) #finds the angle between the image edge and the x-axis
-    angle_d = np.rad2deg(angle)
+    slopebr = v[1] / v[0]
+    interceptbr = bottom[1] - slopebr * bottom[0]
 
-    #find_corners function finds corners in the frame where the origin is the natural origin of the image i.e. (y, x) = (0, 0). However, the rotation is done with respect to the centre of the image so we must change the corner coordinates to the frame where the origin of the image is the centre of the image. Furthermore, as we will be performing an affine transformation on the corner coordinates to obtain our crop ranges we need to add a faux z-axis for the rotation to occur around e.g. add a third dimension. Also as the rotation requires interpolation, the corners are not easily identifiable after the rotation by the find_corners method so find their transformation rotation directly is the best way to do it
-    bl_corner = np.array([bl_corner[1]-(img_cube.shape[-1]//2), bl_corner[0] - (img_cube.shape[-2]//2), 1])
-    br_corner = np.array([br_corner[1]-(img_cube.shape[-1]//2), br_corner[0] - (img_cube.shape[-2]//2), 1])
-    tr_corner = np.array([tr_corner[1]-(img_cube.shape[-1]//2), tr_corner[0] - (img_cube.shape[-2]//2), 1])
-    rot_matrix = np.array([[np.cos(-angle), np.sin(-angle), img_cube.shape[-1]//2], [-np.sin(-angle), np.cos(-angle), img_cube.shape[-2]//2], [0,0,1]])
-    new_bl_corner = np.rint(np.matmul(rot_matrix, bl_corner))
-    new_br_corner = np.rint(np.matmul(rot_matrix, br_corner))
-    new_tr_corner = np.rint(np.matmul(rot_matrix, tr_corner))
+    perpSlopelb = -v[0] / v[1]
+    perpIntercept = bottom[1] - perpSlopelb * bottom[0]
 
-    for j in range(img_cube.shape[0]):
-        img_cube[j] = rotate(img_cube[j], -angle_d, reshape=False, output=np.int16, cval=img_cube[j,0,0])
-    img_cube = img_cube[:, int(new_tr_corner[1]):int(new_bl_corner[1]), int(new_bl_corner[0]):int(new_br_corner[0])]
+    # NOTE(cmo): Adjust if the lb line leaves the region
+    if perpSlopelb * left[0] + perpIntercept > left[1]:
+        perpIntercept = left[1] - perpSlopelb * left[0]
+        bottomX = (interceptbr - perpIntercept) / (perpSlopelb - slopebr)
+        bottomY = slopebr * bottomX + interceptbr
+        bottom = np.array([bottomX, bottomY])
+    else:
+        leftX = (left[1] - perpIntercept) / perpSlopelb
+        left = np.array([leftX, left[1]])
 
-    return img_cube
+    # NOTE(cmo): Adjust top point
+    interceptlt = left[1] - slopebr * left[0]
+    intercepttr = right[1] - perpSlopelb * right[0]
+    topX = (intercepttr - interceptlt) / (slopebr - perpSlopelb)
+    topY = slopebr * topX + interceptlt
+    top = np.array([topX, topY])
+
+    centroid = 0.25 * (top + bottom + left + right)
+
+    # NOTE(cmo): Shift everything in a couple of units
+    towards_centroid(top, centroid)
+    towards_centroid(bottom, centroid)
+    towards_centroid(left, centroid)
+    towards_centroid(right, centroid)
+
+    return [top, left, right, bottom]
+
+
+def line_params(p1, p2):
+    m = (p2[1] - p1[1]) / (p2[0] - p1[0])
+    return m, p1[1] - m * p1[0]
+
+
+def unify_boxes(*cornerLists):
+    '''
+    Unify a set of boxes, defined by their corners so that the box with the
+    smallest area is modified (if necessary) to be fully contained within the
+    others.
+
+    Parameters
+    ----------
+    *cornerLists : List[numpy.ndarray]
+        Lists of corners returned from refine_corners to unify.
+
+    Returns
+    -------
+    unifiedCorners : List[numpy.ndarray]
+        List of unified corners found.
+
+    Raises
+    ------
+    ValueError
+        Raised if no valid set of corners could be found.
+    '''
+    def area(c):
+        return np.linalg.norm(c[0] - c[1]) * np.linalg.norm(c[0] - c[2])
+
+    areas = np.array([area(c) for c in cornerLists])
+    minAreaIdx = areas.argmin()
+    cornersToAdjust = [np.copy(c) for c in cornerLists[minAreaIdx]]
+    centroid = 0.25 * (cornersToAdjust[0] + cornersToAdjust[1] + cornersToAdjust[2] + cornersToAdjust[3])
+    otherCornerLists = [c for i, c in enumerate(cornerLists) if i != minAreaIdx]
+    # [lb, br, lt, tr]
+    params = [[line_params(c[1], c[3]), line_params(c[3], c[2]),
+               line_params(c[1], c[0]), line_params(c[0], c[2])]
+              for c in otherCornerLists]
+
+    for p in params:
+        for cIdx in range(len(cornersToAdjust)):
+            for i in range(100):
+                # TODO(cmo): This approach may fail for > 2 boxes, but that's
+                # not a problem we have right now. May just need to swap loop
+                # ordering.
+                c = cornersToAdjust[cIdx]
+                lbIn = c[1] <= p[0][0] * c[0] + p[0][1]
+                brIn = c[1] <= p[1][0] * c[0] + p[1][1]
+                ltIn = c[1] >= p[2][0] * c[0] + p[2][1]
+                trIn = c[1] >= p[3][0] * c[0] + p[3][1]
+
+                if not all((lbIn, brIn, ltIn, trIn)):
+                    for cc in range(len(cornersToAdjust)):
+                        towards_centroid(cornersToAdjust[cc], centroid)
+                else:
+                    break
+            else:
+                raise ValueError('No unified corners found')
+    return cornersToAdjust
+
+
+def find_unified_bb(imA, imB):
+    '''
+    Scans the provided images to find the corners of the rotated data and
+    returns a unified bounding box that fits within the data on both frames.
+
+    Parameters
+    ----------
+    imA : numpy.ndarray
+        2D array of image data (float) containing the first image.
+
+    imB : numpy.ndarray
+        2D array of image data (float) containing the second image.
+
+    Returns
+    -------
+    finalCorners : List[numpy.ndarray]
+        Corners which are within the data region of both images.
+
+    Raises
+    ------
+    ValueError
+        This is propagated from unify_boxes if there is no valid corner
+        solution for which the smaller box maintains its centroid and all
+        corners are within the larger box.
+    '''
+    cornersA = scanline_search_corners(imA)
+    refinedA = refine_corners(cornersA)
+    cornersB = scanline_search_corners(imB)
+    refinedB = refine_corners(cornersB)
+    finalCorners = unify_boxes(refinedA, refinedB)
+    return finalCorners
+
+
+def rotate_crop_aligned_data(imA, imB):
+    '''
+    Rotate and crop a unified section of data from images in two different
+    wavebands.
+
+    Parameters
+    ----------
+    imA : numpy.ndarray
+        3 or 4D array containing the first image cube.
+    imB : numpy.ndarray
+        3 or 4D array containing the first second cube.
+
+    Returns
+    -------
+    aCrop : numpy.ndarray
+        3 or 4D array containing the rotated and cropped data from the first
+        image.
+    bCrop : numpy.ndarray
+        3 or 4D array containing the rotated and cropped data from the second
+        image.
+    cropData : dict
+        Dictionary containing the metadata necessary to reconstruct these
+        cropped images into their full-frame input using
+        reconstruct_full_frame (excluding the border lost to the crop).
+
+    Raises
+    ------
+    ValueError
+        - Can be propagated from unify_boxes if no valid unified corner solution is found.
+        - If the arrays are of incompatible dimension.
+    '''
+    imA = imA.astype('<f4')
+    imB = imB.astype('<f4')
+    stokes = False
+    if len(imA.shape) == 4 and len(imB.shape) == 4:
+        stokes = True
+        aMidWvl = imA.shape[1] // 2
+        bMidWvl = imB.shape[1] // 2
+        imACore = np.copy(imA[aMidWvl])
+        imBCore = np.copy(imB[bMidWvl])
+        imA = imA.reshape(-1, *imA.shape[-2:])
+        imB = imB.reshape(-1, *imB.shape[-2:])
+    elif len(imA.shape) == 3 and len(imB.shape) == 3:
+        aMidWvl = imA.shape[0] // 2
+        bMidWvl = imB.shape[0] // 2
+        imACore = np.copy(imA[aMidWvl])
+        imBCore = np.copy(imB[bMidWvl])
+    else:
+        raise ValueError('Unexpected dimensionality of imA and imB, expected both 3 or 4, got %d and %d'
+                           % (len(imA.shape), len(imB.shape)))
+
+    if imA.shape[-2:] != imB.shape[-2:]:
+        raise ValueError('x and y dimensions of image cubes seem incompatible.')
+
+    corners = find_unified_bb(imACore, imBCore)
+    top, left, right, bottom = corners
+    br = right - bottom
+    brUnit = br / np.linalg.norm(br)
+    angle = np.arccos(brUnit @ np.array([1, 0]))
+    imCentre = np.array([imACore.shape[1] // 2, imACore.shape[0] // 2])
+    rotMat = np.array(((np.cos(-angle),  np.sin(-angle), imCentre[0]),
+                       (-np.sin(-angle), np.cos(-angle), imCentre[1]),
+                       (0,               0,              1)))
+    bTrans = np.ones(3)
+    bTrans[:2] = bottom - imCentre
+    lTrans = np.ones(3)
+    lTrans[:2] = left - imCentre
+    rTrans = np.ones(3)
+    rTrans[:2] = right - imCentre
+
+    bRot = np.rint(rotMat @ bTrans)
+    lRot = np.rint(rotMat @ lTrans)
+    rRot = np.rint(rotMat @ rTrans)
+
+    imARot = np.empty_like(imA)
+    for wave in range(imA.shape[0]):
+        imARot[wave] = rotate(imA[wave], -np.rad2deg(angle), cval=imA[wave,0,0], reshape=False)
+
+    imBRot = np.empty_like(imB)
+    for wave in range(imB.shape[0]):
+        imBRot[wave] = rotate(imB[wave], -np.rad2deg(angle), cval=imB[wave,0,0], reshape=False)
+
+    cropData = {'frameDims': (imA.shape[-2], imA.shape[-1]),
+                'xMin': int(bRot[0]), 'xMax': int(rRot[0]), 'yMin': int(lRot[1]), 'yMax': int(bRot[1]),
+                'angle': angle}
+
+    aCrop = imARot[:, cropData['yMin']:cropData['yMax'],
+                      cropData['xMin']:cropData['xMax']]
+    bCrop = imBRot[:, cropData['yMin']:cropData['yMax'],
+                      cropData['xMin']:cropData['xMax']]
+    if stokes:
+        aCrop = aCrop.reshape(4, -1, aCrop.shape[-2:])
+        bCrop = bCrop.reshape(4, -1, bCrop.shape[-2:])
+    return aCrop, bCrop, cropData
+
+
+def rotate_crop_data(im):
+    '''
+    Rotate and crop the data from a rotated image.
+
+    Parameters
+    ----------
+    im : numpy.ndarray
+        3 or 4D array containing the image cube.
+
+    Returns
+    -------
+    crop : numpy.ndarray
+        3 or 4D array containing the rotated and cropped data from the image.
+    cropData : dict
+        Dictionary containing the metadata necessary to reconstruct these
+        cropped images into their full-frame input using
+        reconstruct_full_frame (excluding the border lost to the crop).
+
+    Raises
+    ------
+    ValueError
+        If array is of incorrect dimensionality.
+    '''
+    im = im.astype('<f4')
+    stokes = False
+    if len(im.shape) == 4:
+        stokes = True
+        midWvl = im.shape[1] // 2
+        imCore = np.copy(im[midWvl])
+        im = im.reshape(-1, *im.shape[-2:])
+    elif len(im.shape) == 3:
+        midWvl = im.shape[0] // 2
+        imCore = np.copy(im[midWvl])
+    else:
+        raise ValueError('Unexpected dimensionality of im, expected 3 or 4, got %d'
+                           % (len(im.shape)))
+
+    scanCorners = scanline_search_corners(imCore)
+    corners = refine_corners(scanCorners)
+    top, left, right, bottom = corners
+    br = right - bottom
+    brUnit = br / np.linalg.norm(br)
+    angle = np.arccos(brUnit @ np.array([1, 0]))
+    imCentre = np.array([imCore.shape[1] // 2, imCore.shape[0] // 2])
+    rotMat = np.array(((np.cos(-angle),  np.sin(-angle), imCentre[0]),
+                       (-np.sin(-angle), np.cos(-angle), imCentre[1]),
+                       (0,               0,              1)))
+    bTrans = np.ones(3)
+    bTrans[:2] = bottom - imCentre
+    lTrans = np.ones(3)
+    lTrans[:2] = left - imCentre
+    rTrans = np.ones(3)
+    rTrans[:2] = right - imCentre
+
+    bRot = np.rint(rotMat @ bTrans)
+    lRot = np.rint(rotMat @ lTrans)
+    rRot = np.rint(rotMat @ rTrans)
+
+    imRot = np.empty_like(im)
+    for wave in range(im.shape[0]):
+        imRot[wave] = rotate(im[wave], -np.rad2deg(angle), cval=im[wave,0,0], reshape=False)
+
+    cropData = {'frameDims': (im.shape[-2], im.shape[-1]),
+                'xMin': int(bRot[0]), 'xMax': int(rRot[0]), 'yMin': int(lRot[1]), 'yMax': int(bRot[1]),
+                'angle': angle}
+
+    crop = imRot[:, cropData['yMin']:cropData['yMax'],
+                    cropData['xMin']:cropData['xMax']]
+    if stokes:
+        crop = crop.reshape(4, -1, crop.shape[-2:])
+    return crop, cropData
+
+
+def reconstruct_full_frame(cropData, im):
+    '''
+    Reconstruct the full-frame derotated data for a rotated and cropped image
+    cube using the metadata.
+
+    Parameters
+    ----------
+    cropData : dict
+        The crop metadata returned from rotate_crop_data.
+    im : numpy.ndarray
+        The datacube to be restored to full frame
+
+    Returns
+    -------
+    rotatedIm : numpy.ndarray
+        A derotated, full-frame, copy of the input image cube.
+    '''
+    stokes = False
+    if len(im.shape) == 4:
+        stokes = True
+        im = im.reshape(-1, *im.shape[-2:])
+    wvls = im.shape[0]
+
+    imFullFrame = np.zeros((wvls, *cropData['frameDims']), np.float32)
+    imFullFrame[:, cropData['yMin']:cropData['yMax'],
+                   cropData['xMin']:cropData['xMax']] = im
+
+    imFFRot = np.empty_like(imFullFrame)
+    for wave in range(wvls):
+        imFFRot[wave] = rotate(imFullFrame[wave], np.rad2deg(cropData['angle']), reshape=False)
+
+    if stokes:
+        imFFRot = imFFRot.reshape(4, -1, *imFFRot.shape[-2:])
+
+    return imFFRot
+
 
 def segmentation(img, n):
     '''
@@ -328,7 +682,7 @@ def mosaic(segments, img_shape, n):
                 mosaic_img[-y_overlap:,-x_overlap:] = segments[j,i,-y_overlap:,-x_overlap:]
             else:
                 raise IndexError("These indices are out of the bounds of the image. Check your ranges!")
-                
+
     for j in y_range:
         for i in x_range:
             if ((j-1) >= 0) and ((i-1) >= 0) and ((j+1) <= y_range[-1]) and ((i+1) <= x_range[-1]):
@@ -336,7 +690,7 @@ def mosaic(segments, img_shape, n):
                 bottom = mosaic_img[(j*n)-3:(j*n)+3, i*n:(i+1)*n]
                 left = mosaic_img[j*n:(j+1)*n, (i*n)-3:(i*n)+3]
                 right = mosaic_img[j*n:(j+1)*n, ((i+1)*n)-3:((i+1)*n)+3]
-                
+
                 top_new = np.zeros_like(top)
                 bottom_new = np.zeros_like(bottom)
                 left_new = np.zeros_like(left)
@@ -346,7 +700,7 @@ def mosaic(segments, img_shape, n):
                     bottom_new[:,k] = np.interp(np.arange(bottom.shape[0]), np.array([0, bottom.shape[0]-1]), np.array([bottom[0,k],bottom[-1,k]]))
                     left_new[k,:] = np.interp(np.arange(left.shape[1]), np.array([0, left.shape[1]-1]), np.array([left[k,0],left[k,-1]]))
                     right_new[k,:] = np.interp(np.arange(right.shape[1]), np.array([0, right.shape[1]-1]), np.array([right[k,0],right[k,-1]]))
-                
+
                 mosaic_img[((j+1)*n)-3:((j+1)*n)+3, i*n:(i+1)*n] = top_new
                 mosaic_img[(j*n)-3:(j*n)+3, i*n:(i+1)*n] = bottom_new
                 mosaic_img[j*n:(j+1)*n, (i*n)-3:(i*n)+3] = left_new
@@ -354,55 +708,55 @@ def mosaic(segments, img_shape, n):
             elif (j == 0) and ((i-1) >= 0) and ((i+1) <= x_range[-1]):
                 left = mosaic_img[j*n:(j+1)*n, (i*n)-3:(i*n)+3]
                 right = mosaic_img[j*n:(j+1)*n, ((i+1)*n)-3:((i+1)*n)+3]
-                
+
                 left_new = np.zeros_like(left)
                 right_new = np.zeros_like(right)
                 for k in range(left.shape[-2]):
                     left_new[k,:] = np.interp(np.arange(left.shape[1]), np.array([0, left.shape[1]-1]), np.array([left[k,0], left[k,-1]]))
                     right_new[k,:] = np.interp(np.arange(right.shape[1]), np.array([0, right.shape[1]-1]), np.array([right[k,0], right[k,-1]]))
-                    
+
                 mosaic_img[j*n:(j+1)*n, (i*n)-3:(i*n)+3] = left_new
                 mosaic_img[j*n:(j+1)*n, ((i+1)*n)-3:((i+1)*n)+3] = right_new
-                
+
             elif (i == 0) and ((j-1) >= 0) and ((j+1) <= y_range[-1]):
                 top = mosaic_img[((j+1)*n)-3:((j+1)*n)+3, i*n:(i+1)*n]
                 bottom = mosaic_img[(j*n)-3:(j*n)+3, i*n:(i+1)*n]
-                
+
                 top_new = np.zeros_like(top)
                 bottom_new = np.zeros_like(bottom)
                 for k in range(top.shape[-1]):
                     top_new[:,k] = np.interp(np.arange(top.shape[0]), np.array([0, top.shape[0]-1]), np.array([top[0, k], top[-1, k]]))
                     bottom_new[:,k] = np.interp(np.arange(bottom.shape[0]), np.array([0, bottom.shape[0]-1]), np.array([bottom[0, k], bottom[-1, k]]))
-                    
+
                 mosaic_img[((j+1)*n)-3:((j+1)*n)+3, i*n:(i+1)*n] = top_new
                 mosaic_img[(j*n)-3:(j*n)+3, i*n:(i+1)*n] = bottom_new
-                
+
             elif (i == x_range[-1]) and ((j-1) >= 0) and ((j+1) <= y_range[-1]):
                 top = mosaic_img[((j+1)*n)-3:((j+1)*n)+3, -x_overlap:]
                 bottom = mosaic_img[(j*n)-3:(j*n)+3, -x_overlap:]
-                
+
                 top_new = np.zeros_like(top)
                 bottom_new = np.zeros_like(bottom)
                 for k in range(top.shape[-1]):
                     top_new[:,k] = np.interp(np.arange(top.shape[0]), np.array([0, top.shape[0]-1]), np.array([top[0, k], top[-1, k]]))
                     bottom_new[:,k] = np.interp(np.arange(bottom.shape[0]), np.array([0, bottom.shape[0]-1]), np.array([bottom[0, k], bottom[-1, k]]))
-                    
+
                 mosaic_img[((j+1)*n)-3:((j+1)*n)+3, -x_overlap:] = top_new
                 mosaic_img[(j*n)-3:(j*n)+3, -x_overlap:] = bottom_new
-                
+
             elif (j == y_range[-1]) and ((i-1) >= 0) and ((i+1) <= x_range[-1]):
                 left = mosaic_img[-y_overlap:, (i*n)-3:(i*n)+3]
                 right = mosaic_img[-y_overlap:, ((i+1)*n)-3:((i+1)*n)+3]
-                
+
                 left_new = np.zeros_like(left)
                 right_new = np.zeros_like(right)
                 for k in range(left.shape[-2]):
                     left_new[k,:] = np.interp(np.arange(left.shape[1]), np.array([0, left.shape[1]-1]), np.array([left[k,0], left[k,-1]]))
                     right_new[k,:] = np.interp(np.arange(right.shape[1]), np.array([0, right.shape[1]-1]), np.array([right[k,0], right[k,-1]]))
-                    
+
                 mosaic_img[-y_overlap:, (i*n)-3:(i*n)+3] = left_new
                 mosaic_img[-y_overlap:, ((i+1)*n)-3:((i+1)*n)+3] = right_new
-            
+
     return mosaic_img
 
 def mosaic_cube(segments, img_shape, n):
