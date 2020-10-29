@@ -40,7 +40,8 @@ setuptools.setup(
         "pyyaml",
         "tqdm",
         "cycler",
-        "specutils"
+        "specutils",
+        "numba"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

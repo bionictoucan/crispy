@@ -15,11 +15,11 @@ class CRISPSlicingMixin(NDSlicingMixin):
     def _slice(self, item):
         kwargs = {}
         kwargs["filename"] = ObjDict({})
-        kwargs["filename"]["data"] = self.file.data[item]
+        kwargs["filename"]["data"] = self.data[item]
         kwargs["uncertainty"] = self._slice_uncertainty(item)
         kwargs["mask"] = self._slice_mask(item)
         kwargs["wcs"] = self._slice_wcs(item)
-        kwargs["filename"]["header"] = self.file.header
+        kwargs["filename"]["header"] = self.header
         kwargs["nonu"] = self.nonu
 
         return kwargs
