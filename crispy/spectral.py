@@ -7,7 +7,7 @@ from scipy.stats import binned_statistic
 import html
 from .utils import pt_bright
 
-def integrated_intensity(intensity_vector,wavelengths, idx_range="all"):
+def integrated_intensity(intensity_vector,wavelengths, idx_range="all", axis=-1):
     """
     A function to find the integrated intensity over a wavelength range of a spectral line.
 
@@ -22,15 +22,17 @@ def integrated_intensity(intensity_vector,wavelengths, idx_range="all"):
         The wavelengths to integrate over.
     idx_range : range, optional
         The range of indices to integrate over. Default is "all", integrates over the whole range.
+    axis : int, optional
+        The axis to integrate over. Allows for vectorised integration over multi-d arrays. Default is -1, the last axis.
     """
 
     if type(intensity_vector) != np.ndarray:
-        intensity_vector = intensity_vector.file.data
+        intensity_vector = intensity_vector.data
 
     if idx_range == "all":
-        return simps(intensity_vector, wavelengths)
+        return simps(intensity_vector, wavelengths, axis=axis)
     else:
-        return simps(intensity_vector[idx_range], wavelengths[idx_range])
+        return simps(intensity_vector[idx_range], wavelengths[idx_range], axis=axis)
 
 def intensity_ratio(I_1, I_2):
     """
@@ -63,7 +65,7 @@ def doppler_vel(l, del_l=None):
 
     return (del_l / l) * 3e5
 
-def bar_lambda(intensity_vector, wavelengths):
+def bar_lambda(intensity_vector, wavelengths, axis=-1):
     """
     Calculates the intensity-averaged line core.
 
@@ -76,17 +78,19 @@ def bar_lambda(intensity_vector, wavelengths):
         The vector of spectral line intensities.
     wavelengths : numpy.ndarray
         The wavelengths to integrate over.
+    axis : int, optional
+        The axis to integrate over. Allows for vectorisation for integral over multi-d arrays. Default is -1, the last axis.
     """
 
     if type(intensity_vector) != np.ndarray:
-        intensity_vector = intensity_vector.file.data
+        intensity_vector = intensity_vector.data
 
-    num = simps(intensity_vector*wavelengths, wavelengths)
-    den = simps(intensity_vector, wavelengths)
+    num = simps(intensity_vector*wavelengths, wavelengths, axis=axis)
+    den = simps(intensity_vector, wavelengths, axis=axis)
 
     return num / den
 
-def variance(intensity_vector, wavelengths, bar_l=None):
+def variance(intensity_vector, wavelengths, bar_l=None, axis=-1):
     """
     Calculates the variance of the spectral line around the intensity-averaged line core.
 
@@ -101,20 +105,22 @@ def variance(intensity_vector, wavelengths, bar_l=None):
         The wavelengths to integrate over.
     bar_l : float or None, optional
         The intensity-averaged line core of the spectral line. Default is None will call ``crispy2.spectral.bar_lambda`` function on the ``intensity_vector`` and ``wavelengths`` argument to calculate.
+    axis : int, optional
+        The axis to integrate over. Allows for vectorisation for integral over multi-d arrays. Default is -1, the last axis.
     """
 
     if type(intensity_vector) != np.ndarray:
-        intensity_vector = intensity_vector.file.data
+        intensity_vector = intensity_vector.data
 
     if bar_l == None:
-        bar_l = bar_lambda(intensity_vector, wavelengths)
+        bar_l = bar_lambda(intensity_vector, wavelengths, axis=axis)
 
-    num = simps(intensity_vector*(wavelengths-bar_l)**2, wavelengths)
-    den = simps(intensity_vector, wavelengths)
+    num = simps(intensity_vector*(wavelengths-bar_l)**2, wavelengths, axis=axis)
+    den = simps(intensity_vector, wavelengths, axis=axis)
 
     return num / den
 
-def wing_idxs(intensity_vector, wavelengths, var=None, bar_l=None):
+def wing_idxs(intensity_vector, wavelengths, var=None, bar_l=None, axis=-1):
     """
     A function to work out the index range for the wings of the spectral line. This is working on the definition of wings that says the wings are defined as being one standard deviation away from the intensity-averaged line core.
 
@@ -128,16 +134,18 @@ def wing_idxs(intensity_vector, wavelengths, var=None, bar_l=None):
         The variance of the spectral line. Default is None will call ``crispy2.spectral.variance`` function on the ``intensity_vector`` and ``wavelengths`` argument to calculate.
     bar_l : float or None, optional
         The intensity-averaged line core of the spectral line. Default is None will call ``crispy2.spectral.bar_lambda`` function on the ``intensity_vector`` and ``wavelengths`` argument to calculate.
+    axis : int, optional
+        The axis to integrate over. Allows for vectorisation for integral over multi-d arrays. Default is -1, the last axis.
     """
 
     if type(intensity_vector) != np.ndarray:
-        intensity_vector = intensity_vector.file.data
+        intensity_vector = intensity_vector.data
 
     if bar_l == None:
-        bar_l = bar_lambda(intensity_vector, wavelengths)
+        bar_l = bar_lambda(intensity_vector, wavelengths, axis=axis)
 
     if var == None:
-        var = variance(intensity_vector, wavelengths, bar_l=bar_l)
+        var = variance(intensity_vector, wavelengths, bar_l=bar_l, axis=axis)
 
     blue_wing_start = 0 #blue wing starts at shortest wavelength
     red_wing_end = wavelengths.shape[0] - 1 #red wing ends at longest wavelength
