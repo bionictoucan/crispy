@@ -40,9 +40,9 @@ class Inversion(InversionSlicingMixin):
             self.header = header
         elif type(filename) == ObjDict:
             self.f = filename
-            self.wcs = filename["wcs"]
-            self.z = filename["z"]
-            self.header = filename["header"]
+            self.wcs = wcs
+            self.z = z
+            self.header = header
 
     @property
     def ne(self):
