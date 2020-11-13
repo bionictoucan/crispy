@@ -26,7 +26,9 @@ class CRISP(CRISPSlicingMixin):
     :param nonu: Whether or not the :math:`\\Delta \\lambda` on the wavelength axis is uniform. This is helpful when constructing the WCS but if True, then the ``CRISPNonU`` class should be used. Default is False.
     :type nonu:  bool, optional
 
-    :cvar file: This is where the data and header are stored as attributes to this attribute. e.g. ``file.data`` returns the data and ``file.header`` returns the header
+    :cvar data: This is the data from the file.
+    :cvar header: This is the header data from the file.
+    :cvar wvls: This is the sampled wavelengths.
     :cvar wcs: This stores the WCS.
     :cvar nonu: This is either True or False depending what is passed to the nonu kwarg.
     :cvar uncertainty: This is the uncertainty array.
@@ -1424,7 +1426,8 @@ class CRISPWideband(CRISP):
     :param nonu: Whether or not the :math:`\\Delta \\lambda` on the wavelength axis is uniform. This is helpful when constructing the WCS but if True, then the ``CRISPNonU`` class should be used. Default is False.
     :type nonu:  bool, optional
 
-    :cvar file: This is where the data and header are stored as attributes to this attribute. e.g. ``file.data`` returns the data and ``file.header`` returns the header
+    :cvar data: This is the data from the file.
+    :cvar header: This is the header data from the file.
     :cvar wcs: This stores the WCS.
     :cvar nonu: This is either True or False depending what is passed to the nonu kwarg.
     :cvar uncertainty: This is the uncertainty array.
@@ -1552,7 +1555,8 @@ class CRISPNonU(CRISP):
     :param nonu: Whether or not the :math:`\\Delta \\lambda` on the wavelength axis is uniform. This is helpful when constructing the WCS but if True, then the ``CRISPNonU`` class should be used. Default is False.
     :type nonu:  bool, optional
 
-    :cvar file: This is where the data and header are stored as attributes to this attribute. e.g. ``file.data`` returns the data and ``file.header`` returns the header
+    :cvar data: This is the data from the file.
+    :cvar header: This is the header data from the file.
     :cvar wvls: This is where the sampled wavelength points are read in to be used for plotting and ``wave`` methods.
     :cvar wcs: This stores the WCS.
     :cvar nonu: This is either True or False depending what is passed to the nonu kwarg.
