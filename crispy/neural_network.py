@@ -95,7 +95,7 @@ class ConvTransBlock(nn.Module):
         super(ConvTransBlock, self).__init__()
 
         self.convtrans = nn.ConvTranspose2d(
-            in_channles,
+            in_channels,
             out_channels,
             kernel_size=kernel,
             stride=stride,
