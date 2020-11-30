@@ -87,7 +87,7 @@ class ConvTranspBlock(nn.Module):
         kernel=3,
         stride=1,
         bias=False,
-        pad="reflect",
+        pad="zeros",
         normal="batch",
         activation="relu",
         **kwargs
@@ -117,9 +117,9 @@ class ConvTranspBlock(nn.Module):
         else:
             raise NotImplementedError("Soon....")
 
-        nn.init.kaiming_normal_(self.convtrans.weight)
+        nn.init.kaiming_normal_(self.convtransp.weight)
         if bias:
-            nn.init.constant_(self.conv.bias, 0.01)
+            nn.init.constant_(self.convtransp.bias, 0.01)
 
     def forward(self, inp):
         out = self.convtransp(inp)
