@@ -1,7 +1,4 @@
 import codecs, os, sys, re, setuptools
-from sphinx.setup_command import BuildDoc
-
-cmdclass = {"build_sphinx" : BuildDoc}
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -32,6 +29,8 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires = [
         "torch",
+        "torchvision",
+        "numpy",
         "astropy",
         "matplotlib",
         "ipywidgets",
@@ -41,20 +40,12 @@ setuptools.setup(
         "tqdm",
         "cycler",
         "specutils",
-        "numba"
+        "numba == 0.51.2"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent"
     ],
-    python_requires=">3.6",
-    cmdclass=cmdclass,
-    command_options={
-        "build_sphinx" : {
-            "project" : ("setup.py", "crispy"),
-            "version" : ("setup.py", find_version("crispy/__init__.py")),
-            "source_dir" : ("setup.py", "docs")
-        }
-    }
+    python_requires=">3.6"
 )

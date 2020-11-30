@@ -57,7 +57,7 @@ class ConvBlock(nn.Module):
 
         return out
 
-class ConvTransBlock(nn.Module):
+class ConvTranspBlock(nn.Module):
     """
     A modifiable transpose conovlutional layer.
 
@@ -92,15 +92,15 @@ class ConvTransBlock(nn.Module):
         activation="relu",
         **kwargs
     ):
-        super(ConvTransBlock, self).__init__()
+        super(ConvTranspBlock, self).__init__()
 
-        self.convtrans = nn.ConvTranspose2d(
+        self.convtransp = nn.ConvTranspose2d(
             in_channels,
             out_channels,
             kernel_size=kernel,
             stride=stride,
             bias=bias,
-            pad=(kernel-1)//2,
+            padding=(kernel-1)//2,
             padding_mode=pad,
             output_padding=(kernel-1)//2,
             **kwargs
@@ -122,7 +122,7 @@ class ConvTransBlock(nn.Module):
             nn.init.constant_(self.conv.bias, 0.01)
 
     def forward(self, inp):
-        out = self.convtrans(inp)
+        out = self.convtransp(inp)
         if self.norm != None:
             out = self.norm(out)
         out = self.act(out)
