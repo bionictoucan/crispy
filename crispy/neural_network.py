@@ -94,7 +94,7 @@ class ConvTranspBlock(nn.Module):
     ):
         super(ConvTranspBlock, self).__init__()
 
-        self.convtransp = nn.ConvTranspose2d(
+        self.conv = nn.ConvTranspose2d(
             in_channels,
             out_channels,
             kernel_size=kernel,
@@ -117,12 +117,12 @@ class ConvTranspBlock(nn.Module):
         else:
             raise NotImplementedError("Soon....")
 
-        nn.init.kaiming_normal_(self.convtransp.weight)
+        nn.init.kaiming_normal_(self.conv.weight)
         if bias:
-            nn.init.constant_(self.convtransp.bias, 0.01)
+            nn.init.constant_(self.conv.bias, 0.01)
 
     def forward(self, inp):
-        out = self.convtransp(inp)
+        out = self.conv(inp)
         if self.norm != None:
             out = self.norm(out)
         out = self.act(out)
