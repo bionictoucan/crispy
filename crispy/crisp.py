@@ -76,8 +76,8 @@ class CRISP(CRISPSlicingMixin):
             pointing_x = str(self.header.get("CRVAL1"))
             pointing_y = str(self.header.get("CRVAL2"))
         elif type(self.header) == dict:
-            time = self.header["time-obs"]
-            date = self.header["date-obs"]
+            time = self.header["time_obs"]
+            date = self.header["date_obs"]
             cl = str(self.header["crval"][-3])
             wwidth = str(self.header["dimensions"][-3])
             shape = str(self.header["dimensions"])
@@ -168,7 +168,7 @@ class CRISP(CRISPSlicingMixin):
             datetime = self.header["DATE-AVG"]
             el = self.header["WDESC1"]
         except KeyError:
-            datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+            datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
             el = self.header["element"]
 
         fig = plt.figure()
@@ -202,7 +202,7 @@ class CRISP(CRISPSlicingMixin):
             datetime = self.header["DATE-AVG"]
             el = self.header["WDESC1"]
         except KeyError:
-            datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+            datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
             el = self.header["element"]
 
         if self.data.ndim == 1:
@@ -463,7 +463,7 @@ class CRISP(CRISPSlicingMixin):
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
-            datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+            datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
 
         if self.data.min() < 0:
             vmin = 0
@@ -507,7 +507,7 @@ class CRISP(CRISPSlicingMixin):
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
-            datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+            datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
         title = f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l}={del_wvl}{self.aa})"
 
         if frame is None:
@@ -1295,8 +1295,8 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             pointing_x = str(self.list[0].file.header.get("CRVAL1"))
             pointing_y = str(self.list[0].file.header.get("CRVAL2"))
         elif type(self.list[0].file.header) == dict:
-            time = self.list[0].file.header["time-obs"]
-            date = self.list[0].file.header["date-obs"]
+            time = self.list[0].file.header["time_obs"]
+            date = self.list[0].file.header["date_obs"]
             cl = [str(f.file.header["crval"][-3]) for f in self.list]
             wwidth = [str(f.file.header["dimensions"][-3]) for f in self.list]
             shape = [str(f.file.header["dimensions"]) for f in self.list]
@@ -1447,8 +1447,8 @@ class CRISPWideband(CRISP):
             pointing_x = str(self.header.get("CRVAL1"))
             pointing_y = str(self.header.get("CRVAL2"))
         elif type(self.header) == dict:
-            time = self.header["time-obs"]
-            date = self.header["date-obs"]
+            time = self.header["time_obs"]
+            date = self.header["date_obs"]
             shape = str(self.header["dimensions"])
             el = self.header["element"]
             pointing_x = str(self.header["crval"][-1])
@@ -1478,7 +1478,7 @@ class CRISPWideband(CRISP):
             datetime = self.header["DATE-AVG"]
             el = self.header["WDESC1"]
         except KeyError:
-            datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+            datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
             el = self.header["element"]
 
         if frame is None:
@@ -1525,8 +1525,8 @@ class CRISPWidebandSequence(CRISPSequence):
             pointing_x = str(self.list[0].file.header.get("CRVAL1"))
             pointing_y = str(self.list[0].file.header.get("CRVAL2"))
         elif type(self.list[0].file.header) == dict:
-            time = [f.file.header["time-obs"] for f in self.list]
-            date = self.list[0].file.header["date-obs"]
+            time = [f.file.header["time_obs"] for f in self.list]
+            date = self.list[0].file.header["date_obs"]
             shape = [str(f.file.header["dimensions"]) for f in self.list]
             el = [self.list[0].file.header["element"] for f in self.list]
             pointing_x = str(self.list[0].file.header["crval"][-1])
@@ -1587,8 +1587,8 @@ class CRISPNonU(CRISP):
             pointing_x = str(self.header.get("CRVAL1"))
             pointing_y = str(self.header.get("CRVAL2"))
         elif type(self.header) == dict:
-            time = self.header["time-obs"]
-            date = self.header["date-obs"]
+            time = self.header["time_obs"]
+            date = self.header["date_obs"]
             cl = str(self.header["crval"][-3])
             wwidth = self.header["dimensions"][-3]
             shape = str(self.header["dimensions"])
@@ -1645,7 +1645,7 @@ class CRISPNonU(CRISP):
             datetime = self.header["DATE-AVG"]
             el = self.header["WDESC1"]
         except KeyError:
-            datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+            datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
             el = self.header["element"]
 
         fig = plt.figure()
@@ -1679,7 +1679,7 @@ class CRISPNonU(CRISP):
             datetime = self.header["DATE-AVG"]
             el = self.header["WDESC1"]
         except KeyError:
-            datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+            datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
             el = self.header["element"]
 
         if self.data.ndim == 1:
@@ -1940,7 +1940,7 @@ class CRISPNonU(CRISP):
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
-            datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+            datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
 
         if frame is None:
             fig = plt.figure()
@@ -1983,7 +1983,7 @@ class CRISPNonU(CRISP):
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
-            datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+            datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
         title = f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l}={del_wvl}{self.aa})"
 
         if frame is None:
@@ -2637,8 +2637,8 @@ class CRISPNonUSequence(CRISPSequence):
             pointing_x = str(self.list[0].file.header.get("CRVAL1"))
             pointing_y = str(self.list[0].file.header.get("CRVAL2"))
         elif type(self.list[0].file.header) == dict:
-            time = self.list[0].file.header["time-obs"]
-            date = self.list[0].file.header["date-obs"]
+            time = self.list[0].file.header["time_obs"]
+            date = self.list[0].file.header["date_obs"]
             cl = [str(f.file.header["crval"][-3]) for f in self.list]
             wwidth = [str(f.file.header["dimensions"][-3]) for f in self.list]
             shape = [str(f.file.header["dimensions"]) for f in self.list]

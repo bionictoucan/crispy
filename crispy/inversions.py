@@ -93,8 +93,8 @@ class Inversion(InversionSlicingMixin):
             pointing_x = str(self.header["CRVAL1"])
             pointing_y = str(self.header["CRVAL2"])
         except KeyError:
-            time = self.header["time-obs"]
-            date = self.header["date-obs"]
+            time = self.header["time_obs"]
+            date = self.header["date_obs"]
             pointing_x = str(self.header["crval"][-1])
             pointing_y = str(self.header["crval"][-2])
 
@@ -175,7 +175,7 @@ class Inversion(InversionSlicingMixin):
             try:
                 datetime = self.header["DATE-AVG"]
             except KeyError:
-                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+                datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
 
             title = f"{datetime} ({point[0]},{point[1]})"
         else:
@@ -207,7 +207,7 @@ class Inversion(InversionSlicingMixin):
             try:
                 datetime = self.header["DATE-AVG"]
             except KeyError:
-                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+                datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
 
             title = f"{datetime} ({point[0]},{point[1]})"
         else:
@@ -239,7 +239,7 @@ class Inversion(InversionSlicingMixin):
             try:
                 datetime = self.header["DATE-AVG"]
             except KeyError:
-                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+                datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
 
             title = f"{datetime} ({point[0]},{point[1]})"
         else:
@@ -271,7 +271,7 @@ class Inversion(InversionSlicingMixin):
             try:
                 datetime = self.header["DATE-AVG"]
             except KeyError:
-                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+                datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
 
             title = f"{datetime} ({point[0]},{point[1]})"
         else:
@@ -328,7 +328,7 @@ class Inversion(InversionSlicingMixin):
             try:
                 datetime = self.header["DATE-AVG"]
             except KeyError:
-                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+                datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
         else:
             datetime = ""
 
@@ -370,7 +370,7 @@ class Inversion(InversionSlicingMixin):
             try:
                 datetime = self.header["DATE-AVG"]
             except KeyError:
-                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+                datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
         else:
            datetime = ""
         if frame is None:
@@ -411,7 +411,7 @@ class Inversion(InversionSlicingMixin):
             try:
                 datetime = self.header["DATE-AVG"]
             except KeyError:
-                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+                datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
         else:
             datetime = ""
         if frame is None:
@@ -452,7 +452,7 @@ class Inversion(InversionSlicingMixin):
             try:
                 datetime = self.header["DATE-AVG"]
             except KeyError:
-                datetime = self.header["date-obs"] + "T" + self.header["time-obs"]
+                datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
         else:
             datetime = ""
         if frame is None:

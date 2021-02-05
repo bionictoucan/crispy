@@ -191,7 +191,7 @@ def la_palma_cube_to_hdf5(cube_path, tseries_path, spectfile, date_obs, telescop
     """
 
     header = {}
-    header["date-obs"] = date_obs
+    header["date_obs"] = date_obs
     header["telescope"] = telescope
     header["instrument"] = instrument
     header["pixel_scale"] = pixel_scale
@@ -217,7 +217,7 @@ def la_palma_cube_to_hdf5(cube_path, tseries_path, spectfile, date_obs, telescop
         header["cunit"] = ("arcsec", "arcsec")
 
     for jj, frame in enumerate(tqdm(mem_cube)):
-        header["time-obs"] = times[jj].deconde("utf-8")
+        header["time_obs"] = times[jj].deconde("utf-8")
         if "wb" not in cube_path and frame.ndim == 4:
             header["crpix"] = (1, np.median(np.arange(frame.shape[-3])), np.median(np.arange(frame.shape[-2])), np.median(np.arange(frame.shape[-1])))
             header["crval"] = (1, np.median(header["spect_pos"]), poitning[-2], pointing[-1])

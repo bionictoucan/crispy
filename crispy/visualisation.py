@@ -518,7 +518,7 @@ class WidebandViewer:
             try:
                 self.time = [date2num(f.file.header["DATE-AVG"]) for f in self.cube.list]
             except KeyError:
-                self.time = [date2num(f.file.header["date-obs"]+" "+f.file.header["time-obs"]) for f in self.cube.list]
+                self.time = [date2num(f.file.header["date_obs"]+" "+f.file.header["time_obs"]) for f in self.cube.list]
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(1, 2, 1, projection=self.cube.list[0].wcs)
             self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
@@ -539,8 +539,8 @@ class WidebandViewer:
                 self.time1 = [date2num(f.file.header["DATE-AVG"]) for f in self.cube[0].list]
                 self.time2 = [date2num(f.file.header["DATE-AVG"]) for f in self.cube[1].list]
             except KeyError:
-                self.time1 = [date2num(f.file.header["date-obs"]+" "+f.file.header["time-obs"]) for f in self.cube[0].list]
-                self.time2 = [date2num(f.file.header["date-obs"]+" "+f.file.header["time-obs"]) for f in self.cube[1].list]
+                self.time1 = [date2num(f.file.header["date_obs"]+" "+f.file.header["time_obs"]) for f in self.cube[0].list]
+                self.time2 = [date2num(f.file.header["date_obs"]+" "+f.file.header["time_obs"]) for f in self.cube[1].list]
             self.fig = plt.figure(figsize=(8,10))
             self.ax1 = self.fig.add_subplot(2, 2, 1, projection=self.cube[0].list[0].wcs)
             self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
@@ -1453,7 +1453,7 @@ class SpectralTimeViewer:
             try:
                 self.times1 = [date2num(f.file.header["DATE-AVG"]) for f in self.cube1.list]
             except KeyError:
-                self.times1 = [date2num(f.file.header["date-obs"]+" "+f.file.header["time-obs"]) for f in self.cube1.list]
+                self.times1 = [date2num(f.file.header["date_obs"]+" "+f.file.header["time_obs"]) for f in self.cube1.list]
             
             out1 = widgets.interactive_output(self._img_plot1, {"ll" : self.ll, "t" : self.t})
             out2 = widgets.interactive_output(self._shape, {"opts" : shape})
@@ -1519,8 +1519,8 @@ class SpectralTimeViewer:
                 self.times1 = [date2num(f.file.header["DATE-AVG"]) for f in self.cube1.list]
                 self.times2 = [date2num(f.file.header["DATE-AVG"]) for f in self.cube2.list]
             except KeyError:
-                self.times1 = [date2num(f.file.header["date-obs"]+" "+f.file.header["time-obs"]) for f in self.cube1.list]
-                self.times2 = [date2num(f.file.header["date-obs"]+" "+f.file.header["time-obs"]) for f in self.cube2.list]
+                self.times1 = [date2num(f.file.header["date_obs"]+" "+f.file.header["time_obs"]) for f in self.cube1.list]
+                self.times2 = [date2num(f.file.header["date_obs"]+" "+f.file.header["time_obs"]) for f in self.cube2.list]
             
             out1 = widgets.interactive_output(self._img_plot2, {"ll1" : self.ll1, "ll2" : self.ll2, "t1" : self.t1, "t2" : self.t2})
             out2 = widgets.interactive_output(self._shape, {"opts" : shape})
@@ -2219,7 +2219,7 @@ class PolarimetricTimeViewer:
         try:
             self.times1 = [date2num(f.file.header["DATE-AVG"]) for f in self.cube.list]
         except KeyError:
-            self.times1 = [date2num(f.file.header["date-obs"]+" "+f.file.header["time-obs"]) for f in self.cube.list]
+            self.times1 = [date2num(f.file.header["date_obs"]+" "+f.file.header["time_obs"]) for f in self.cube.list]
 
         out1 = widgets.interactive_output(self._img_plot1, {"ll" : self.ll, "s" : s, "t" : self.t})
         out2 = widgets.interactive_output(self._shape, {"opts" : shape})
