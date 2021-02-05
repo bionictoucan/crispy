@@ -69,9 +69,6 @@ def hdf5_header_to_wcs(hdf5_header, nonu=False):
         Whether or not the spectral points are sampled non-uniformly. Default is False.
     """
 
-    if type(hdf5_header) is not dict:
-        hdf5_header = hdf5_header.attrs
-
     wcs_dict = {}
 
     wcs_dict["TELESCOP"] = hdf5_header["telescope"]
