@@ -1574,7 +1574,7 @@ class CRISPNonU(CRISP):
         if ".fits" in filename:
             self.wvl = fits.open(filename)[1].data #This assumes that the true wavelength points are stored in the first HDU of the FITS file as a numpy array
         else:
-            self.wvl = self.header["spect_pos"]
+            self.wvl = self.header["wavels"]
 
     def __str__(self):
         if type(self.header) == Header:
