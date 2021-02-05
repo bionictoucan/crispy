@@ -46,7 +46,7 @@ class CRISP(CRISPSlicingMixin):
             f = h5py.File(filename, mode="r")
             self.file = ObjDict({})
             self.file["data"] = f["data"]
-            self.file["header"] = yaml.load(f["header"][0], Loader=yaml.Loader)
+            self.file["header"] = f["data"].attrs
         elif type(filename) == ObjDict:
             self.file = filename
         else:
@@ -1572,9 +1572,9 @@ class CRISPNonU(CRISP):
         super().__init__(filename=filename, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu)
 
         if ".fits" in filename:
-            self.wvls = fits.open(filename)[1].data #This assumes that the true wavelength points are stored in the first HDU of the FITS file as a numpy array
+            self.wvl = fits.open(filename)[1].data #This assumes that the true wavelength points are stored in the first HDU of the FITS file as a numpy array
         else:
-            self.wvls = self.header["spect_pos"]
+            self.wvl = self.header["spect_pos"]
 
     def __str__(self):
         if type(self.header) == Header:
@@ -2612,7 +2612,7 @@ class CRISPNonU(CRISP):
         idx : int
             The index along the wavelength axis to know the wavelength for.
         """
-        return self.wvls[idx]
+        return self.wvl[idx]
 
 class CRISPNonUSequence(CRISPSequence):
     """

@@ -70,7 +70,7 @@ def hdf5_header_to_wcs(hdf5_header, nonu=False):
     """
 
     if type(hdf5_header) is not dict:
-        hdf5_header = yaml.load(hdf5_header[0], Loader=yaml.Loader)
+        hdf5_header = hdf5_header.attrs
 
     wcs_dict = {}
 
