@@ -19,7 +19,7 @@ def memmap_crisp_cube(path):
 
     folder, item = os.path.split(path)
     files = os.listdir(folder)
-    assoc_name = ".".join(item.split[:-1]) + ".assoc.pro" #assoc file contains some meta information and the name usually follows similar convention to the La Palma cube without the file suffix
+    assoc_name = ".".join(item.split(".")[:-1]) + ".assoc.pro" #assoc file contains some meta information and the name usually follows similar convention to the La Palma cube without the file suffix
 
     if assoc_name in files:
         # Read out of the assoc file so no need to find meta information!!
