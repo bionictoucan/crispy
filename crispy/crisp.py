@@ -1936,7 +1936,7 @@ class CRISPNonU(CRISP):
         else:
             idx = self.ind[0]
         wvl = np.round(self.wave(idx) << u.Angstrom, decimals=2).value
-        del_wvl = np.round(wvl - np.median(self.wvls), decimals=2)
+        del_wvl = np.round(wvl - (self.wave(self.wcs.low_level_wcs._wcs.array_shape[0]//2) << u.Angstrom).value, decimals=2)
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
@@ -1979,7 +1979,7 @@ class CRISPNonU(CRISP):
         plt.style.use("bmh")
 
         wvl = np.round(self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(self.ind[1]) << u.Angstrom, decimals=2).value
-        del_wvl = np.round(wvl - np.median(self.wvls), decimals=2)
+        del_wvl = np.round(wvl - (self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(self.wcs.low_level_wcs._wcs.array_shape[1]//2) << u.Angstrom).value, decimals=2)
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
