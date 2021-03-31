@@ -239,7 +239,7 @@ def lambda_0_wing(wing_idxs, wavelengths, d_lambda=None):
 
     return wavelengths[wing_idxs[-1]] - d_lambda
 
-def interp_fine(spec_line):
+def interp_fine(wavels, intensity, pts=101):
     """
     Interpolates the spectral line onto a finer grid for more accurate calculations for the wing properties.
 

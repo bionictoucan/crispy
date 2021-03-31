@@ -6,7 +6,9 @@ from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
 import astropy.units as u
 from astropy.io.fits.header import Header
+from astropy.coordinates import SkyCoord
 from specutils.utils.wcs_utils import vac_to_air
+from sunpy.coordinates import Helioprojective
 from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
 from .utils import ObjDict, pt_bright, rotate_crop_data, rotate_crop_aligned_data
 from .io import hdf5_header_to_wcs
@@ -1185,39 +1187,39 @@ class CRISP(CRISPSlicingMixin):
         if len(self.wcs.low_level_wcs.array_shape) == 4:
             if hasattr(self, "ind"):
                 if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x) << u.arcsec
+                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
                 elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x) << u.arcsec
+                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
                 elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x) << u.arcsec
+                    return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
                 else:
-                    return self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x) << u.arcsec
+                    return self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
             else:
-                return self.wcs[0,0].array_index_to_world(y,x) << u.arcsec
+                return self.wcs[0,0].array_index_to_world(y,x)
         elif len(self.wcs.low_level_wcs.array_shape) == 3:
             if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
                 if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x) << u.arcsec
+                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
                 elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x) << u.arcsec
+                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
                 elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x) << u.arcsec
+                    return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
                 else:
-                    return self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x) << u.arcsec
+                    return self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
             else:
                 if hasattr(self, "ind"):
                     if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                        return self.wcs.low_level_wcs._wcs[0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x) << u.arcsec
+                        return self.wcs.low_level_wcs._wcs[0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
                     elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                        return self.wcs.low_level_wcs._wcs[0,self.ind[-2]].array_index_to_world(y,x) << u.arcsec
+                        return self.wcs.low_level_wcs._wcs[0,self.ind[-2]].array_index_to_world(y,x)
                     elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                        return self.wcs.low_level_wcs._wcs[0,:,self.ind[-1]].array_index_to_world(y,x) << u.arcsec
+                        return self.wcs.low_level_wcs._wcs[0,:,self.ind[-1]].array_index_to_world(y,x)
                     else:
-                        return self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x) << u.arcsec
+                        return self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
                 else:
-                    return self.wcs[0].array_index_to_world(y,x) << u.arcsec
+                    return self.wcs[0].array_index_to_world(y,x) 
         elif len(self.wcs.low_level_wcs.array_shape) == 2:
-            return self.wcs.array_index_to_world(y,x) << u.arcsec
+            return self.wcs.array_index_to_world(y,x) 
         else:
             raise NotImplementedError("Too many or too little dimensions.")
 
@@ -1233,42 +1235,43 @@ class CRISP(CRISPSlicingMixin):
             The Helioprojective Latitude in arcseconds.
         """
         lon, lat = lon << u.arcsec, lat << u.arcsec
+        sc = SkyCoord(lon, lat, frame=Helioprojective)
         if len(self.wcs.low_level_wcs.array_shape) == 4:
             if hasattr(self, "ind"):
                 if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].world_to_array_index(lon,lat)
+                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].world_to_array_index(sc)
                 elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].world_to_array_index(lon,lat)
+                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].world_to_array_index(sc)
                 elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].world_to_array_index(lon,lat)
+                    return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].world_to_array_index(sc)
                 else:
-                    return self.wcs.low_level_wcs._wcs[0,0].world_to_array_index(lon,lat)
+                    return self.wcs.low_level_wcs._wcs[0,0].world_to_array_index(sc)
             else:
-                return self.wcs[0,0].world_to_array_index(lon,lat)
+                return self.wcs[0,0].world_to_array_index(sc)
         elif len(self.wcs.low_level_wcs.array_shape) == 3:
             if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
                 if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].world_to_array_index(lon,lat)
+                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].world_to_array_index(sc)
                 elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].world_to_array_index(lon,lat)
+                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].world_to_array_index(sc)
                 elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].world_to_array_index(lon,lat)
+                    return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].world_to_array_index(sc)
                 else:
-                    return self.wcs.low_level_wcs._wcs[0,0].world_to_array_index(lon,lat)
+                    return self.wcs.low_level_wcs._wcs[0,0].world_to_array_index(sc)
             else:
                 if hasattr(self, "ind"):
                     if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                        return self.wcs.low_level_wcs._wcs[0,self.ind[-2],self.ind[-1]].world_to_array_index(lon,lat)
+                        return self.wcs.low_level_wcs._wcs[0,self.ind[-2],self.ind[-1]].world_to_array_index(sc)
                     elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                        return self.wcs.low_level_wcs._wcs[0,self.ind[-2]].world_to_array_index(lon,lat)
+                        return self.wcs.low_level_wcs._wcs[0,self.ind[-2]].world_to_array_index(sc)
                     elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                        return self.wcs.low_level_wcs._wcs[0,:,self.ind[-1]].world_to_array_index(lon,lat)
+                        return self.wcs.low_level_wcs._wcs[0,:,self.ind[-1]].world_to_array_index(sc)
                     else:
-                        return self.wcs.low_level_wcs._wcs[0].world_to_array_index(lon,lat)
+                        return self.wcs.low_level_wcs._wcs[0].world_to_array_index(sc)
                 else:
-                    return self.wcs[0].world_to_array_index(lon,lat)
+                    return self.wcs[0].world_to_array_index(sc)
         elif len(self.wcs.low_level_wcs.array_shape) == 2:
-            return self.wcs.world_to_array_index(lon,lat)
+            return self.wcs.world_to_array_index(sc)
         else:
             raise NotImplementedError("Too many or too little dimensions.")
 
