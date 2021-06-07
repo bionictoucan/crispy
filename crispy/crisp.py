@@ -5,7 +5,6 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
 import astropy.units as u
-from astropy.io.fits.header import Header
 from astropy.coordinates import SkyCoord
 from specutils.utils.wcs_utils import vac_to_air
 from sunpy.coordinates import Helioprojective
@@ -551,6 +550,21 @@ class CRISP(CRISPSlicingMixin):
             im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=vmin, origin="lower", norm=norm)
             ax1.set_ylabel("y [pixels]")
             ax1.set_xlabel("x [pixels]")
+            ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
+            fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
+            fig.show()
+        elif frame == "arcsec":
+            try:
+                xmax = self.header["CDELT1"] * self.shape[-1]
+                ymax = self.header["CDELT2"] * self.shape[-2]
+            except KeyError:
+                xmax = self.header["pixel_scale"] * self.shape[-1]
+                ymax = self.header["pixel_scale"] * self.shape[-2]
+            fig = plt.figure()
+            ax1 = fig.add_subplot(1, 1, 1)
+            im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=vmin, origin="lower", norm=norm, extent=[0,xmax,0,ymax])
+            ax1.set_ylabel("y [arcsec]")
+            ax1.set_xlabel("x [arcsec]")
             ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
             fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
             fig.show()
@@ -1188,6 +1202,319 @@ class CRISP(CRISPSlicingMixin):
                     ax2.set_title("Stokes V ")
                     ax2.tick_params(direction="in")
                     fig.colorbar(im2, ax=ax2, orientation="horizontal", label="V [DNs]")
+        elif frame == "arcsec":
+            try:
+                xmax = self.header["CDELT1"] * self.shape[-1]
+                ymax = self.header["CDELT2"] * self.shape[-2]
+            except KeyError:
+                xmax = self.header["pixel_scale"] * self.shape[-1]
+                ymax = self.header["pixel_scale"] * self.shape[-2]
+            if self.data.ndim == 2:
+                fig = plt.figure()
+                ax1 = fig.add_subplot(1, 1, 1)
+                if stokes == "I":
+                    data = self.data
+                    data[data < 0] = np.nan
+                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_title("Stokes I "+title)
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
+                elif stokes == "Q":
+                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_title("Stokes Q "+title)
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="Q [DNs]")
+                elif stokes == "U":
+                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_title("Stokes U "+title)
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="U [DNs]")
+                elif stokes == "V":
+                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_title("Stokes V "+title)
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="V [DNs]")
+                else:
+                    raise ValueError("This is not a Stokes.")
+                ax1.set_ylabel("y [arcsec]")
+                ax1.set_xlabel("x [arcsec]")
+                ax1.tick_params(direction="in")
+                fig.show()
+            elif self.data.ndim == 3:
+                if stokes == "all":
+                    fig = plt.figure(constrained_layout=True)
+                    fig.suptitle(title)
+                    data = self.data[0]
+                    data[data < 0] = np.nan
+                    ax1 = fig.add_subplot(2, 2, 1)
+                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_ylabel("y [arcsec]")
+                    ax1.set_xlabel("x [arcsec]")
+                    ax1.xaxis.set_label_position("top")
+                    ax1.xaxis.tick_top()
+                    ax1.set_title("Stokes I")
+                    ax1.tick_params(direction="in")
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
+
+                    ax2 = fig.add_subplot(2, 2, 2)
+                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax2.set_ylabel("y [arcsec]")
+                    ax2.set_xlabel("x [arcsec]")
+                    ax2.xaxis.set_label_position("top")
+                    ax2.xaxis.tick_top()
+                    ax2.yaxis.set_label_position("right")
+                    ax2.yaxis.tick_right()
+                    ax2.set_title("Stokes Q")
+                    ax2.tick_params(direction="in")
+                    fig.colorbar(im2, ax=ax2, orientation="horizontal", label="Q [DNs]")
+
+                    ax3 = fig.add_subplot(2, 2, 3)
+                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax3.set_ylabel("y [arcsec]")
+                    ax3.set_xlabel("x [arcsed]")
+                    ax3.set_title("Stokes U")
+                    ax3.tick_params(direction="in")
+                    fig.colorbar(im3, ax=ax3, orientation="horizontal", label="U [DNs]")
+
+                    ax4 = fig.add_subplot(2, 2, 4)
+                    im4 = ax4.imshow(self.data[3], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    ax4.set_ylabel("y [arcsec]")
+                    ax4.set_xlabel("x [arcsed]")
+                    ax4.yaxis.set_label_position("right")
+                    ax4.yaxis.ticks_right()
+                    ax4.set_title("Stokes V")
+                    ax4.tick_params(direction="in")
+                    fig.colorbar(im4, ax=ax4, orientation="horizontal", label="V [DNs]")
+                elif stokes == "IQU":
+                    fig = plt.figure()
+                    fig.suptitle(title)
+
+                    data = self.data[0]
+                    data[data < 0] = np.nan
+                    ax1 = fig.add_subplot(1, 3, 1)
+                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_ylabel("y [arcsec]")
+                    ax1.set_xlabel("x [arcsec]")
+                    ax1.set_title("Stokes I")
+                    ax1.tick_params(direction="in")
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
+
+                    ax2 = fig.add_subplot(1, 3, 2)
+                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax2.set_ylabel("y [arcsec]")
+                    ax2.set_xlabel("x [arcsec]")
+                    ax2.set_title("Stokes Q")
+                    ax2.tick_params(direction="in")
+                    fig.colorbar(im2, ax=ax2, orientation="horizontal", label="Q [DNs]")
+
+                    ax3 = fig.add_subplot(1, 3, 3)
+                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax3.set_ylabel("y [arcsec]")
+                    ax3.set_xlabel("x [arcsec]")
+                    ax3.set_title("Stokes U")
+                    ax3.tick_params(direction="in")
+                    fig.colorbar(im3, ax=ax3, orientation="horizontal", label="U [DNs]")
+                elif stokes == "QUV":
+                    fig = plt.figure()
+                    fig.suptitle(title)
+
+                    ax1 = fig.add_subplot(1, 3, 1)
+                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_ylabel("y [arcsec]")
+                    ax1.set_xlabel("x [arcsec]")
+                    ax1.set_title("Stokes Q")
+                    ax1.tick_params(direction="in")
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="Q [DNs]")
+
+                    ax2 = fig.add_subplot(1, 3, 2)
+                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax2.set_ylabel("y [arcsec]")
+                    ax2.set_xlabel("x [arcsec]")
+                    ax2.set_title("Stokes U")
+                    ax2.tick_params(direction="in")
+                    fig.colorbar(im2, ax=ax2, orientation="horizontal", label="U [DNs]")
+
+                    ax3 = fig.add_subplot(1, 3, 3)
+                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    ax3.set_ylabel("y [arcsec]")
+                    ax3.set_xlabel("x [arcsec]")
+                    ax3.set_title("Stokes V")
+                    ax3.tick_params(direction="in")
+                    fig.colorbar(im3, ax=ax3, orientation="horizontal", label="V [DNs]")
+                elif stokes == "IQV":
+                    fig = plt.figure()
+                    fig.suptitle(title)
+
+                    data = self.data[0]
+                    data[data < 0] = np.nan
+                    ax1 = fig.add_subplot(1, 3, 1)
+                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_ylabel("y [arcsec]")
+                    ax1.set_xlabel("x [arcsec]")
+                    ax1.set_title("Stokes I")
+                    ax1.tick_params(direction="in")
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
+
+                    ax2 = fig.add_subplot(1, 3, 2)
+                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax2.set_ylabel("y [arcsec]")
+                    ax2.set_xlabel("x [arcsec]")
+                    ax2.set_title("Stokes Q")
+                    ax2.tick_params(direction="in")
+                    fig.colorbar(im2, ax=ax2, orientation="horizontal", label="Q [DNs]")
+
+                    ax3 = fig.add_subplot(1, 3, 3)
+                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    ax3.set_ylabel("y [arcsec]")
+                    ax3.set_xlabel("x [arcsec]")
+                    ax3.set_title("Stokes V")
+                    ax3.tick_params(direction="in")
+                    fig.colorbar(im3, ax=ax3, orientation="horizontal", label="V [DNs]")
+                elif stokes == "IUV":
+                    fig = plt.figure()
+                    fig.suptitle(title)
+
+                    data = self.data[0]
+                    data[data < 0] = np.nan
+                    ax1 = fig.add_subplot(1, 3, 1)
+                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_ylabel("y [arcsec]")
+                    ax1.set_xlabel("x [arcsec]")
+                    ax1.set_title("Stokes I")
+                    ax1.tick_params(direction="in")
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
+
+                    ax2 = fig.add_subplot(1, 3, 2)
+                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax2.set_ylabel("y [arcsec]")
+                    ax2.set_xlabel("x [arcsec]")
+                    ax2.set_title("Stokes U")
+                    ax2.tick_params(direction="in")
+                    fig.colorbar(im2, ax=ax2, orientation="horizontal", label="U [DNs]")
+
+                    ax3 = fig.add_subplot(1, 3, 3)
+                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    ax3.set_ylabel("y [arcsec]")
+                    ax3.set_xlabel("x [arcsec]")
+                    ax3.set_title("Stokes V")
+                    ax3.tick_params(direction="in")
+                    fig.colorbar(im3, ax=ax3, orientation="horizontal", label="V [DNs]")
+                elif stokes == "IQ":
+                    fig = plt.figure()
+                    fig.suptitle(title)
+
+                    data = self.data[0]
+                    data[data < 0] = np.nan
+                    ax1 = fig.add_subplot(1, 2, 1)
+                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_ylabel("y [arcsec]")
+                    ax1.set_xlabel("x [arcsec]")
+                    ax1.set_title("Stokes I")
+                    ax1.tick_params(direction="in")
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
+
+                    ax2 = fig.add_subplot(1, 2, 2)
+                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax2.set_ylabel("y [arcsec]")
+                    ax2.set_xlabel("x [arcsec]")
+                    ax2.set_title("Stokes Q")
+                    ax2.tick_params(direction="in")
+                    fig.colorbar(im2, ax=ax2, orientation="horizontal", label="Q [DNs]")
+                elif stokes == "IU":
+                    fig = plt.figure()
+                    fig.suptitle(title)
+
+                    data = self.data[0]
+                    data[data < 0] = np.nan
+                    ax1 = fig.add_subplot(1, 2, 1)
+                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_ylabel("y [arcsec]")
+                    ax1.set_xlabel("x [arcsec]")
+                    ax1.set_title("Stokes I")
+                    ax1.tick_params(direction="in")
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
+
+                    ax2 = fig.add_subplot(1, 2, 2)
+                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax2.set_ylabel("y [arcsec]")
+                    ax2.set_xlabel("x [arcsec]")
+                    ax2.set_title("Stokes U")
+                    ax2.tick_params(direction="in")
+                    fig.colorbar(im2, ax=ax2, orientation="horizontal", label="U [DNs]")
+                elif stokes == "IV":
+                    fig = plt.figure()
+                    fig.suptitle(title)
+
+                    data = self.data[0]
+                    data[data < 0] = np.nan
+                    ax1 = fig.add_subplot(1, 2, 1)
+                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_ylabel("y [arcsec]")
+                    ax1.set_xlabel("x [arcsec]")
+                    ax1.set_title("Stokes I")
+                    ax1.tick_params(direction="in")
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="I [DNs]")
+
+                    ax2 = fig.add_subplot(1, 2, 2)
+                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    ax2.set_ylabel("y [arcsec]")
+                    ax2.set_xlabel("x [arcsec]")
+                    ax2.set_title("Stokes V")
+                    ax2.tick_params(direction="in")
+                    fig.colorbar(im2, ax=ax2, orientation="horizontal", label="V [DNs]")
+                elif stokes == "QU":
+                    fig = plt.figure()
+                    fig.suptitle(title)
+
+                    ax1 = fig.add_subplot(1, 2, 1)
+                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_ylabel("y [arcsec]")
+                    ax1.set_xlabel("x [arcsec]")
+                    ax1.set_title("Stokes Q")
+                    ax1.tick_params(direction="in")
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="Q [DNs]")
+
+                    ax2 = fig.add_subplot(1, 2, 2)
+                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax2.set_ylabel("y [arcsec]")
+                    ax2.set_xlabel("x [arcsec]")
+                    ax2.set_title("Stokes U")
+                    ax2.tick_params(direction="in")
+                    fig.colorbar(im2, ax=ax2, orientation="horizontal", label="U [DNs]")
+                elif stokes == "QV":
+                    fig = plt.figure()
+                    fig.suptitle(title)
+
+                    ax1 = fig.add_subplot(1, 2, 1)
+                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_ylabel("y [arcsec]")
+                    ax1.set_xlabel("x [arcsec]")
+                    ax1.set_title("Stokes Q")
+                    ax1.tick_params(direction="in")
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="Q [DNs]")
+
+                    ax2 = fig.add_subplot(1, 2, 2)
+                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    ax2.set_ylabel("y [arcsec]")
+                    ax2.set_xlabel("x [arcsec]")
+                    ax2.set_title("Stokes V")
+                    ax2.tick_params(direction="in")
+                    fig.colorbar(im2, ax=ax2, orientation="horizontal", label="V [DNs]")
+                elif stokes == "UV":
+                    fig = plt.figure()
+                    fig.suptitle(title)
+
+                    ax1 = fig.add_subplot(1, 2, 1)
+                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    ax1.set_ylabel("y [arcsec]")
+                    ax1.set_xlabel("x [arcsec]")
+                    ax1.set_title("Stokes U")
+                    ax1.tick_params(direction="in")
+                    fig.colorbar(im1, ax=ax1, orientation="horizontal", label="U [DNs]")
+
+                    ax2 = fig.add_subplot(1, 2, 2)
+                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    ax2.set_ylabel("y [arcsec]")
+                    ax2.set_xlabel("x [arcsec]")
+                    ax2.set_title("Stokes V ")
+                    ax2.tick_params(direction="in")
+                    fig.colorbar(im2, ax=ax2, orientation="horizontal", label="V [DNs]")
 
         fig.show()
 
@@ -1717,7 +2044,6 @@ class CRISPWideband(CRISP):
         norm : matplotlib.colors.Normalize or None, optional
             The normalisation to use in the colourmap.
         """
-        plt.style.use("bmh")
         try:
             datetime = self.header["DATE-AVG"]
             el = self.header["WDESC1"]
@@ -1867,7 +2193,6 @@ class CRISPNonU(CRISP):
         d : bool, optional
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
-        plt.style.use("bmh")
         if self.data.ndim != 1:
             raise IndexError("If you are using Stokes data please use the plot_stokes method.")
 
@@ -1919,7 +2244,6 @@ class CRISPNonU(CRISP):
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
 
-        plt.style.use("bmh")
         point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(*self.ind[-2:])]
         try:
             datetime = self.header["DATE-AVG"]
@@ -2173,7 +2497,6 @@ class CRISPNonU(CRISP):
         norm : matplotlib.colors.Normalize or None, optional
             The normalisation to use in the colourmap.
         """
-        plt.style.use("bmh")
 
         if type(self.ind) == int:
             idx = self.ind
@@ -2222,7 +2545,6 @@ class CRISPNonU(CRISP):
         frame : str or None, optional
             The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
         """
-        plt.style.use("bmh")
 
         wvl = np.round(self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(self.ind[1]) << u.Angstrom, decimals=2).value
         del_wvl = np.round(wvl - (self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(self.wcs.low_level_wcs._wcs.array_shape[1]//2) << u.Angstrom).value, decimals=2)
