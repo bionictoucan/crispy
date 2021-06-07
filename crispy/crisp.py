@@ -10,7 +10,7 @@ from astropy.coordinates import SkyCoord
 from specutils.utils.wcs_utils import vac_to_air
 from sunpy.coordinates import Helioprojective
 from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
-from .utils import ObjDict, pt_bright, rotate_crop_data, rotate_crop_aligned_data
+from .utils import ObjDict, pt_bright, rotate_crop_data, rotate_crop_aligned_data, reconstruct_full_frame
 from .io import hdf5_header_to_wcs
 
 class CRISP(CRISPSlicingMixin):
@@ -68,16 +68,16 @@ class CRISP(CRISPSlicingMixin):
         self.D = html.unescape("&Delta;")
 
     def __str__(self):
-        if type(self.header) == Header:
-            time = self.header.get("DATE-AVG")[-12:]
-            date = self.header.get("DATE-AVG")[:-13]
-            cl = str(np.round(self.header.get("TWAVE1"), decimals=2))
-            wwidth = self.header.get("WWIDTH1")
-            shape = str([self.header.get(f"NAXIS{j+1}") for j in reversed(range(self.data.ndim))])
-            el = self.header.get("WDESC1")
-            pointing_x = str(self.header.get("CRVAL1"))
-            pointing_y = str(self.header.get("CRVAL2"))
-        elif type(self.header) == dict:
+        try:
+            time = self.header["DATE-AVG"][-12:]
+            date = self.header["DATE-AVG"][:-13]
+            cl = str(np.round(self.header["TWAVE1"], decimals=2))
+            wwidth = self.header["WWIDTH1"]
+            shape = str([self.header[f"NAXIS{j+1}"] for j in reversed(range(self.data.ndim))])
+            el = self.header["WDESC1"]
+            pointing_x = str(self.header["CRVAL1"])
+            pointing_y = str(self.header["CRVAL2"])
+        except KeyError:
             time = self.header["time_obs"]
             date = self.header["date_obs"]
             cl = str(self.header["crval"][-3])
@@ -87,14 +87,15 @@ class CRISP(CRISPSlicingMixin):
             pointing_x = str(self.header["crval"][-1])
             pointing_y = str(self.header["crval"][-2])
 
-        return f"""CRISP Observation
+        return f"""
+        CRISP Observation
         ------------------
         {date} {time}
 
         Observed: {el}
-        Centre wavelength: {cl}
+        Centre wavelength [{self.aa}]: {cl}
         Wavelengths sampled: {wwidth}
-        Pointing: ({pointing_x}, {pointing_y})
+        Pointing [arcsec] (HPLN, HPLT): ({pointing_x}, {pointing_y})
         Shape: {shape}"""
 
     @property
@@ -103,7 +104,7 @@ class CRISP(CRISPSlicingMixin):
 
     @property
     def header(self):
-        return self.file.header
+        return dict(self.file.header)
 
     @property
     def shape(self):
@@ -113,12 +114,35 @@ class CRISP(CRISPSlicingMixin):
     def wvls(self):
         return self.wave(np.arange(self.shape[-3]))
 
-    def rotate_crop(self):
+    @property
+    def info(self):
+        return print(self.__str__())
+
+    @property
+    def time(self):
+        try:
+            return self.header["DATE-AVG"][-12:]
+        except KeyError:
+            return self.header["time_obs"]
+
+    @property
+    def date(self):
+        try:
+            return self.header["DATE-AVG"][:-13]
+        except KeyError:
+            return self.header["date_obs"]
+
+    def rotate_crop(self, sep=False):
         """
         For an image containing the data as a rotated subframe this method
         returns the data after rotation and cropping in addition to the
         metadata required to reconstruct the full frame (excluding a small
         border that is removed during refinement of the data corners).
+
+        Parameters
+        ----------
+        sep : bool, optional
+            Whether or not to return just the rotated array i.e. if False then ```self.data```is replaced with the rotated object and the full frame is moved to ```self.full_frame``` else the rotated data is returned as a numpy array. Default is False.
 
         Returns
         -------
@@ -131,7 +155,50 @@ class CRISP(CRISPSlicingMixin):
             crop).
         """
 
-        return rotate_crop_data(self.data)
+        if sep:
+            return rotate_crop_data(self.data)
+        else:
+            self.full_frame = self.data
+            crop, crop_dict = rotate_crop_data(self.data)
+            self.file.header["frame_dims"] = crop_dict["frameDims"]
+            self.file.header["x_min"] = crop_dict["xMin"]
+            self.file.header["x_max"] = crop_dict["xMax"]
+            self.file.header["y_min"] = crop_dict["yMin"]
+            self.file.header["y_max"] = crop_dict["yMax"]
+            self.file.header["angle"] = crop_dict["angle"]
+            self.file.data = crop
+
+
+    def reconstruct_full_frame(self, sep=False):
+        """
+        If the image has been rotated (which would take it out of its WCS) then this method can be used to reconstruct the image in its original WCS frame.
+
+        Parameters
+        ----------
+        sep : bool, optional
+            Whether or not to return just the array of the full frame i.e. if False, then ```self.data``` is replaced with the full frame object and the rotated is moved to ```self.rot_data``` else the full frame is return as a numpy array. Default is False.
+
+        Returns
+        -------
+        rotatedIm : numpy.ndarray
+            A derotated, full frame, copy of the input image cube.
+        """
+
+        assert("frame_dims" in self.header)
+        crop_dict = {
+            "frameDims" : self.header["frame_dims"],
+            "xMin" : self.header["x_min"],
+            "xMax" : self.header["x_max"],
+            "yMin" : self.header["y_min"],
+            "yMax" : self.header["y_max"],
+            "angle" : self.header["angle"]
+        }
+
+        if sep:
+            return reconstruct_full_frame(crop_dict, self.data)
+        else:
+            self.rot_data = self.data
+            self.file.data = reconstruct_full_frame(crop_dict, self.data)
 
     def plot_spectrum(self, unit=None, air=False, d=False):
         """
@@ -146,7 +213,6 @@ class CRISP(CRISPSlicingMixin):
         d : bool, optional
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
-        plt.style.use("bmh")
         if self.data.ndim != 1:
             raise IndexError("If you are using Stokes data please use the plot_stokes method.")
 
@@ -198,7 +264,6 @@ class CRISP(CRISPSlicingMixin):
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
 
-        plt.style.use("bmh")
         point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(*self.ind[-2:])]
         try:
             datetime = self.header["DATE-AVG"]
@@ -452,7 +517,6 @@ class CRISP(CRISPSlicingMixin):
         norm : matplotlib.colors.Normalize or None, optional
             The normalisation to use in the colourmap.
         """
-        plt.style.use("bmh")
 
         if type(self.ind) == int:
             idx = self.ind
@@ -502,7 +566,6 @@ class CRISP(CRISPSlicingMixin):
         frame : str or None, optional
             The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
         """
-        plt.style.use("bmh")
 
         wvl = np.round(self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(self.ind[1]) << u.Angstrom, decimals=2).value
         del_wvl = np.round(wvl - (self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(self.wcs.low_level_wcs._wcs.array_shape[1]//2) << u.Angstrom).value, decimals=2)
@@ -1173,7 +1236,7 @@ class CRISP(CRISPSlicingMixin):
         else:
             raise NotImplementedError("This is way too many dimensions for me to handle.")
 
-    def to_lonlat(self, y, x):
+    def to_lonlat(self, y, x, coord=False, unit=False):
         """
         This function will take a y, x coordinate in pixel space and map it to Helioprojective Longitude, Helioprojective Latitude according to the transform in the WCS. This will return the Helioprojective coordinates in units of arcseconds. Note this function takes arguments in the order of numpy indexing (y,x) but returns a pair longitude/latitude which is Solar-X, Solar-Y.
 
@@ -1183,45 +1246,159 @@ class CRISP(CRISPSlicingMixin):
             The y-index to be converted to Helioprojective Latitude.
         x : int
             The x-index to be converted to Helioprojective Longitude.
+        coord : bool, optional
+            Whether or not to return an ```astropy.coordinates.SkyCoord```. Default is False.
+        unit : bool, optional
+            Whether or not to return the values with associated ```astropy.units```. Default is False.
         """
-        if len(self.wcs.low_level_wcs.array_shape) == 4:
-            if hasattr(self, "ind"):
-                if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
-                elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
-                elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
-                else:
-                    return self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
-            else:
-                return self.wcs[0,0].array_index_to_world(y,x)
-        elif len(self.wcs.low_level_wcs.array_shape) == 3:
-            if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
-                elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
-                elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
-                else:
-                    return self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
-            else:
+        if coord:
+            if len(self.wcs.low_level_wcs.array_shape) == 4:
                 if hasattr(self, "ind"):
                     if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                        return self.wcs.low_level_wcs._wcs[0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                        return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
                     elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                        return self.wcs.low_level_wcs._wcs[0,self.ind[-2]].array_index_to_world(y,x)
+                        return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
                     elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                        return self.wcs.low_level_wcs._wcs[0,:,self.ind[-1]].array_index_to_world(y,x)
+                        return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
                     else:
-                        return self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
+                        return self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
                 else:
-                    return self.wcs[0].array_index_to_world(y,x) 
-        elif len(self.wcs.low_level_wcs.array_shape) == 2:
-            return self.wcs.array_index_to_world(y,x) 
+                    return self.wcs[0,0].array_index_to_world(y,x)
+            elif len(self.wcs.low_level_wcs.array_shape) == 3:
+                if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
+                    if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                        return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                    elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                        return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
+                    elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                        return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
+                    else:
+                        return self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
+                else:
+                    if hasattr(self, "ind"):
+                        if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                            return self.wcs.low_level_wcs._wcs[0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                        elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                            return self.wcs.low_level_wcs._wcs[0,self.ind[-2]].array_index_to_world(y,x)
+                        elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                            return self.wcs.low_level_wcs._wcs[0,:,self.ind[-1]].array_index_to_world(y,x)
+                        else:
+                            return self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
+                    else:
+                        return self.wcs[0].array_index_to_world(y,x) 
+            elif len(self.wcs.low_level_wcs.array_shape) == 2:
+                return self.wcs.array_index_to_world(y,x) 
+            else:
+                raise NotImplementedError("Too many or too little dimensions.")
         else:
-            raise NotImplementedError("Too many or too little dimensions.")
+            if unit:
+                if len(self.wcs.low_level_wcs.array_shape) == 4:
+                    if hasattr(self, "ind"):
+                        if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                            return sc.Tx, sc.Ty
+                        elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
+                            return sc.Tx, sc.Ty
+                        elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                            sc = self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
+                            return sc.Tx, sc.Ty
+                        else:
+                            sc = self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
+                            return sc.Tx, sc.Ty
+                    else:
+                        sc =  self.wcs[0,0].array_index_to_world(y,x)
+                        return sc.Tx, sc.Ty
+                elif len(self.wcs.low_level_wcs.array_shape) == 3:
+                    if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
+                        if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                            return sc.Tx, sc.Ty
+                        elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
+                            return sc.Tx, sc.Ty
+                        elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                            sc = self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
+                            return sc.Tx, sc.Ty
+                        else:
+                            sc = self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
+                            return sc.Tx, sc.Ty
+                    else:
+                        if hasattr(self, "ind"):
+                            if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                                sc = self.wcs.low_level_wcs._wcs[0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                                return sc.Tx, sc.Ty
+                            elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                                sc = self.wcs.low_level_wcs._wcs[0,self.ind[-2]].array_index_to_world(y,x)
+                                return sc.Tx, sc.Ty
+                            elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                                sc = self.wcs.low_level_wcs._wcs[0,:,self.ind[-1]].array_index_to_world(y,x)
+                                return sc.Tx, sc.Ty
+                            else:
+                                sc = self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
+                                return sc.Tx, sc.Ty
+                        else:
+                            sc = self.wcs[0].array_index_to_world(y,x) 
+                            return sc.Tx, sc.Ty
+                elif len(self.wcs.low_level_wcs.array_shape) == 2:
+                    sc = self.wcs.array_index_to_world(y,x) 
+                    return sc.Tx, sc.Ty
+                else:
+                    raise NotImplementedError("Too many or too little dimensions.")
+            else:
+                if len(self.wcs.low_level_wcs.array_shape) == 4:
+                    if hasattr(self, "ind"):
+                        if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                            return sc.Tx.value, sc.Ty.value
+                        elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
+                            return sc.Tx.value, sc.Ty.value
+                        elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                            sc = self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
+                            return sc.Tx.value, sc.Ty.value
+                        else:
+                            sc = self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
+                            return sc.Tx.value, sc.Ty.value
+                    else:
+                        sc =  self.wcs[0,0].array_index_to_world(y,x)
+                        return sc.Tx.value, sc.Ty.value
+                elif len(self.wcs.low_level_wcs.array_shape) == 3:
+                    if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
+                        if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                            return sc.Tx.value, sc.Ty.value
+                        elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
+                            return sc.Tx.value, sc.Ty.value
+                        elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                            sc = self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
+                            return sc.Tx.value, sc.Ty.value
+                        else:
+                            sc = self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
+                            return sc.Tx.value, sc.Ty.value
+                    else:
+                        if hasattr(self, "ind"):
+                            if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                                sc = self.wcs.low_level_wcs._wcs[0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                                return sc.Tx.value, sc.Ty.value
+                            elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                                sc = self.wcs.low_level_wcs._wcs[0,self.ind[-2]].array_index_to_world(y,x)
+                                return sc.Tx.value, sc.Ty.value
+                            elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                                sc = self.wcs.low_level_wcs._wcs[0,:,self.ind[-1]].array_index_to_world(y,x)
+                                return sc.Tx.value, sc.Ty.value
+                            else:
+                                sc = self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
+                                return sc.Tx.value, sc.Ty.value
+                        else:
+                            sc = self.wcs[0].array_index_to_world(y,x) 
+                            return sc.Tx.value, sc.Ty.value
+                elif len(self.wcs.low_level_wcs.array_shape) == 2:
+                    sc = self.wcs.array_index_to_world(y,x) 
+                    return sc.Tx.value, sc.Ty.value
+                else:
+                    raise NotImplementedError("Too many or too little dimensions.")
 
     def from_lonlat(self,lon,lat):
         """
@@ -1288,17 +1465,17 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         self.list = [CRISP(**f) for f in files]
 
     def __str__(self):
-        if type(self.list[0].file.header) == Header:
-            time = self.list[0].file.header.get("DATE-AVG")[-12:]
-            date = self.list[0].file.header.get("DATE-AVG")[:-13]
-            cl = [str(np.round(f.file.header.get("TWAVE1"), decimals=2)) for f in self.list]
-            wwidth = [f.file.header.get("WWIDTH1") for f in self.list]
-            shape = [str([f.file.header.get(f"NAXIS{j+1}") for j in reversed(range(f.file.data.ndim))]) for f in self.list]
-            el = [f.file.header.get("WDESC1") for f in self.list]
-            pointing_x = str(self.list[0].file.header.get("CRVAL1"))
-            pointing_y = str(self.list[0].file.header.get("CRVAL2"))
-        elif type(self.list[0].file.header) == dict:
-            time = self.list[0].file.header["time_obs"]
+        try:
+            time = [f.file.header["DATE-AVG"][-12:] for f in self.list]
+            date = self.list[0].file.header["DATE-AVG"][:-13]
+            cl = [str(np.round(f.file.header["TWAVE1"], decimals=2)) for f in self.list]
+            wwidth = [f.file.header["WWIDTH1"] for f in self.list]
+            shape = [str([f.file.header[f"NAXIS{j+1}"] for j in reversed(range(f.file.data.ndim))]) for f in self.list]
+            el = [f.file.header["WDESC1"] for f in self.list]
+            pointing_x = str(self.list[0].file.header["CRVAL1"])
+            pointing_y = str(self.list[0].file.header["CRVAL2"])
+        except KeyError:
+            time = [f.file.header["time_obs"] for f in self.list]
             date = self.list[0].file.header["date_obs"]
             cl = [str(f.file.header["crval"][-3]) for f in self.list]
             wwidth = [str(f.file.header["dimensions"][-3]) for f in self.list]
@@ -1307,14 +1484,15 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             pointing_x = str(self.list[0].file.header["crval"][-1])
             pointing_y = str(self.list[0].file.header["crval"][-2])
 
-        return f"""CRISP Observation
+        return f"""
+        CRISP Observation
         ------------------
         {date} {time}
 
         Observed: {el}
         Centre wavelength: {cl}
-        Wavelengths sampled: {wwidth}
-        Pointing: ({pointing_x}, {pointing_y})
+        Wavelengths sampled [{self.aa}]: {wwidth}
+        Pointing [arcsec] (HPLN, HPLT): ({pointing_x}, {pointing_y})
         Shape: {shape}"""
 
     @property
@@ -1329,8 +1507,64 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
     def wvls(self):
         return [self.wave(np.arange(f.shape[-3])) for f in self.list]
 
-    def rotate_crop(self):
-        return rotate_crop_aligned_data(self.list[0].data, self.list[1].data)
+    @property
+    def shape(self):
+        return self.list[0].shape
+
+    @property
+    def info(self):
+        return print(self.__str__())
+
+    @property
+    def time(self):
+        return [f.time for f in self.list]
+
+    @property
+    def date(self):
+        return [f.date for f in self.list]
+
+    def rotate_crop(self, sep=False, diff_t=False):
+        if diff_t:
+            if sep:
+                return [f.rotate_crop() for f in self.list]
+            else:
+                self.full_frame = [*self.data]
+                for f in self.list:
+                    crop, crop_dict = f.rotate_crop(sep=True)
+                    f.file.data = crop
+                    f.file.header["frame_dims"] = crop_dict["frameDims"]
+                    f.file.header["x_min"] = crop_dict["xMin"]
+                    f.file.header["x_max"] = crop_dict["xMax"]
+                    f.file.header["y_min"] = crop_dict["yMin"]
+                    f.file.header["y_max"] = crop_dict["yMax"]
+                    f.file.header["angle"] = crop_dict["angle"]
+        else:
+            if sep:
+                return rotate_crop_aligned_data(self.list[0].data, self.list[1].data)
+            else:
+                self.full_frame = [self.list[0].data, self.list[1].data]
+                crop_a, crop_b, crop_dict = rotate_crop_aligned_data(self.list[0].data, self.list[1].data)
+                self.list[0].file.data = crop_a
+                self.list[1].file.data = crop_b
+                self.list[0].file.header["frame_dims"] = crop_dict["frameDims"]
+                self.list[0].file.header["x_min"] = crop_dict["xMin"]
+                self.list[0].file.header["x_max"] = crop_dict["xMax"]
+                self.list[0].file.header["y_min"] = crop_dict["yMin"]
+                self.list[0].file.header["y_max"] = crop_dict["yMax"]
+                self.list[0].file.header["angle"] = crop_dict["angle"]
+                self.list[1].file.header["frame_dims"] = crop_dict["frameDims"]
+                self.list[1].file.header["x_min"] = crop_dict["xMin"]
+                self.list[1].file.header["x_max"] = crop_dict["xMax"]
+                self.list[1].file.header["y_min"] = crop_dict["yMin"]
+                self.list[1].file.header["y_max"] = crop_dict["yMax"]
+                self.list[1].file.header["angle"] = crop_dict["angle"]
+
+    def reconstruct_full_frame(self, sep=False):
+        if sep:
+            return [f.reconstruct_full_frame(sep=True) for f in self.list]
+        else:
+            for f in self.list:
+                f.reconstruct_full_frame(sep=False)
 
     def plot_spectrum(self, idx, unit=None, air=False, d=False):
         """
@@ -1414,6 +1648,12 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             for f in self.list:
                 f.stokes_map(stokes, frame=frame)
 
+    def from_lonlat(self, lon, lat):
+        return self.list[0].from_lonlat(lon, lat)
+
+    def to_lonlat(self, y, x):
+        return self.list[0].to_lonlat(y, x)
+
 class CRISPWideband(CRISP):
     """
     Class for wideband or single wavelength CRISP images. This class expects the data to be two-dimensional.
@@ -1442,14 +1682,14 @@ class CRISPWideband(CRISP):
     :cvar shape: The shape of the data from ``file``. Much easier than doing ``file.data.shape``.
     """
     def __str__(self):
-        if type(self.header) == Header:
+        try:
             time = self.header.get("DATE-AVG")[-12:]
             date = self.header.get("DATE-AVG")[:-13]
             shape = str([self.header.get(f"NAXIS{j+1}") for j in reversed(range(self.data.ndim))])
             el = self.header.get("WDESC1")
             pointing_x = str(self.header.get("CRVAL1"))
             pointing_y = str(self.header.get("CRVAL2"))
-        elif type(self.header) == dict:
+        except KeyError:
             time = self.header["time_obs"]
             date = self.header["date_obs"]
             shape = str(self.header["dimensions"])
@@ -1457,7 +1697,8 @@ class CRISPWideband(CRISP):
             pointing_x = str(self.header["crval"][-1])
             pointing_y = str(self.header["crval"][-2])
 
-        return f"""CRISP Wideband Context Image
+        return f"""
+        CRISP Wideband Context Image
         ------------------
         {date} {time}
 
@@ -1520,14 +1761,14 @@ class CRISPWidebandSequence(CRISPSequence):
         self.list = [CRISPWideband(**f) for f in files]
 
     def __str__(self):
-        if type(self.list[0].file.header) == Header:
-            time = [f.file.header.get("DATE-AVG")[-12:] for f in self.list]
-            date = self.list[0].file.header.get("DATE-AVG")[:-13]
-            shape = [str([f.file.header.get(f"NAXIS{j+1}") for j in reversed(range(f.file.data.ndim))]) for f in self.list]
-            el = [f.file.header.get("WDESC1") for f in self.list]
-            pointing_x = str(self.list[0].file.header.get("CRVAL1"))
-            pointing_y = str(self.list[0].file.header.get("CRVAL2"))
-        elif type(self.list[0].file.header) == dict:
+        try:
+            time = [f.file.header["DATE-AVG"][-12:] for f in self.list]
+            date = self.list[0].file.header["DATE-AVG"][:-13]
+            shape = [str([f.file.header[f"NAXIS{j+1}"] for j in reversed(range(f.file.data.ndim))]) for f in self.list]
+            el = [f.file.header["WDESC1"] for f in self.list]
+            pointing_x = str(self.list[0].file.header["CRVAL1"])
+            pointing_y = str(self.list[0].file.header["CRVAL2"])
+        except KeyError:
             time = [f.file.header["time_obs"] for f in self.list]
             date = self.list[0].file.header["date_obs"]
             shape = [str(f.file.header["dimensions"]) for f in self.list]
@@ -1535,7 +1776,8 @@ class CRISPWidebandSequence(CRISPSequence):
             pointing_x = str(self.list[0].file.header["crval"][-1])
             pointing_y = str(self.list[0].file.header["crval"][-2])
 
-        return f"""CRISP Wideband Context Image
+        return f"""
+        CRISP Wideband Context Image
         ------------------
         {date} {time}
 
@@ -1580,7 +1822,7 @@ class CRISPNonU(CRISP):
             self.wvl = self.header["wavels"]
 
     def __str__(self):
-        if type(self.header) == Header:
+        try:
             time = self.header.get("DATE-AVG")[-12:]
             date = self.header.get("DATE-AVG")[:-13]
             cl = str(np.round(self.header.get("TWAVE1"), decimals=2))
@@ -1589,7 +1831,7 @@ class CRISPNonU(CRISP):
             el = self.header.get("WDESC1")
             pointing_x = str(self.header.get("CRVAL1"))
             pointing_y = str(self.header.get("CRVAL2"))
-        elif type(self.header) == dict:
+        except KeyError:
             time = self.header["time_obs"]
             date = self.header["date_obs"]
             cl = str(self.header["crval"][-3])
@@ -1600,7 +1842,8 @@ class CRISPNonU(CRISP):
             pointing_y = str(self.header["crval"][-2])
         sampled_wvls = str(self.wvls)
 
-        return f"""CRISP Observation
+        return f"""
+        CRISP Observation
         ------------------
         {date} {time}
 
@@ -2630,7 +2873,7 @@ class CRISPNonUSequence(CRISPSequence):
         self.list = [CRISPNonU(**f) for f in files]
 
     def __str__(self):
-        if type(self.list[0].file.header) == Header:
+        try:
             time = self.list[0].file.header.get("DATE-AVG")[-12:]
             date = self.list[0].file.header.get("DATE-AVG")[:-13]
             cl = [str(np.round(f.file.header.get("TWAVE1"), decimals=2)) for f in self.list]
@@ -2639,7 +2882,7 @@ class CRISPNonUSequence(CRISPSequence):
             el = [f.file.header.get("WDESC1") for f in self.list]
             pointing_x = str(self.list[0].file.header.get("CRVAL1"))
             pointing_y = str(self.list[0].file.header.get("CRVAL2"))
-        elif type(self.list[0].file.header) == dict:
+        except KeyError:
             time = self.list[0].file.header["time_obs"]
             date = self.list[0].file.header["date_obs"]
             cl = [str(f.file.header["crval"][-3]) for f in self.list]
@@ -2650,7 +2893,8 @@ class CRISPNonUSequence(CRISPSequence):
             pointing_y = str(self.list[0].file.header["crval"][-2])
         sampled_wvls = [f.wvls for f in self.list]
 
-        return f"""CRISP Observation
+        return f"""
+        CRISP Observation
         ------------------
         {date} {time}
 
