@@ -53,7 +53,7 @@ class CRISP(CRISPSlicingMixin):
         else:
             raise NotImplementedError("m8 y?")
         if wcs is None and ".fits" in filename:
-            self.wcs = WCS(self.header)
+            self.wcs = WCS(self.file.header)
         elif wcs is None and ".h5" or ".hdf5" in filename:
             self.wcs = hdf5_header_to_wcs(self.header, nonu=nonu)
         else:
