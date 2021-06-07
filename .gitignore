@@ -11,5 +11,7 @@
 .DS_Store
 *.ipynb
 *.icloud
+*.png
 docsrc/
 docs/
+cbar.py
