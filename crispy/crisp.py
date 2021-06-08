@@ -2149,14 +2149,14 @@ class CRISPNonU(CRISP):
 
     def __str__(self):
         try:
-            time = self.header.get("DATE-AVG")[-12:]
-            date = self.header.get("DATE-AVG")[:-13]
-            cl = str(np.round(self.header.get("TWAVE1"), decimals=2))
-            wwidth = self.header.get("WWIDTH1")
-            shape = str([self.header.get(f"NAXIS{j+1}") for j in reversed(range(self.data.ndim))])
-            el = self.header.get("WDESC1")
-            pointing_x = str(self.header.get("CRVAL1"))
-            pointing_y = str(self.header.get("CRVAL2"))
+            time = self.header["DATE-AVG"][-12:]
+            date = self.header["DATE-AVG"][:-13]
+            cl = str(np.round(self.header["TWAVE1"], decimals=2))
+            wwidth = self.header["WWIDTH1"]
+            shape = str([self.header[f"NAXIS{j+1}"] for j in reversed(range(self.data.ndim))])
+            el = self.header["WDESC1"]
+            pointing_x = str(self.header["CRVAL1"])
+            pointing_y = str(self.header["CRVAL2"])
         except KeyError:
             time = self.header["time_obs"]
             date = self.header["date_obs"]
@@ -3196,14 +3196,14 @@ class CRISPNonUSequence(CRISPSequence):
 
     def __str__(self):
         try:
-            time = self.list[0].file.header.get("DATE-AVG")[-12:]
-            date = self.list[0].file.header.get("DATE-AVG")[:-13]
-            cl = [str(np.round(f.file.header.get("TWAVE1"), decimals=2)) for f in self.list]
-            wwidth = [f.file.header.get("WWIDTH1") for f in self.list]
-            shape = [str([f.file.header.get(f"NAXIS{j+1}") for j in reversed(range(f.file.data.ndim))]) for f in self.list]
-            el = [f.file.header.get("WDESC1") for f in self.list]
-            pointing_x = str(self.list[0].file.header.get("CRVAL1"))
-            pointing_y = str(self.list[0].file.header.get("CRVAL2"))
+            time = self.list[0].file.header["DATE-AVG"][-12:]
+            date = self.list[0].file.header["DATE-AVG"][:-13]
+            cl = [str(np.round(f.file.header["TWAVE1"], decimals=2)) for f in self.list]
+            wwidth = [f.file.header["WWIDTH1"] for f in self.list]
+            shape = [str([f.file.header[f"NAXIS{j+1}"] for j in reversed(range(f.file.data.ndim))]) for f in self.list]
+            el = [f.file.header["WDESC1"] for f in self.list]
+            pointing_x = str(self.list[0].file.header["CRVAL1"])
+            pointing_y = str(self.list[0].file.header["CRVAL2"])
         except KeyError:
             time = self.list[0].file.header["time_obs"]
             date = self.list[0].file.header["date_obs"]
