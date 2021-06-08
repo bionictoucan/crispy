@@ -2010,12 +2010,12 @@ class CRISPWideband(CRISP):
     """
     def __str__(self):
         try:
-            time = self.header.get("DATE-AVG")[-12:]
-            date = self.header.get("DATE-AVG")[:-13]
-            shape = str([self.header.get(f"NAXIS{j+1}") for j in reversed(range(self.data.ndim))])
-            el = self.header.get("WDESC1")
-            pointing_x = str(self.header.get("CRVAL1"))
-            pointing_y = str(self.header.get("CRVAL2"))
+            time = self.header["DATE-AVG"][-12:]
+            date = self.header["DATE-AVG"][:-13]
+            shape = str([self.header[f"NAXIS{j+1}"] for j in reversed(range(self.data.ndim))])
+            el = self.header["WDESC1"]
+            pointing_x = str(self.header["CRVAL1"])
+            pointing_y = str(self.header["CRVAL2"])
         except KeyError:
             time = self.header["time_obs"]
             date = self.header["date_obs"]
