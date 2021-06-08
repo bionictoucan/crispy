@@ -171,16 +171,13 @@ class Inversion(InversionSlicingMixin):
         eb : bool, optional
             Whether or not to plot the median absolute deviation (MAD) for the electron number density as errorbars. Default is False.
         """
-        point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind[-2:])]
         if self.header is not None:
             try:
                 datetime = self.header["DATE-AVG"]
             except KeyError:
                 datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
 
-            title = f"{datetime} ({point[0]},{point[1]})"
-        else:
-            title = f"({point[0]}, {point[1]})"
+            title = f"{datetime}"
         fig = plt.figure()
         ax1 = fig.gca()
         if eb:
@@ -202,16 +199,13 @@ class Inversion(InversionSlicingMixin):
         eb : bool, optional
             Whether or not to plot the median absolute deviation (MAD) of the estimated electron temperatures as errorbars. Default is False.
         """
-        point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind[-2:])]
         if self.header is not None:
             try:
                 datetime = self.header["DATE-AVG"]
             except KeyError:
                 datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
 
-            title = f"{datetime} ({point[0]},{point[1]})"
-        else:
-            title = f"({point[0]}, {point[1]})"
+            title = f"{datetime}"
         fig = plt.figure()
         ax1 = fig.gca()
         if eb:
@@ -233,16 +227,13 @@ class Inversion(InversionSlicingMixin):
         eb : bool, optional
             Whether or not to plot the median absolute deviation (MAD) of the bulk velocity as errorbars. Default is False.
         """
-        point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind[-2:])]
         if self.header is not None:
             try:
                 datetime = self.header["DATE-AVG"]
             except KeyError:
                 datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
 
-            title = f"{datetime} ({point[0]},{point[1]})"
-        else:
-            title = f"({point[0]}, {point[1]})"
+            title = f"{datetime}"
         fig = plt.figure()
         ax1 = fig.gca()
         if eb:
@@ -264,16 +255,13 @@ class Inversion(InversionSlicingMixin):
         eb : bool, optional
             Whether or not to plot the median absolute deviation (MAD) for each estimated quantity as errorbars. Default is False.
         """
-        point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind[-2:])]
         if self.header is not None:
             try:
                 datetime = self.header["DATE-AVG"]
             except KeyError:
                 datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
 
-            title = f"{datetime} ({point[0]},{point[1]})"
-        else:
-            title = f"({point[0]}, {point[1]})"
+            title = f"{datetime}"
         fig = plt.figure()
         fig.suptitle(title)
         ax1 = fig.add_subplot(1, 3, 1)
