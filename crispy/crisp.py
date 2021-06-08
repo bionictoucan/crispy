@@ -230,7 +230,7 @@ class CRISP(CRISPSlicingMixin):
         else:
             xlabel = f"{self.l} [{self.aa}]"
 
-        point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind[-2:])]
+        # point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind[-2:])]
         try:
             datetime = self.header["DATE-AVG"]
             el = self.header["WDESC1"]
@@ -243,7 +243,7 @@ class CRISP(CRISPSlicingMixin):
         ax1.plot(wavelength, self.data, c=pt_bright["blue"])
         ax1.set_ylabel("Intensity [DNs]")
         ax1.set_xlabel(xlabel)
-        ax1.set_title(f"{datetime} {el}{self.aa} ({point[0]},{point[1]})")
+        ax1.set_title(f"{datetime} {el}{self.aa}")
         ax1.tick_params(direction="in")
         fig.show()
 
@@ -263,7 +263,7 @@ class CRISP(CRISPSlicingMixin):
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
 
-        point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(*self.ind[-2:])]
+        # point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(*self.ind[-2:])]
         try:
             datetime = self.header["DATE-AVG"]
             el = self.header["WDESC1"]
@@ -2211,7 +2211,7 @@ class CRISPNonU(CRISP):
         else:
             xlabel = f"{self.l} [{self.aa}]"
 
-        point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind[-2:])]
+        # point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind[-2:])]
         try:
             datetime = self.header["DATE-AVG"]
             el = self.header["WDESC1"]
@@ -2244,7 +2244,7 @@ class CRISPNonU(CRISP):
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
 
-        point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(*self.ind[-2:])]
+        # point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(*self.ind[-2:])]
         try:
             datetime = self.header["DATE-AVG"]
             el = self.header["WDESC1"]
