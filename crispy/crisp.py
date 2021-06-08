@@ -312,7 +312,7 @@ class CRISP(CRISPSlicingMixin):
             ax1.tick_params(direction="in")
             fig.show()
         elif self.data.ndim == 2:
-            wavelength = self.wcs.array_index_to_world(np.arange(self.data.shape[1])) << u.m
+            wavelength = self.wcs.array_index_to_world(np.arange(self.data.shape[0])) << u.m
 
             if unit is None:
                 wavelength <<= u.Angstrom
@@ -2308,7 +2308,7 @@ class CRISPNonU(CRISP):
             ax1.tick_params(direction="in")
             fig.show()
         elif self.data.ndim == 2:
-            wavelength = self.wcs.array_index_to_world(np.arange(self.data.shape[1])) << u.m
+            wavelength = self.wcs.array_index_to_world(np.arange(self.data.shape[0])) << u.m
 
             if unit is None:
                 wavelength <<= u.Angstrom
