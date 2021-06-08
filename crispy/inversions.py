@@ -169,7 +169,6 @@ class Inversion(InversionSlicingMixin):
         eb : bool, optional
             Whether or not to plot the median absolute deviation (MAD) for the electron number density as errorbars. Default is False.
         """
-        plt.style.use("bmh")
         point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind[-2:])]
         if self.header is not None:
             try:
@@ -201,7 +200,6 @@ class Inversion(InversionSlicingMixin):
         eb : bool, optional
             Whether or not to plot the median absolute deviation (MAD) of the estimated electron temperatures as errorbars. Default is False.
         """
-        plt.style.use("bmh")
         point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind[-2:])]
         if self.header is not None:
             try:
@@ -233,7 +231,6 @@ class Inversion(InversionSlicingMixin):
         eb : bool, optional
             Whether or not to plot the median absolute deviation (MAD) of the bulk velocity as errorbars. Default is False.
         """
-        plt.style.use("bmh")
         point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind[-2:])]
         if self.header is not None:
             try:
@@ -265,7 +262,6 @@ class Inversion(InversionSlicingMixin):
         eb : bool, optional
             Whether or not to plot the median absolute deviation (MAD) for each estimated quantity as errorbars. Default is False.
         """
-        plt.style.use("bmh")
         point = [np.round(x << u.arcsec, decimals=2).value for x in self.wcs.low_level_wcs._wcs[0].array_index_to_world(*self.ind[-2:])]
         if self.header is not None:
             try:
@@ -318,7 +314,6 @@ class Inversion(InversionSlicingMixin):
         frame : str, optional
             The frame to plot the map in. Default is None therefore uses the WCS frame. Other option is "pix" to plot in the pixel frame.
         """
-        plt.style.use("bmh")
         if type(self.ind) == int:
             idx = self.ind
         else:
@@ -360,7 +355,6 @@ class Inversion(InversionSlicingMixin):
         frame : str, optional
             The frame to plot the map in. Default is None therefore uses the WCS frame. Other option is "pix" to plot in the pixel frame.
         """
-        plt.style.use("bmh")
         if type(self.ind) == int:
             idx = self.ind
         else:
@@ -401,7 +395,6 @@ class Inversion(InversionSlicingMixin):
         frame : str, optional
             The frame to plot the map in. Default is None therefore uses the WCS frame. Other option is "pix" to plot in the pixel frame.
         """
-        plt.style.use("bmh")
         if type(self.ind) == int:
             idx = self.ind
         else:
@@ -442,7 +435,6 @@ class Inversion(InversionSlicingMixin):
         frame : str, optional
             The frame to plot the map in. Default is None therefore uses the WCS frame. Other option is "pix" to plot in the pixel frame.
         """
-        plt.style.use("bmh")
         if type(self.ind) == int:
             idx = self.ind
         else:
