@@ -32,7 +32,7 @@ class Inversion(InversionSlicingMixin):
         if type(filename) == str:
             self.f = h5py.File(filename, "r")
             if type(z) == str:
-                self.z = h5py.File(z, "r").get("z")
+                self.z = h5py.File(z, "r").get("z")[...]
             else:
                 self.z = z
             if wcs == None:
