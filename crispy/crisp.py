@@ -2195,6 +2195,10 @@ class CRISPNonU(CRISP):
         Shape: {shape}
         Wavelengths sampled: {sampled_wvls}"""
 
+    @property
+    def wvls(self):
+        return self.wvl
+
     def plot_spectrum(self, unit=None, air=False, d=False):
         """
         Plots the intensity spectrum for a specified coordinate by slicing.
@@ -2211,7 +2215,7 @@ class CRISPNonU(CRISP):
         if self.data.ndim != 1:
             raise IndexError("If you are using Stokes data please use the plot_stokes method.")
 
-        wavelength = self.wcs.array_index_to_world(np.arange(self.data.shape[0])) << u.m
+        wavelength = self.wvls
         if unit is None:
             wavelength <<= u.Angstrom
         else:
@@ -2268,7 +2272,7 @@ class CRISPNonU(CRISP):
             el = self.header["element"]
 
         if self.data.ndim == 1:
-            wavelength = self.wcs.array_index_to_world(np.arange(self.data.shape[0])) << u.m
+            wavelength = self.wvls
 
             if unit is None:
                 wavelength <<= u.Angstrom
@@ -2308,7 +2312,7 @@ class CRISPNonU(CRISP):
             ax1.tick_params(direction="in")
             fig.show()
         elif self.data.ndim == 2:
-            wavelength = self.wcs.array_index_to_world(np.arange(self.data.shape[0])) << u.m
+            wavelength = self.wvls
 
             if unit is None:
                 wavelength <<= u.Angstrom
