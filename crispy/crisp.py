@@ -1790,6 +1790,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
     """
     def __init__(self, files):
         self.list = [CRISP(**f) for f in files]
+        self.aa = html.unescape("#&8491;")
 
     def __str__(self):
         try:
