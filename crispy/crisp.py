@@ -1833,7 +1833,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
 
     @property
     def wvls(self):
-        return [self.wave(np.arange(f.shape[-3])) for f in self.list]
+        return [f.wave(np.arange(f.shape[-3])) for f in self.list]
 
     @property
     def shape(self):
