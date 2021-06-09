@@ -1837,7 +1837,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
 
     @property
     def shape(self):
-        return self.list[0].shape
+        return [f.shape for f in self.list]
 
     @property
     def info(self):

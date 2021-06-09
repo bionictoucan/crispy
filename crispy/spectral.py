@@ -192,7 +192,7 @@ def wing_idxs(intensity_vector, wavelengths, var=None, bar_l=None, axis=-1):
         return blue_ranges, red_ranges
     else:
         blue_wing_end = np.argmin(np.abs(wavelengths - blue_end_wvl))
-        red_wing_start = np.argmin(np.abs(wavelengths - red_wing_wvl))
+        red_wing_start = np.argmin(np.abs(wavelengths - red_start_wvl))
 
         return range(blue_wing_start, blue_wing_end+1), range(red_wing_start, red_wing_end+1)
 
