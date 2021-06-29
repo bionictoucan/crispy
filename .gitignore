@@ -15,3 +15,4 @@
 docsrc/
 docs/
 cbar.py
+*.toml

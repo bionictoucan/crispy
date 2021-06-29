@@ -18,7 +18,7 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 setuptools.setup(
-    name="crispy",
+    name="sst-crispy",
     version=find_version("crispy/__init__.py"),
     author="John Armstrong",
     author_email="j.armstrong.2@research.gla.ac.uk",
