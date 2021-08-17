@@ -14,17 +14,17 @@ The type of data that ``crispy`` is built to deal with is **optical** imaging sp
 
 ## How do I get this moderately cool Python package?
 
-``crispy`` can be found on PyPI using (not available *yet*, John needs to finish the documentation):
+``crispy`` can be found on PyPI using:
 
 ```
-pip install crispy
+pip install sst-crispy
 ```
 
 or can be installed from source using:
 
 ```
-git clone https://github.com/rhero12/crispy
-cd crispy
+git clone https://github.com/bionic-toucan/crispy2
+cd crispy2
 python setup.py install --user
 ```
 

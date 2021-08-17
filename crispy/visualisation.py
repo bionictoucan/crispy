@@ -2412,3 +2412,48 @@ class PolarimetricTimeViewer:
             el = self.cube.file.header["element"]
         self.ax1.set_title(fr"{el} {self.aa} {self.D} {self.l}$_{1}$ = {ll} {self.aa}")
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="Intensity [DNs]")
+
+# class SpectTest:
+#     def __init__(self, data):
+#         self.aa = html.unescape("&#8491;")
+#         self.l = html.unescape("&lambda;")
+
+#         self.cube = CRISP(data)
+#         self.wvls = self.cube.wave(np.arange(self.cube.shape[0])) << u.Angstrom
+#         self.fig = plt.figure()
+#         try:
+#             self.ax1 = self.fig.add_subplot(1, 2, 1, projection=self.cube.wcs.dropaxis(-1))
+#         except:
+#             self.ax1 = self.fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.cube[0].wcs.low_level_wcs, 0))
+#         self.ax1.set_ylabel("Helioprojective Latitude [arcsec]")
+#         self.ax1.set_xlabel("Helioprojective Longitude [arcsec]")
+#         self.ax1.imshow(self.cube[0].data)
+#         self.ax2 = self.fig.add_subplot(1, 2, 2)
+#         self.ax2.yaxis.set_label_position("right")
+#         self.ax2.yaxis.tick_right()
+#         self.ax2.set_ylabel("I [DNs]")
+#         self.ax2.set_xlabel(f"{self.l} [{self.aa}]")
+#         self.fig.show()
+
+#         self.coords = []
+#         self.px_coords = []
+
+#         self.receiver = self.fig.canvas.mpl_connect("button_press_event", self._on_click)
+
+#     def _on_click(self, event):
+#         if self.fig.canvas.manager.toolbar.mode != "":
+#             return
+
+#         centre_coord = int(event.ydata), int(event.xdata)
+#         self.px_coords.append(centre_coord)
+#         circ = patches.Circle(centre_coord[::-1], radius=10, facecolor=list(pt_bright_cycler)[0]["color"], edgecolor="k", linewidth=1)
+#         self.ax1.add_patch(circ)
+#         self.ax2.plot(self.wvls, self.cube[:, centre_coord[0], centre_coord[1]].data)
+#         px = self.cube.to_lonlat(*centre_coord) << u.arcsec
+#         self.coords.append(px)
+#         self.fig.canvas.draw()
+
+#     def _key_press(self, event):
+#         """
+#         Use `event.key` to define different behaviour for different key presses.
+#         """
