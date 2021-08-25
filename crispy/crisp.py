@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os, html, yaml, h5py
+import os, html, yaml, zarr
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
@@ -10,7 +10,7 @@ from specutils.utils.wcs_utils import vac_to_air
 from sunpy.coordinates import Helioprojective
 from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
 from .utils import ObjDict, pt_bright, rotate_crop_data, rotate_crop_aligned_data, reconstruct_full_frame
-from .io import hdf5_header_to_wcs
+from .io import zarr_header_to_wcs
 
 class CRISP(CRISPSlicingMixin):
     """
@@ -43,8 +43,8 @@ class CRISP(CRISPSlicingMixin):
     def __init__(self, filename, wcs=None, uncertainty=None, mask=None, nonu=False):
         if type(filename) == str and ".fits" in filename:
             self.file = fits.open(filename)[0]
-        elif type(filename) == str and ".h5" or ".hdf5" in filename:
-            f = h5py.File(filename, mode="r")
+        elif type(filename) == str and ".zarr" in filename:
+            f = zarr.open(filename, mode="r")
             self.file = ObjDict({})
             self.file["data"] = f["data"]
             self.file["header"] = f["data"].attrs
@@ -54,8 +54,8 @@ class CRISP(CRISPSlicingMixin):
             raise NotImplementedError("m8 y?")
         if wcs is None and ".fits" in filename:
             self.wcs = WCS(self.file.header)
-        elif wcs is None and ".h5" or ".hdf5" in filename:
-            self.wcs = hdf5_header_to_wcs(self.header, nonu=nonu)
+        elif wcs is None and ".zarr" in filename:
+            self.wcs = zarr_header_to_wcs(self.header, nonu=nonu)
         else:
             self.wcs = wcs
         self.nonu = nonu

@@ -1,5 +1,5 @@
 import numpy as np
-import os, yaml, h5py
+import os, yaml, zarr
 from astropy.wcs import WCS
 from scipy.io import readsav
 from tqdm import tqdm
@@ -57,30 +57,30 @@ def memmap_crisp_cube(path):
 
     return np.memmap(path, offset=512, dtype=dtype, mode="r", shape=tuple(shape))
 
-def hdf5_header_to_wcs(hdf5_header, nonu=False):
+def zarr_header_to_wcs(zarr_header, nonu=False):
     """
-    This function takes the hdf5 header information and converts it to a wcs object.
+    This function takes the zarr header information and converts it to a wcs object.
 
     Parameters
     ----------
-    hdf5_header : dict or yaml
-        The header information from the hdf5 observation file.
+    zarr_header : dict or yaml or JSON
+        The header information from the zarr observation file.
     nonu : bool, optional
         Whether or not the spectral points are sampled non-uniformly. Default is False.
     """
 
     wcs_dict = {}
 
-    wcs_dict["TELESCOP"] = hdf5_header["telescope"]
-    wcs_dict["INSTRUME"] = hdf5_header["instrument"]
-    wcs_dict["EXT_NAME"] = hdf5_header["element"]
+    wcs_dict["TELESCOP"] = zarr_header["telescope"]
+    wcs_dict["INSTRUME"] = zarr_header["instrument"]
+    wcs_dict["EXT_NAME"] = zarr_header["element"]
 
-    if len(hdf5_header["dimensions"]) == 4:
+    if len(zarr_header["dimensions"]) == 4:
         # FITS axes are in the opposite order from numpy axes so the dimensions are read in reverse
-        wcs_dict["NAXIS1"] = hdf5_header["dimensions"][-1]
-        wcs_dict["NAXIS2"] = hdf5_header["dimensions"][-2]
-        wcs_dict["NAXIS3"] = hdf5_header["dimensions"][-3]
-        wcs_dict["NAXIS4"] = hdf5_header["dimensions"][-4]
+        wcs_dict["NAXIS1"] = zarr_header["dimensions"][-1]
+        wcs_dict["NAXIS2"] = zarr_header["dimensions"][-2]
+        wcs_dict["NAXIS3"] = zarr_header["dimensions"][-3]
+        wcs_dict["NAXIS4"] = zarr_header["dimensions"][-4]
 
         wcs_dict["CTYPE1"] = "HPLN-TAN"
         wcs_dict["CTYPE2"] = "HPLT-TAN"
@@ -91,27 +91,27 @@ def hdf5_header_to_wcs(hdf5_header, nonu=False):
         wcs_dict["CUNIT2"] = "arcsec"
         wcs_dict["CUNIT3"] = "Angstrom"
 
-        wcs_dict["CRPIX1"] = hdf5_header["crpix"][-1]
-        wcs_dict["CRPIX2"] = hdf5_header["crpix"][-2]
-        wcs_dict["CRPIX3"] = hdf5_header["crpix"][-3]
-        wcs_dict["CRPIX4"] = hdf5_header["crpix"][-4]
+        wcs_dict["CRPIX1"] = zarr_header["crpix"][-1]
+        wcs_dict["CRPIX2"] = zarr_header["crpix"][-2]
+        wcs_dict["CRPIX3"] = zarr_header["crpix"][-3]
+        wcs_dict["CRPIX4"] = zarr_header["crpix"][-4]
 
-        wcs_dict["CRVAL1"] = hdf5_header["crval"][-1]
-        wcs_dict["CRVAL2"] = hdf5_header["crval"][-2]
-        wcs_dict["CRVAL3"] = hdf5_header["crval"][-3]
+        wcs_dict["CRVAL1"] = zarr_header["crval"][-1]
+        wcs_dict["CRVAL2"] = zarr_header["crval"][-2]
+        wcs_dict["CRVAL3"] = zarr_header["crval"][-3]
         wcs_dict["CRVAL4"] = 1.0
 
-        wcs_dict["CDELT1"] = hdf5_header["pixel_scale"]
-        wcs_dict["CDELT2"] = hdf5_header["pixel_scale"]
+        wcs_dict["CDELT1"] = zarr_header["pixel_scale"]
+        wcs_dict["CDELT2"] = zarr_header["pixel_scale"]
         if nonu:
             wcs_dict["CDELT3"] = 0.1
         else:
-            wcs_dict["CDELT3"] = hdf5_header["wavel_scale"]
+            wcs_dict["CDELT3"] = zarr_header["wavel_scale"]
         wcs_dict["CDELT4"] = 1.0
-    elif len(hdf5_header["dimensions"]) == 3:
-        wcs_dict["NAXIS1"] = hdf5_header["dimensions"][-1]
-        wcs_dict["NAXIS2"] = hdf5_header["dimensions"][-2]
-        wcs_dict["NAXIS3"] = hdf5_header["dimensions"][-3]
+    elif len(zarr_header["dimensions"]) == 3:
+        wcs_dict["NAXIS1"] = zarr_header["dimensions"][-1]
+        wcs_dict["NAXIS2"] = zarr_header["dimensions"][-2]
+        wcs_dict["NAXIS3"] = zarr_header["dimensions"][-3]
 
         wcs_dict["CTYPE1"] = "HPLN-TAN"
         wcs_dict["CTYPE2"] = "HPLT-TAN"
@@ -121,23 +121,23 @@ def hdf5_header_to_wcs(hdf5_header, nonu=False):
         wcs_dict["CUNIT2"] = "arcsec"
         wcs_dict["CUNIT3"] = "Angstrom"
 
-        wcs_dict["CRPIX1"] = hdf5_header["crpix"][-1]
-        wcs_dict["CRPIX2"] = hdf5_header["crpix"][-2]
-        wcs_dict["CRPIX3"] = hdf5_header["crpix"][-3]
+        wcs_dict["CRPIX1"] = zarr_header["crpix"][-1]
+        wcs_dict["CRPIX2"] = zarr_header["crpix"][-2]
+        wcs_dict["CRPIX3"] = zarr_header["crpix"][-3]
 
-        wcs_dict["CRVAL1"] = hdf5_header["crval"][-1]
-        wcs_dict["CRVAL2"] = hdf5_header["crval"][-2]
-        wcs_dict["CRVAL3"] = hdf5_header["crval"][-3]
+        wcs_dict["CRVAL1"] = zarr_header["crval"][-1]
+        wcs_dict["CRVAL2"] = zarr_header["crval"][-2]
+        wcs_dict["CRVAL3"] = zarr_header["crval"][-3]
 
-        wcs_dict["CDELT1"] = hdf5_header["pixel_scale"]
-        wcs_dict["CDELT2"] = hdf5_header["pixel_scale"]
+        wcs_dict["CDELT1"] = zarr_header["pixel_scale"]
+        wcs_dict["CDELT2"] = zarr_header["pixel_scale"]
         if nonu:
             wcs_dict["CDELT3"] = 0.1
         else:
-            wcs_dict["CDELT3"] = hdf5_header["wavel_scale"]
-    elif len(hdf5_header["dimensions"]) == 2:
-        wcs_dict["NAXIS1"] = hdf5_header["dimensions"][-1]
-        wcs_dict["NAXIS2"] = hdf5_header["dimensions"][-2]
+            wcs_dict["CDELT3"] = zarr_header["wavel_scale"]
+    elif len(zarr_header["dimensions"]) == 2:
+        wcs_dict["NAXIS1"] = zarr_header["dimensions"][-1]
+        wcs_dict["NAXIS2"] = zarr_header["dimensions"][-2]
 
         wcs_dict["CTYPE1"] = "HPLN-TAN"
         wcs_dict["CTYPE2"] = "HPLT-TAN"
@@ -145,20 +145,20 @@ def hdf5_header_to_wcs(hdf5_header, nonu=False):
         wcs_dict["CUNIT1"] = "arcsec"
         wcs_dict["CUNIT2"] = "arcsec"
 
-        wcs_dict["CRPIX1"] = hdf5_header["crpix"][-1]
-        wcs_dict["CRPIX2"] = hdf5_header["crpix"][-2]
+        wcs_dict["CRPIX1"] = zarr_header["crpix"][-1]
+        wcs_dict["CRPIX2"] = zarr_header["crpix"][-2]
 
-        wcs_dict["CRVAL1"] = hdf5_header["crval"][-1]
-        wcs_dict["CRVAL2"] = hdf5_header["crval"][-2]
+        wcs_dict["CRVAL1"] = zarr_header["crval"][-1]
+        wcs_dict["CRVAL2"] = zarr_header["crval"][-2]
 
-        wcs_dict["CDELT1"] = hdf5_header["pixel_scale"]
-        wcs_dict["CDELT2"] = hdf5_header["pixel_scale"]
+        wcs_dict["CDELT1"] = zarr_header["pixel_scale"]
+        wcs_dict["CDELT2"] = zarr_header["pixel_scale"]
 
     return WCS(wcs_dict)
 
 def la_palma_cube_to_hdf5(cube_path, tseries_path, spectfile, date_obs, telescope, instrument, pixel_scale, cadence, element, pointing, mu=None, start_idx=0, save_dir="./"):
     """
-    This is a function to save a La Palma legacy cube as hdf5 files.
+    This is a function to save a La Palma legacy cube as zarr files.
 
     Parameters
     ----------
@@ -220,28 +220,25 @@ def la_palma_cube_to_hdf5(cube_path, tseries_path, spectfile, date_obs, telescop
         header["time_obs"] = times[jj].deconde("utf-8")
         if "wb" not in cube_path and frame.ndim == 4:
             header["crpix"] = (1, np.median(np.arange(frame.shape[-3])), np.median(np.arange(frame.shape[-2])), np.median(np.arange(frame.shape[-1])))
-            header["crval"] = (1, np.median(header["spect_pos"]), poitning[-2], pointing[-1])
-            f = h5py.File(save_dir+str(start_idx).zfill(5)+".h5", "a")
-            f["data"] = frame
-            f.create_dataset("header", (1,), dtype=h5py.special_dtype(vlen=str))
-            f["header"][0] = yaml.dump(header)
-            f.close()
+            header["crval"] = (1, np.median(header["spect_pos"]), pointing[-2], pointing[-1])
+            f = zarr.open(save_dir+str(start_idx).zfill(5)+".zarr", mode="w")
+            data = f.array("data", frame, chunks=(1,1,frame.shape[-2],frame.shape[-1]))
+            for k, v in header.items():
+                data.attrs[k] = v
             start_idx += 1
         elif "wb" not in cube_path and frame.ndim == 3:
             header["crpix"] = (np.median(np.arange(frame.shape[-3])), np.median(np.arange(frame.shape[-2])), np.median(np.arange(frame.shape[-1])))
-            header["crval"] = (np.median(header["spect_pos"]), poitning[-2], pointing[-1])
-            f = h5py.File(save_dir+str(start_idx).zfill(5)+".h5", "a")
-            f["data"] = frame
-            f.create_dataset("header", (1,), dtype=h5py.special_dtype(vlen=str))
-            f["header"][0] = yaml.dump(header)
-            f.close()
+            header["crval"] = (np.median(header["spect_pos"]), pointing[-2], pointing[-1])
+            f = zarr.open(save_dir+str(start_idx).zfill(5)+".zarr", mode="w")
+            data = f.array("data", frame, chunks=(1,frame.shape[-2],frame.shape[-1]))
+            for k, v in header.items():
+                data.attrs[k] = v
             start_idx += 1
         else:
             header["crpix"] = (np.median(np.arange(frame.shape[-2])), np.median(np.arange(frame.shape[-1])))
-            header["crval"] = (poitning[-2], pointing[-1])
-            f = h5py.File(save_dir+str(start_idx).zfill(5)+".h5", "a")
-            f["data"] = frame
-            f.create_dataset("header", (1,), dtype=h5py.special_dtype(vlen=str))
-            f["header"][0] = yaml.dump(header)
-            f.close()
+            header["crval"] = (pointing[-2], pointing[-1])
+            f = zarr.open(save_dir+str(start_idx).zfill(5)+".zarr", mode="w")
+            data = f.array("data", frame, chunks=(1,frame.shape[-2],frame.shape[-1]))
+            for k, v in header.items():
+                data.attrs[k] = v
             start_idx += 1

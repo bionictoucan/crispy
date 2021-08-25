@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import ipywidgets as widgets
-import h5py, yaml, html
+import yaml, html
 import matplotlib.patches as patches
 from matplotlib.colors import SymLogNorm
 import astropy.units as u

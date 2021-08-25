@@ -35,7 +35,7 @@ setuptools.setup(
         "matplotlib",
         "ipywidgets",
         "jupyterlab",
-        "h5py",
+        "zarr",
         "pyyaml",
         "tqdm",
         "cycler",

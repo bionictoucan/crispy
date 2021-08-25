@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import h5py, yaml
+import yaml, zarr
 from matplotlib.colors import SymLogNorm
 from astropy.wcs import WCS
 import astropy.units as u
@@ -30,9 +30,9 @@ class Inversion(InversionSlicingMixin):
     """
     def __init__(self, filename, z, header, wcs=None):
         if type(filename) == str:
-            self.f = h5py.File(filename, "r")
+            self.f = zarr.open(filename, mode="r")
             if type(z) == str:
-                self.z = h5py.File(z, "r").get("z")[...]
+                self.z = zarr.open(z, mode="r")["z"][:]
             else:
                 self.z = z
             if wcs == None:
