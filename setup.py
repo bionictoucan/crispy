@@ -28,19 +28,18 @@ setuptools.setup(
     url="https://github.com/rhero12/crispy",
     packages=setuptools.find_packages(),
     install_requires = [
-        "torch",
-        "torchvision",
         "numpy",
         "astropy",
         "matplotlib",
-        "ipywidgets",
-        "jupyterlab",
         "zarr",
-        "pyyaml",
         "tqdm",
         "cycler",
         "specutils",
-        "numba == 0.51.2"
+        "numba == 0.51.2",
+        "weno4",
+        "sunpy[all]",
+        "ipywidgets",
+        "jupyterlab"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
