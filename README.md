@@ -23,8 +23,8 @@ pip install sst-crispy
 or can be installed from source using:
 
 ```
-git clone https://github.com/bionic-toucan/crispy2
-cd crispy2
+git clone https://github.com/bionic-toucan/crispy
+cd crispy
 python setup.py install --user
 ```
 
