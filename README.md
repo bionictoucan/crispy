@@ -2,7 +2,7 @@
 
 Author: John A. Armstrong, *Univeristy of Glasgow*
 
-The following repository contains the source code for the `crispy` Python package, aptly named due to my working with the CRisp Imagining SpectroPolarimeter (CRISP) instrument mounted at the Swedish 1-m Solar Telescope (SST) in La Palma, Spain. (However, the code with work *any* imaging spectropolarimetric data regardless of instrument so long as it follows normal FITS standards or a custm hdf5 standard I have grown accustomed to using, see the docs for more details).
+The following repository contains the source code for the `crispy` Python package, aptly named due to my working with the CRisp Imagining SpectroPolarimeter (CRISP) instrument mounted at the Swedish 1-m Solar Telescope (SST) in La Palma, Spain. (However, the code with work *any* imaging spectropolarimetric data regardless of instrument so long as it follows normal FITS standards or a custom zarr standard I have grown accustomed to using, see the docs for more details).
 
 ## Why does this exist?
 
