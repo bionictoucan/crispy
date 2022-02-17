@@ -35,7 +35,7 @@ setuptools.setup(
         "tqdm",
         "cycler",
         "specutils",
-        "numba == 0.51.2",
+        "numba",
         "weno4",
         "sunpy[all]",
         "ipywidgets",
