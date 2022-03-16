@@ -12,7 +12,5 @@
 *.ipynb
 *.icloud
 *.png
-docsrc/
-docs/
 cbar.py
 *.toml
