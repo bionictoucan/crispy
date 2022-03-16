@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.interpolate import interp1d
 from scipy.integrate import simps
 from scipy.fft import fft2, fftfreq
 from scipy.stats import binned_statistic
