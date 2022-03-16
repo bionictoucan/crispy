@@ -28,7 +28,7 @@ setuptools.setup(
     url="https://github.com/bionictoucan/crispy",
     packages=setuptools.find_packages(),
     install_requires = [
-        "numpy <1.22, >=1.19",
+        "numpy <1.22, >1.19",
         "astropy",
         "matplotlib",
         "zarr",
