@@ -3,7 +3,7 @@
 Quick Start Guide to crispy
 ===========================
 
-The following is a quick guide on how to get started with crispy. This will cover the basic data wrapper and its constituent properties. For a more in-depth look at the other data wrapppers please refer to :ref:`data-wrap-ex`.
+The following is a quick guide on how to get started with crispy. This will cover the basic data wrapper and its constituent properties. For a more in-depth look at the other data wrappers please refer to :ref:`data-wrap-ex`.
 
 The first thing to do is to import the default data wrapper ``CRISP``. This is the base used for all of data objects in the package. ``CRISP`` assumes that your observations are either imaging spectroscopic or imaging spectropolarimetric (although it'll give its best at any 3D or 4D data) and is given either as a `FITS file <https://fits.gsfc.nasa.gov/fits_standard.html>`_, an `hdf5 file <https://www.hdfgroup.org/solutions/hdf5/>`_ or an object dictionary (see :ref:`utils`).
 
