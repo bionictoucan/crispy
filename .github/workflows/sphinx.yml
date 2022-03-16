@@ -4,7 +4,7 @@ on: push
 
 jobs:
         build:
-                runs-on: ubuntu-18.04
+                runs-on: ubuntu-latest
                 steps:
                         - uses: actions/checkout@v2
                         - uses: actions/setup-python@v2
@@ -17,8 +17,8 @@ jobs:
                         #           platform: x64
                         - name: Build HTML
                           uses: ammaraskar/sphinx-action@0.4
-                        #   with:
-                        #       pre-build-command: "apt-get update -y && apt-get install -y python3-dev build-essential"
+                          with:
+                              pre-build-command: "apt-get update -y && apt-get install -y python3-dev build-essential"
                         - name: Upload artifacts
                           uses: actions/upload-artifact@v1
                           with:
