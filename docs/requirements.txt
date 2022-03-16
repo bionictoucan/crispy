@@ -1,3 +1,4 @@
 jupyter-sphinx==0.3.0
 sphinx-rtd-theme==1.0.0
 sst-crispy==1.0.2
+numcodecs==0.9.1
