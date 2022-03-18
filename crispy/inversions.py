@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import yaml, zarr
+import zarr
 from matplotlib.colors import SymLogNorm
 from astropy.wcs import WCS
 import astropy.units as u

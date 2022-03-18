@@ -1,5 +1,5 @@
 import numpy as np
-import os, yaml, zarr
+import os, zarr
 from astropy.wcs import WCS
 from scipy.io import readsav
 from tqdm import tqdm

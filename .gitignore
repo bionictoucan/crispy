@@ -1,6 +1,5 @@
 .vscode/*
 /crispy/__pycache__/
-/examples/
 /old_notebooks/
 /*.egg-info
 /dist/
@@ -14,3 +13,4 @@
 *.png
 cbar.py
 *.toml
+old_rsts/

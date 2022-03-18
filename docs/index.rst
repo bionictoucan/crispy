@@ -15,10 +15,8 @@ This is a Python package for working with imaging spectroscopic/spectropolarimet
    :caption: Contents:
 
    Installation
-   gettingstarted
+   auto_examples/index
    API
-   Examples
-   Convert
 
 Indices and tables
 ==================

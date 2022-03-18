@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import ipywidgets as widgets
-import yaml, html
+import html
 import matplotlib.patches as patches
 from matplotlib.colors import SymLogNorm
 import astropy.units as u
-from .crisp import CRISP, CRISPSequence, CRISPWideband, CRISPWidebandSequence, CRISPNonU, CRISPNonUSequence
+from .crisp import CRISP, CRISPSequence, CRISPWidebandSequence, CRISPNonU, CRISPNonUSequence
 from .inversions import Inversion
 from .utils import CRISP_sequence_constructor
 from matplotlib import ticker

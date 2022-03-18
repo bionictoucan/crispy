@@ -1,0 +1,28 @@
+{
+    "crpix": [
+        492.0,
+        489.0
+    ],
+    "crval": [
+        -233.293,
+        523.598
+    ],
+    "ctype": [
+        "solar-y",
+        "solar-x"
+    ],
+    "cunit": [
+        "arcsecond",
+        "arcsecond"
+    ],
+    "date_obs": "2017-09-06",
+    "dimensions": [
+        979,
+        985
+    ],
+    "element": "H alpha",
+    "instrument": "CRISP",
+    "pixel_scale": 0.059,
+    "telescope": "SST",
+    "time_obs": "09:04:45.591"
+}

@@ -22,7 +22,7 @@ copyright = '2022, John A. Armstrong'
 author = 'John A. Armstrong'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0.0'
+release = '1.0.2'
 
 
 # -- General configuration ---------------------------------------------------
@@ -30,9 +30,14 @@ release = '1.0.0'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.napoleon", "sphinx.ext.autodoc", "sphinx.ext.intersphinx", "sphinx.ext.linkcode", "sphinx.ext.githubpages", "jupyter_sphinx.execute"
+extensions = ["sphinx.ext.napoleon", "sphinx.ext.autodoc", "sphinx.ext.intersphinx", "sphinx.ext.linkcode", "sphinx.ext.githubpages", "sphinx_gallery.gen_gallery"
 ]
 autodoc_member_order = "bysource"
+
+sphinx_gallery_conf = {
+     'examples_dirs': ['../examples', '../tutorials'],   # path to your example scripts
+     'gallery_dirs': ['auto_examples', 'tutorials'],  # path to where to save gallery generated output
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

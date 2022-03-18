@@ -13,4 +13,4 @@ CRISP observations are normally shipped in the legacy La Palma data cube format 
 
 The last function in the I/O section is mandatory for using the produced hdf5 files with the ``crispy2.crisp`` data classes. This function converts the header information from the hdf5 files into a WCS object usable by these data classes.
 
-.. autofunction:: crispy.io.hdf5_header_to_wcs
+.. autofunction:: crispy.io.zarr_header_to_wcs

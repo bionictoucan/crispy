@@ -1,0 +1,51 @@
+{
+    "crpix": [
+        0.0,
+        5.0,
+        492.0,
+        488.0
+    ],
+    "crval": [
+        8544.44,
+        -233.293,
+        523.598
+    ],
+    "ctype": [
+        "stokes",
+        "wavelength",
+        "solar-y",
+        "solar-x"
+    ],
+    "cunit": [
+        "stokes",
+        "angstrom",
+        "arcsecond",
+        "arcsecond"
+    ],
+    "date_obs": "2017-09-06",
+    "dimensions": [
+        4,
+        11,
+        977,
+        985
+    ],
+    "element": "Ca II 8542",
+    "instrument": "CRISP",
+    "pixel_scale": 0.059,
+    "telescope": "SST",
+    "time_obs": "09:04:45.591",
+    "wavel_scale": "nonu",
+    "wavels": [
+        8541.3,
+        8541.5,
+        8541.7,
+        8541.8,
+        8541.9,
+        8542.0,
+        8542.1,
+        8542.2,
+        8542.3,
+        8542.5,
+        8542.7
+    ]
+}

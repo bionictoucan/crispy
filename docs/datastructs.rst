@@ -11,6 +11,7 @@ The first type is the generic data object that can be used for a CRISP observati
 
 .. autoclass:: crispy.crisp.CRISP
    :members:
+   :show-inheritance:
 
 Often, CRISP observations are taken in more than one spectral line. As such, the ``CRISPSequence`` class can be used to combine multiple spectral line observations. This is just a container which creates a list of ``CRISP`` objects which can be accessed individually or as a group (under the assumption that they all share the same world coordinate system).
 
