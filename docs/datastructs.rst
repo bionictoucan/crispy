@@ -17,6 +17,7 @@ Often, CRISP observations are taken in more than one spectral line. As such, the
 
 .. autoclass:: crispy.crisp.CRISPSequence
    :members:
+   :show-inheritance:
 
 The spacing between the wavelength positions of CRISP's Fabry-Pérot interferometer is variable. This means that the line core can be more densely sampled than the line wings and vice versa. As a result, the wavelength axis cannot be represented by the world coordinate system (however, the spatial coordinates **are** described by the world coordinate system). To combat this, use the ``CRISPNonU`` class which will not assume that the wavelength axis in the header information is throwaway and look for specific wavelength positions elsewhere in the file (e.g. for a fits file, the code looks into the 1st non-PrimaryHDU for these wavelength positions, if this is not common conventions please let me know). This leads to an attribute containing these wavelengths known as ``wvls`` but the class method ``wave`` will still work perfectly fine.
 
@@ -26,9 +27,11 @@ Similarly to ``CRISPSequence``, there is a ``CRISPNonUSequence`` class which aga
 
 .. autoclass:: crispy.crisp.CRISPNonU
    :members:
+   :show-inheritance:
 
 .. autoclass:: crispy.crisp.CRISPNonUSequence
    :members:
+   :show-inheritance:
 
 Broadband Data
 --------------
@@ -37,6 +40,8 @@ As well as narrowband observations, CRISP also images using a broadband filter f
 
 .. autoclass:: crispy.crisp.CRISPWideband
    :members:
+   :show-inheritance:
 
 .. autoclass:: crispy.crisp.CRISPWidebandSequence
    :members:
+   :show-inheritance:

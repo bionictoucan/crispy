@@ -193,12 +193,14 @@ point :math:`(-720'', -310'')` in the Helioprojective plane:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 67-68
+.. GENERATED FROM PYTHON SOURCE LINES 67-70
 
 .. code-block:: default
 
 
     crisp[:,y,x].plot_spectrum()
+
+
 
 
 .. image-sg:: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_002.png
@@ -210,10 +212,203 @@ point :math:`(-720'', -310'')` in the Helioprojective plane:
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 71-75
+
+CRISPNonU
+---------
+For the CRISPNonU class, we choose an imaging spectropolarimetric Ca II 8542
+observation of the X2.2 solar flare SOL20170906T09:10.
+
+.. GENERATED FROM PYTHON SOURCE LINES 75-79
+
+.. code-block:: default
+
+
+    crispnonu = CRISPNonU("example_data/2017/ca_00001.zarr")
+    print(crispnonu)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+
+            CRISP Observation
+            ------------------
+            2017-09-06 09:04:45.591
+
+            Observed: Ca II 8542
+            Centre wavelength: 8544.44
+            Wavelengths sampled: 11
+            Pointing: (523.598, -233.293)
+            Shape: [4, 11, 977, 985]
+            Wavelengths sampled: [8541.3, 8541.5, 8541.7, 8541.8, 8541.9, 8542.0, 8542.1, 8542.2, 8542.3, 8542.5, 8542.7]
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 80-88
+
+The ``intensity_map`` and ``plot_spectrum`` methods will also work here with
+the correct slicing -- that is, the object will need to be sliced twice for
+the ``intensity_map`` instance method and thrice for the ``plot_spectrum``
+instance method. The main difference from the CRISPNonU class can be seen in
+the wavelengths sampled section: the wavelengths are sampled non-uniformly but
+the class deals with this for us. Here, we will show the polarimetric instance
+methods (which also exist in the ``CRISP`` class). Firstly is ``stokes_map``
+for the line core:
+
+.. GENERATED FROM PYTHON SOURCE LINES 88-91
+
+.. code-block:: default
+
+
+    crispnonu[:,5].stokes_map(stokes="all")
+
+
+
+
+.. image-sg:: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_003.png
+   :alt: 2017-09-06T09:04:45.591 λ=8544.54Å (Δλ=0.0Å), Stokes I , Stokes Q , Stokes U , Stokes V 
+   :srcset: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_003.png
+   :class: sphx-glr-single-img
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 92-98
+
+The polarimetric plotting methods take a keyword argument ``stokes`` which is
+a string specifying which of the Stokes parameters the user would like to
+plot. In the example above we have used "all" to plot the maps of all of the
+Stokes parameters at line centre. However, if the user would like to only
+display Stokes I, Q and V this can be accomplished by setting ``stokes =
+"IQV"``.
+
+.. GENERATED FROM PYTHON SOURCE LINES 100-103
+
+We can then identify a point to view the Stokes profiles using the
+``from_lonlat`` instance method as before and plot the Stokes profiles using
+the ``plot_stokes`` instance method:
+
+.. GENERATED FROM PYTHON SOURCE LINES 103-107
+
+.. code-block:: default
+
+
+    y, x = crispnonu.from_lonlat(510, -260)
+    print(y,x)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    38 257
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 109-112
+
+.. code-block:: default
+
+
+    crispnonu[:,:,38,257].plot_stokes(stokes="all")
+
+
+
+
+.. image-sg:: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_004.png
+   :alt: 2017-09-06T09:04:45.591 Ca II 8542 Å All Stokes
+   :srcset: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_004.png
+   :class: sphx-glr-single-img
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 113-117
+
+CRISPWideband
+-------------
+For the CRISPWideband class, we use the complimentary wideband Ca II 8542 for
+the observation shown as an example for the CRISPNonU class, above.
+
+.. GENERATED FROM PYTHON SOURCE LINES 117-121
+
+.. code-block:: default
+
+
+    crispwideband = CRISPWideband("example_data/2017/wideband/ca_00001.zarr")
+    print(crispwideband)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+
+            CRISP Wideband Context Image
+            ------------------
+            2017-09-06 09:04:45.591
+
+            Observed: Ca II 8542
+            Pointing: (523.598, -233.293)
+            Shape: [977, 985]
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 122-124
+
+The CRISPWideband class has one useful plotting instance method, that is
+``intensity_map``:
+
+.. GENERATED FROM PYTHON SOURCE LINES 124-127
+
+.. code-block:: default
+
+
+    crispwideband.intensity_map()
+
+
+
+
+.. image-sg:: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_005.png
+   :alt: 2017-09-06T09:04:45.591 Ca II 8542 Å
+   :srcset: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_005.png
+   :class: sphx-glr-single-img
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 128-129
+
+CRISPWideband can also utilise the ``from_lonlat`` and ``to_lonlat`` instance
+methods.
+
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.024 seconds)
+   **Total running time of the script:** ( 0 minutes  2.165 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_DataWrapperUsage.py:

@@ -70,4 +70,60 @@ crisp[:,y,x].plot_spectrum()
 # %%
 # CRISPNonU
 # ---------
-# For the CRISPNonU class,
+# For the CRISPNonU class, we choose an imaging spectropolarimetric Ca II 8542
+# observation of the X2.2 solar flare SOL20170906T09:10.
+
+crispnonu = CRISPNonU("example_data/2017/ca_00001.zarr")
+print(crispnonu)
+
+# %%
+# The ``intensity_map`` and ``plot_spectrum`` methods will also work here with
+# the correct slicing -- that is, the object will need to be sliced twice for
+# the ``intensity_map`` instance method and thrice for the ``plot_spectrum``
+# instance method. The main difference from the CRISPNonU class can be seen in
+# the wavelengths sampled section: the wavelengths are sampled non-uniformly but
+# the class deals with this for us. Here, we will show the polarimetric instance
+# methods (which also exist in the ``CRISP`` class). Firstly is ``stokes_map``
+# for the line core:
+
+crispnonu[:,5].stokes_map(stokes="all")
+
+# %%
+# The polarimetric plotting methods take a keyword argument ``stokes`` which is
+# a string specifying which of the Stokes parameters the user would like to
+# plot. In the example above we have used "all" to plot the maps of all of the
+# Stokes parameters at line centre. However, if the user would like to only
+# display Stokes I, Q and V this can be accomplished by setting ``stokes =
+# "IQV"``.
+
+# %%
+# We can then identify a point to view the Stokes profiles using the
+# ``from_lonlat`` instance method as before and plot the Stokes profiles using
+# the ``plot_stokes`` instance method:
+
+y, x = crispnonu.from_lonlat(510, -260)
+print(y,x)
+
+# %%
+#
+
+crispnonu[:,:,38,257].plot_stokes(stokes="all")
+
+# %%
+# CRISPWideband
+# -------------
+# For the CRISPWideband class, we use the complimentary wideband Ca II 8542 for
+# the observation shown as an example for the CRISPNonU class, above.
+
+crispwideband = CRISPWideband("example_data/2017/wideband/ca_00001.zarr")
+print(crispwideband)
+
+# %%
+# The CRISPWideband class has one useful plotting instance method, that is
+# ``intensity_map``:
+
+crispwideband.intensity_map()
+
+# %%
+# CRISPWideband can also utilise the ``from_lonlat`` and ``to_lonlat`` instance
+# methods.

@@ -36,7 +36,8 @@ autodoc_member_order = "bysource"
 
 sphinx_gallery_conf = {
      'examples_dirs': ['../examples', '../tutorials'],   # path to your example scripts
-     'gallery_dirs': ['auto_examples', 'tutorials'],  # path to where to save gallery generated output
+     'gallery_dirs': ['auto_examples', 'tutorials'],  # path to where to save gallery generated output,
+     'run_stale_examples' : True
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -76,3 +77,6 @@ def linkcode_resolve(domain, info):
         return None
     filename = info['module'].replace('.', '/')
     return "https://github.com/bionictoucan/crispy/blob/main/%s.py" % filename
+
+import warnings
+warnings.filterwarnings("ignore")

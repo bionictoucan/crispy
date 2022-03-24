@@ -156,7 +156,7 @@ def zarr_header_to_wcs(zarr_header, nonu=False):
 
     return WCS(wcs_dict)
 
-def la_palma_cube_to_hdf5(cube_path, tseries_path, spectfile, date_obs, telescope, instrument, pixel_scale, cadence, element, pointing, mu=None, start_idx=0, save_dir="./"):
+def la_palma_cube_to_zarr(cube_path, tseries_path, spectfile, date_obs, telescope, instrument, pixel_scale, cadence, element, pointing, mu=None, start_idx=0, save_dir="./"):
     """
     This is a function to save a La Palma legacy cube as zarr files.
 
@@ -187,7 +187,7 @@ def la_palma_cube_to_hdf5(cube_path, tseries_path, spectfile, date_obs, telescop
     start_idx : int, optional
         The time index to start making files from. Default is 0.
     save_dir : str, optional
-        The directory to save the hdf5 files in. Default is the current directory.
+        The directory to save the zarr files in. Default is the current directory.
     """
 
     header = {}

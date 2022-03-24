@@ -7,3 +7,4 @@ The following code is useful for working with inversion data from `RADYNVERSION 
 
 .. autoclass:: crispy.inversions.Inversion
    :members:
+   :show-inheritance:

@@ -109,6 +109,26 @@ def CRISP_sequence_constructor(files, wcs=None, uncertainty=None, mask=None, non
 
     return file_dict_list
 
+def parameter_docstring(cls: object):
+    """
+    A function to extract the parameters section of a docstring. Can be used to
+    add these parameters to an inheriting class without all the effort of
+    copying and pasting. This assumes docstrings following the `numpy convention <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
+
+    Parameters
+    ----------
+    cls : object
+        Just a class doin' class things.
+    
+    Returns
+    -------
+    str
+        A string containing cls' parameters that are inherited by the child class.
+    """
+
+    doc = cls.__doc__
+    parameters = doc.split("Parameters")[-1]
+    return "\n    Parameters"+parameters
 
 @njit
 def scanline_search_corners(im, size=10):

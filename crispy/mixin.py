@@ -1,18 +1,19 @@
 from astropy.nddata.mixins.ndslicing import NDSlicingMixin
 from .utils import ObjDict
+from typing import Union, Sequence
 
 class CRISPSlicingMixin(NDSlicingMixin):
     '''
     This is the parent class that will allow the CRISP objects to be sliced without having to create new objects.
     '''
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Union[int, Sequence]):
         kwargs = self._slice(item)
         cl = self.__class__(**kwargs)
         cl.ind = item
         return cl
 
-    def _slice(self, item):
+    def _slice(self, item: Union[int, Sequence]):
         kwargs = {}
         kwargs["filename"] = ObjDict({})
         kwargs["filename"]["data"] = self.data[item]
@@ -29,11 +30,11 @@ class CRISPSequenceSlicingMixin(CRISPSlicingMixin):
     This is the parent class that will allow the CRISPSequence objects to be sliced without having to create new objects.
     '''
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Union[int, Sequence]):
         args = self._slice(item)
         return self.__class__(args)
 
-    def _slice(self, item):
+    def _slice(self, item: Union[int, Sequence]):
         args = [f._slice(item) for f in self.list]
         return args
 
@@ -42,13 +43,13 @@ class InversionSlicingMixin(NDSlicingMixin):
     This is the parent class that will allow the Inversion objects to be sliced without having to create new objects.
     """
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Union[int, Sequence]):
         kwargs = self._slice(item)
         cl = self.__class__(**kwargs)
         cl.ind = item
         return cl
 
-    def _slice(self, item):
+    def _slice(self, item: Union[int, Sequence]):
         kwargs = {}
         # if type(item) == tuple:
         #     err_item = list(item)
@@ -64,7 +65,7 @@ class InversionSlicingMixin(NDSlicingMixin):
         kwargs["filename"]["temperature_err"] = self.temp_err[item]
         kwargs["filename"]["vel_err"] = self.vel_err[item]
         kwargs["wcs"] = self._slice_wcs(item)
-        kwargs["z"] = self.z
+        kwargs["z"] = self.z[item[0]]
         kwargs["header"] = self.header
 
         return kwargs
