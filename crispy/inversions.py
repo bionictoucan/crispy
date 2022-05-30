@@ -1,5 +1,4 @@
-from ctypes import Union
-from typing import Dict, Optional, Tuple
+from typing import Union, Dict, Optional, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 import zarr
