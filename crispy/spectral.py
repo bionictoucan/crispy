@@ -40,9 +40,9 @@ def integrated_intensity(intensity_vector,wavelengths, idx_range="all", axis=-1)
             for i in range(idx_range.shape[-1]):
                 id_range = range(int(idx_range[0, j, i]), int(idx_range[1, j, i]))
                 int_i[j, i] = simps(intensity_vector[id_range, j, i], wavelengths[id_range])
-                
+
         return int_i
-   
+
 
 def intensity_ratio(I_1, I_2):
     """
@@ -127,7 +127,7 @@ def variance(intensity_vector, wavelengths, bar_l=None, axis=-1):
     if type(intensity_vector) != np.ndarray:
         intensity_vector = intensity_vector.data
 
-    if bar_l == None:
+    if bar_l is None:
         bar_l = bar_lambda(intensity_vector, wavelengths, axis=axis)
 
     if intensity_vector.ndim == 3:
@@ -180,14 +180,14 @@ def wing_idxs(intensity_vector, wavelengths, var=None, bar_l=None, axis=-1):
     if intensity_vector.ndim == 3:
         blue_wing_end = np.argmin(np.abs(wavelengths[:, np.newaxis, np.newaxis] - blue_end_wvl[np.newaxis]), axis=0)
         red_wing_start = np.argmin(np.abs(wavelengths[:, np.newaxis, np.newaxis] - red_start_wvl[np.newaxis]), axis=0)
-        
+
         blue_ranges = np.zeros((2,*intensity_vector.shape[-2:]))
         blue_ranges[0] = blue_wing_start
         blue_ranges[1] = blue_wing_end
         red_ranges = np.zeros((2, *intensity_vector.shape[-2:]))
         red_ranges[0] = red_wing_start
         red_ranges[1] = red_wing_end
-        
+
         return blue_ranges, red_ranges
     else:
         blue_wing_end = np.argmin(np.abs(wavelengths - blue_end_wvl))
@@ -233,7 +233,7 @@ def lambda_0_wing(wing_idxs, wavelengths, d_lambda=None):
         The half-width of the wing of the spectral line. Default is None will call ``crispy.spectral.delta_lambda`` function on the ``wing_idxs`` and ``wavelengths`` arguments to calculate.
     """
 
-    if d_lambda == None:
+    if d_lambda is None:
         d_lambda = delta_lambda(wing_idxs, wavelengths)
 
     return wavelengths[wing_idxs[-1]] - d_lambda
@@ -250,10 +250,10 @@ def interp_fine(wavels, intensity, pts=101):
 
     x, y = wavels, intensity
     x_new = np.linspace(x[0], x[-1], num=pts)
-    
+
     if y.ndim == 3:
         y_new = np.zeros((x_new.shape[0], *y.shape[-2:]), dtype=np.float32)
-                
+
         for j in tqdm(range(y.shape[-2])):
             for i in range(y.shape[-1]):
                 y_new[:, j, i] = weno4(x_new, x, y[:, j, i])

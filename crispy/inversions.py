@@ -48,24 +48,24 @@ class Inversion(InversionSlicingMixin):
             self.f = zarr.open(filename, mode="r")
             if type(z) == str:
                 self.z = zarr.open(z, mode="r")["z"][:]
-            elif z == None:
+            elif z is None:
                 self.z = self.f["/atmos/z"]
             else:
                 self.z = z
-            if wcs == None:
+            if wcs is None:
                 self.wcs = self._inversion_wcs(header)
             else:
                 self.wcs = wcs
             self.header = header
         elif type(filename) == ObjDict:
             self.f = filename
-            if wcs == None:
+            if wcs is None:
                 self.wcs = self._inversion_wcs(header)
             else:
                 self.wcs = wcs
             if type(z) == str:
                 self.z = zarr.open(z, mode="r")["z"][:]
-            elif z == None:
+            elif z is None:
                 self.z = filename["z"]
             else:
                 self.z = z
@@ -132,7 +132,7 @@ class Inversion(InversionSlicingMixin):
             return self.f["/atmos/vel_err"]
 
     def __str__(self) -> str:
-        try :       
+        try :
             time = self.header["DATE-AVG"][-12:]
             date = self.header["DATE-AVG"][:-13]
             pointing_x = str(self.header["CRVAL1"])
@@ -352,7 +352,7 @@ class Inversion(InversionSlicingMixin):
         except KeyError:
             datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
 
-        if frame == None:
+        if frame is None:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
             im1 = ax1.imshow(self.ne, cmap="cividis")
@@ -390,7 +390,7 @@ class Inversion(InversionSlicingMixin):
             datetime = self.header["DATE-AVG"]
         except KeyError:
             datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
-        if frame == None:
+        if frame is None:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
             im1 = ax1.imshow(self.temp, cmap="hot")
@@ -562,9 +562,9 @@ class Inversion(InversionSlicingMixin):
                         else:
                             return self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
                     else:
-                        return self.wcs[0].array_index_to_world(y,x) 
+                        return self.wcs[0].array_index_to_world(y,x)
             elif len(self.wcs.low_level_wcs.array_shape) == 2:
-                return self.wcs.array_index_to_world(y,x) 
+                return self.wcs.array_index_to_world(y,x)
             else:
                 raise NotImplementedError("Too many or too little dimensions.")
         else:
@@ -615,10 +615,10 @@ class Inversion(InversionSlicingMixin):
                                 sc = self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
                                 return sc.Tx, sc.Ty
                         else:
-                            sc = self.wcs[0].array_index_to_world(y,x) 
+                            sc = self.wcs[0].array_index_to_world(y,x)
                             return sc.Tx, sc.Ty
                 elif len(self.wcs.low_level_wcs.array_shape) == 2:
-                    sc = self.wcs.array_index_to_world(y,x) 
+                    sc = self.wcs.array_index_to_world(y,x)
                     return sc.Tx, sc.Ty
                 else:
                     raise NotImplementedError("Too many or too little dimensions.")
@@ -669,10 +669,10 @@ class Inversion(InversionSlicingMixin):
                                 sc = self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
                                 return sc.Tx.value, sc.Ty.value
                         else:
-                            sc = self.wcs[0].array_index_to_world(y,x) 
+                            sc = self.wcs[0].array_index_to_world(y,x)
                             return sc.Tx.value, sc.Ty.value
                 elif len(self.wcs.low_level_wcs.array_shape) == 2:
-                    sc = self.wcs.array_index_to_world(y,x) 
+                    sc = self.wcs.array_index_to_world(y,x)
                     return sc.Tx.value, sc.Ty.value
                 else:
                     raise NotImplementedError("Too many or too little dimensions.")

@@ -135,7 +135,7 @@ class SpectralViewer:
             out2 = widgets.interactive_output(self._shape, {"opts" : shape})
 
             display(widgets.HBox([ll, shape]))
-                
+
         elif type(self.cube) == CRISPSequence or type(self.cube) == CRISPNonUSequence:
             self.fig = plt.figure(figsize=(8,10))
             try:
@@ -257,14 +257,14 @@ class SpectralViewer:
                     for p in self.ax1.patches:
                         if p.get_xy() == box_anchor:
                             p.remove()
-                    
+
                     idx = self.box_coords.index(box_coord)
                     del self.box_coords[idx]
                     del self.px_coords[idx]
                     del self.shape_type[idx]
                     del self.coords[idx]
                     return
-                
+
                 self.coords.append(self.cube.to_lonlat(*box_anchor) << u.arcsec)
                 rect = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
                 rect.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
@@ -329,14 +329,14 @@ class SpectralViewer:
                     for p in self.ax.patches:
                         if p.get_xy() == box_anchor:
                             p.remove()
-                    
+
                     idx = self.box_coords.index(box_coord)
                     del self.box_coords[idx]
                     del self.px_coords[idx]
                     del self.shape_type[idx]
                     del self.coords[idx]
                     return
-                
+
                 self.coords.append(self.cube.to_lonlat(*box_anchor) << u.arcsec)
                 rect1 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
                 rect1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
@@ -646,14 +646,14 @@ class WidebandViewer:
                     for p in self.ax.patches:
                         if p.get_xy() == box_anchor:
                             p.remove()
-                    
+
                     idx = self.box_coords.index(box_coord)
                     del self.box_coords[idx]
                     del self.px_coords[idx]
                     del self.shape_type[idx]
                     del self.coords[idx]
                     return
-                
+
                 self.coords.append(self.cube.to_lonlat(*box_anchor) << u.arcsec)
                 rect = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
                 rect.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
@@ -724,14 +724,14 @@ class WidebandViewer:
                     for p in self.ax.patches:
                         if p.get_xy() == box_anchor:
                             p.remove()
-                    
+
                     idx = self.box_coords.index(box_coord)
                     del self.box_coords[idx]
                     del self.px_coords[idx]
                     del self.shape_type[idx]
                     del self.coords[idx]
                     return
-                
+
                 self.coords.append(self.cube.to_lonlat(*box_anchor) << u.arcsec)
                 rect1 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
                 rect1.set_path_effects([PathEffects(linewidth=3, foreground="k")])
@@ -903,30 +903,30 @@ class AtmosViewer:
         self.ax3.set_xlabel("Helioprojective Longitude [arcsec]")
         self.ax2.tick_params(axis="y", labelleft=False)
         self.ax3.tick_params(axis="y", labelleft=False)
-        
+
         self.ax4 = self.fig.add_subplot(self.gs[2, :])
         self.ax4.set_ylabel(r"log $n_{e}$ [cm$^{-3}$]")
         self.ax4.yaxis.set_label_position("right")
         self.ax4.yaxis.tick_right()
-        
+
         self.ax5 = self.fig.add_subplot(self.gs[3, :])
         self.ax5.set_ylabel(r"log T [K]")
         self.ax5.yaxis.set_label_position("right")
         self.ax5.yaxis.tick_right()
-        
+
         self.ax6 = self.fig.add_subplot(self.gs[4, :])
         self.ax6.set_ylabel(r"v [km s$^{-1}$]")
         self.ax6.set_xlabel(r"z [Mm]")
         self.ax6.yaxis.set_label_position("right")
         self.ax6.yaxis.tick_right()
-        
+
         self.ax4.tick_params(axis="x", labelbottom=False, direction="in")
         self.ax5.tick_params(axis="x", labelbottom=False, direction="in")
         self.ax6.tick_params(axis="both", direction="in")
-        
+
         widgets.interact(self._img_plot,
                         z = widgets.SelectionSlider(options=np.round(self.inv.z, decimals=3), description="Image height [Mm]: ", style={"description_width" : "initial"}, layout=widgets.Layout(width="50%")))
-        
+
         widgets.interact(self._shape, opts=shape)
 
         self.receiver = self.fig.canvas.mpl_connect("button_press_event", self._on_click)
@@ -936,7 +936,7 @@ class AtmosViewer:
         outx = widgets.interactive_output(self._boxx, {"x" : x})
         outy = widgets.interactive_output(self._boxy, {"y" : y})
         display(widgets.HBox([x, y]))
-        
+
         done_button = widgets.Button(description="Done")
         done_button.on_click(self._disconnect_matplotlib)
         clear_button = widgets.Button(description='Clear')
@@ -945,7 +945,7 @@ class AtmosViewer:
         save_button.on_click(self._save)
         display(widgets.HBox([done_button, clear_button, save_button]))
         widgets.interact(self._file_name, fn = widgets.Text(description="Filename to save as: ", style={"description_width" : "initial"}), layout=widgets.Layout(width="50%"))
-        
+
     def _on_click(self, event):
         if self.fig.canvas.manager.toolbar.mode != "":
             return
@@ -1001,14 +1001,14 @@ class AtmosViewer:
                 for p in self.ax1.patches:
                     if p.get_xy() == box_anchor:
                         p.remove()
-                
+
                 idx = self.box_coords.index(box_coord)
                 del self.box_coords[idx]
                 del self.px_coords[idx]
                 del self.shape_type[idx]
                 del self.coords[idx]
                 return
-            
+
             self.coords.append(self.inv.to_lonlat(*box_anchor) << u.arcsec)
             rect1 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
             rect1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
@@ -1042,7 +1042,7 @@ class AtmosViewer:
             self.ax6.legend()
             self.colour_idx += 1
             self.fig.canvas.draw()
-        
+
     def _shape(self, opts):
         self.shape = opts
 
@@ -1054,7 +1054,7 @@ class AtmosViewer:
 
     def _disconnect_matplotlib(self, _):
         self.fig.canvas.mpl_disconnect(self.receiver)
-        
+
     def _clear(self, _):
         self.coords = []
         self.px_coords = []
@@ -1095,7 +1095,7 @@ class AtmosViewer:
 
     def _file_name(self, fn):
         self.filename = fn
-            
+
     def _img_plot(self, z):
         if self.ax1.images == []:
             pass
@@ -1224,7 +1224,7 @@ class ImageViewer:
             out1 = widgets.interactive_output(self._img_plot1, {"ll" : ll})
 
             display(widgets.HBox([ll]))
-                
+
         elif type(self.cube) == CRISPSequence or type(self.cube) == CRISPNonUSequence:
             self.fig = plt.figure(figsize=(8,10))
             try:
@@ -1382,7 +1382,7 @@ class SpectralTimeViewer:
                     self.wvls1 = self.cube1.list[0].wave(np.arange(self.cube1.list[0].shape[0]))
                 elif self.cube1.list[0].file.data.ndim == 4:
                     self.wvls1 = self.cube1.list[0].wave(np.arange(self.cube1.list[0].shape[1]))
-            if data2 == None:
+            if data2 is None:
                 pass
             elif type(data2) == list:
                 data2 = CRISP_sequence_constructor(data2, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu)
@@ -1411,7 +1411,7 @@ class SpectralTimeViewer:
                     self.wvls1 = self.cube1.list[0].wave(np.arange(self.cube1.list[0].shape[0])) << u.Angstrom
                 elif self.cube1.list[0].file.data.ndim == 4:
                     self.wvls1 = self.cube1.list[0].wave(np.arange(self.cube1.list[0].shape[1])) << u.Angstrom
-            if data2 == None:
+            if data2 is None:
                 pass
             elif type(data2) == list:
                 data2 = CRISP_sequence_constructor(data2, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu)
@@ -1427,7 +1427,7 @@ class SpectralTimeViewer:
                 elif self.cube2.list[0].file.data.ndim == 4:
                     self.wvls2 = self.cube2.list[0].wave(np.arange(self.cube2.list[0].shape[1]))
 
-        if data2 == None:
+        if data2 is None:
             self.fig = plt.figure(figsize=(8,10))
             self.gs = self.fig.add_gridspec(nrows=2, ncols=2)
             if self.cube1.list[0].file.data.ndim == 3:
@@ -1454,12 +1454,12 @@ class SpectralTimeViewer:
                 self.times1 = [date2num(f.file.header["DATE-AVG"]) for f in self.cube1.list]
             except KeyError:
                 self.times1 = [date2num(f.file.header["date_obs"]+" "+f.file.header["time_obs"]) for f in self.cube1.list]
-            
+
             out1 = widgets.interactive_output(self._img_plot1, {"ll" : self.ll, "t" : self.t})
             out2 = widgets.interactive_output(self._shape, {"opts" : shape})
 
             display(widgets.HBox([widgets.VBox([self.ll,self.t]), shape]))
-                
+
         else:
             self.fig = plt.figure(figsize=(8,10))
             self.gs = self.fig.add_gridspec(nrows=3, ncols=2)
@@ -1494,7 +1494,7 @@ class SpectralTimeViewer:
             self.ax4.set_ylabel("Intensity [DNs]")
             self.ax4.set_xlabel(f"{self.l} [{self.aa}]")
             self.ax4.tick_params(direction="in")
-            
+
             self.ax5 = self.fig.add_subplot(self.gs[2,:])
             self.ax5.set_ylabel("Intensity [DNs]")
             self.ax5.set_xlabel("Time [UTC]")
@@ -1514,14 +1514,14 @@ class SpectralTimeViewer:
 
             self.t1 = widgets.IntSlider(value=0, min=0, max=len(self.cube1.list)-1, step=1, disabled=False, description=r"t$_{1}$ index: ")
             self.t2 = widgets.IntSlider(value=0, min=0, max=len(self.cube2.list)-1, step=1, disabled=False, description=r"t$_{2}$ index: ")
-            
+
             try:
                 self.times1 = [date2num(f.file.header["DATE-AVG"]) for f in self.cube1.list]
                 self.times2 = [date2num(f.file.header["DATE-AVG"]) for f in self.cube2.list]
             except KeyError:
                 self.times1 = [date2num(f.file.header["date_obs"]+" "+f.file.header["time_obs"]) for f in self.cube1.list]
                 self.times2 = [date2num(f.file.header["date_obs"]+" "+f.file.header["time_obs"]) for f in self.cube2.list]
-            
+
             out1 = widgets.interactive_output(self._img_plot2, {"ll1" : self.ll1, "ll2" : self.ll2, "t1" : self.t1, "t2" : self.t2})
             out2 = widgets.interactive_output(self._shape, {"opts" : shape})
 
@@ -1605,14 +1605,14 @@ class SpectralTimeViewer:
                     for p in self.ax.patches:
                         if p.get_xy() == box_anchor:
                             p.remove()
-                    
+
                     idx = self.box_coords.index(box_coord)
                     del self.box_coords[idx]
                     del self.px_coords[idx]
                     del self.shape_type[idx]
                     del self.coords[idx]
                     return
-                
+
                 self.coords.append(self.cube1.list[0].to_lonlat(*box_anchor) << u.arcsec)
                 rect = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
                 rect.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
@@ -1704,14 +1704,14 @@ class SpectralTimeViewer:
                     for p in self.ax.patches:
                         if p.get_xy() == box_anchor:
                             p.remove()
-                    
+
                     idx = self.box_coords.index(box_coord)
                     del self.box_coords[idx]
                     del self.px_coords[idx]
                     del self.shape_type[idx]
                     del self.coords[idx]
                     return
-                
+
                 self.coords.append(self.cube1.list[0].to_lonlat(*box_anchor) << u.arcsec)
                 rect1 = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
                 rect1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
@@ -1961,7 +1961,7 @@ class PolarimetricViewer:
         out2 = widgets.interactive_output(self._shape, {"opts" : shape})
 
         display(widgets.HBox([widgets.VBox([ll, s]), shape]))
-                
+
         self.coords = []
         self.px_coords = []
         self.shape_type = []
@@ -2028,14 +2028,14 @@ class PolarimetricViewer:
                 for p in self.ax.patches:
                     if p.get_xy() == box_anchor:
                         p.remove()
-                
+
                 idx = self.box_coords.index(box_coord)
                 del self.box_coords[idx]
                 del self.px_coords[idx]
                 del self.shape_type[idx]
                 del self.coords[idx]
                 return
-            
+
             self.coords.append(self.cube.to_lonlat(*box_anchor) << u.arcsec)
             rect = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
             rect.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
@@ -2114,7 +2114,7 @@ class PolarimetricViewer:
             "U" : 2,
             "V" : 3
         }
-        
+
         s_idx = stokes_dict[s]
 
         if s_idx == 0:
@@ -2225,7 +2225,7 @@ class PolarimetricTimeViewer:
         out2 = widgets.interactive_output(self._shape, {"opts" : shape})
 
         display(widgets.HBox([widgets.VBox([self.ll, s]), widgets.VBox([self.t, shape])]))
-                
+
         self.coords = []
         self.px_coords = []
         self.shape_type = []
@@ -2301,14 +2301,14 @@ class PolarimetricTimeViewer:
                 for p in self.ax.patches:
                     if p.get_xy() == box_anchor:
                         p.remove()
-                
+
                 idx = self.box_coords.index(box_coord)
                 del self.box_coords[idx]
                 del self.px_coords[idx]
                 del self.shape_type[idx]
                 del self.coords[idx]
                 return
-            
+
             self.coords.append(self.cube.to_lonlat(*box_anchor) << u.arcsec)
             rect = patches.Rectangle(box_anchor[::-1], self.boxx, self.boxy, linewidth=2, edgecolor=list(pt_bright_cycler)[self.colour_idx]["color"], facecolor="none")
             rect.set_path_effects([PathEffects.withStroke(linewidth=3, foreground="k")])
@@ -2395,7 +2395,7 @@ class PolarimetricTimeViewer:
             "U" : 2,
             "V" : 3
         }
-        
+
         s_idx = stokes_dict[s]
 
         if s_idx == 0:

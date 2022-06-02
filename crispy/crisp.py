@@ -584,7 +584,7 @@ class CRISP(CRISPSlicingMixin):
         else:
             vmin = self.data.min()
 
-        if frame == None and not self.rotate:
+        if frame is None and not self.rotate:
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
             im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=vmin, norm=norm)
@@ -602,7 +602,7 @@ class CRISP(CRISPSlicingMixin):
             ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
             fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
             fig.show()
-        elif (frame == "arcsec") or (frame == None and self.rotate):
+        elif (frame == "arcsec") or (frame is None and self.rotate):
             try:
                 xmax = self.header["CDELT1"] * self.shape[-1]
                 ymax = self.header["CDELT2"] * self.shape[-2]
@@ -639,7 +639,7 @@ class CRISP(CRISPSlicingMixin):
             datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
         title = f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l}={del_wvl}{self.aa})"
 
-        if frame == None and not self.rotate:
+        if frame is None and not self.rotate:
             if self.data.ndim == 2:
                 fig = plt.figure()
                 ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
@@ -1204,7 +1204,7 @@ class CRISP(CRISPSlicingMixin):
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_title("Stokes V ")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="V [DNs]")
-        elif (frame == "arcsec") or (frame == None and self.rotate):
+        elif (frame == "arcsec") or (frame is None and self.rotate):
             try:
                 xmax = self.header["CDELT1"] * self.shape[-1]
                 ymax = self.header["CDELT2"] * self.shape[-2]
@@ -2593,7 +2593,7 @@ class CRISPNonU(CRISP):
             ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
             fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
             fig.show()
-        elif (frame == "arcsec") or (frame == None and self.rotate):
+        elif (frame == "arcsec") or (frame is None and self.rotate):
             try:
                 xmax = self.header["CDELT1"] * self.shape[-1]
                 ymax = self.header["CDELT2"] * self.shape[-2]
@@ -2630,7 +2630,7 @@ class CRISPNonU(CRISP):
             datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
         title = f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l}={del_wvl}{self.aa})"
 
-        if (frame == None) and (not self.rotate):
+        if (frame is None) and (not self.rotate):
             if self.data.ndim == 2:
                 fig = plt.figure(constrained_layout=True)
                 ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
@@ -3188,7 +3188,7 @@ class CRISPNonU(CRISP):
                     ax2.set_yticks([])
                     ax2.set_title("Stokes V ")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="V [DNs]")
-        elif (frame == "arcsec") or (frame == None and self.rotate):
+        elif (frame == "arcsec") or (frame is None and self.rotate):
             try:
                 xmax = self.header["CDELT1"] * self.shape[-1]
                 ymax = self.header["CDELT2"] * self.shape[-2]
