@@ -32,7 +32,7 @@ class CRISP(CRISPSlicingMixin):
     be for narrowband observations of a single spectral line. This can be sliced
     directly by virtue of inheriting from `astropy`'s `N-dimensional data
     slicing <https://docs.astropy.org/en/stable/nddata/>`_.
-    
+
     Parameters
     ----------
     filename : str or ObjDict
@@ -1493,7 +1493,7 @@ class CRISP(CRISPSlicingMixin):
         idx : int or numpy.ndarray of ints
             The index or indices along the wavelength axis to be converted to
             physical units.
-            
+
         Returns
         -------
         float or numpy.ndarray of floats
@@ -1519,7 +1519,7 @@ class CRISP(CRISPSlicingMixin):
                 elif hasattr(self, "ind") and type(self.ind[0]) != slice:
                     return self.wcs.low_level_wcs._wcs[:,0,0].array_index_to_world(idx) << u.Angstrom
                 else:
-                    return self.wcs[:,0,0].array_index_to_world(idx) << u.Angstrom
+                    return self.wcs.array_index_to_world(idx, 0, 0)[1] << u.Angstrom
         elif len(self.wcs.low_level_wcs.array_shape) == 2:
             if hasattr(self, "ind"):
                 if self.wcs.low_level_wcs._wcs.naxis == 4:
@@ -1550,7 +1550,7 @@ class CRISP(CRISPSlicingMixin):
         unit : bool, optional
             Whether or not to return the values with associated
             ```astropy.units```. Default is False.
-            
+
         Returns
         -------
         tuple[float]
@@ -1591,9 +1591,9 @@ class CRISP(CRISPSlicingMixin):
                         else:
                             return self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
                     else:
-                        return self.wcs[0].array_index_to_world(y,x) 
+                        return self.wcs[0].array_index_to_world(y,x)
             elif len(self.wcs.low_level_wcs.array_shape) == 2:
-                return self.wcs.array_index_to_world(y,x) 
+                return self.wcs.array_index_to_world(y,x)
             else:
                 raise NotImplementedError("Too many or too little dimensions.")
         else:
@@ -1644,10 +1644,10 @@ class CRISP(CRISPSlicingMixin):
                                 sc = self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
                                 return sc.Tx, sc.Ty
                         else:
-                            sc = self.wcs[0].array_index_to_world(y,x) 
+                            sc = self.wcs[0].array_index_to_world(y,x)
                             return sc.Tx, sc.Ty
                 elif len(self.wcs.low_level_wcs.array_shape) == 2:
-                    sc = self.wcs.array_index_to_world(y,x) 
+                    sc = self.wcs.array_index_to_world(y,x)
                     return sc.Tx, sc.Ty
                 else:
                     raise NotImplementedError("Too many or too little dimensions.")
@@ -1698,10 +1698,10 @@ class CRISP(CRISPSlicingMixin):
                                 sc = self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
                                 return sc.Tx.value, sc.Ty.value
                         else:
-                            sc = self.wcs[0].array_index_to_world(y,x) 
+                            sc = self.wcs[0].array_index_to_world(y,x)
                             return sc.Tx.value, sc.Ty.value
                 elif len(self.wcs.low_level_wcs.array_shape) == 2:
-                    sc = self.wcs.array_index_to_world(y,x) 
+                    sc = self.wcs.array_index_to_world(y,x)
                     return sc.Tx.value, sc.Ty.value
                 else:
                     raise NotImplementedError("Too many or too little dimensions.")
@@ -2052,7 +2052,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             Whether or not to return an ```astropy.coordinates.SkyCoord```. Default is False.
         unit : bool, optional
             Whether or not to return the values with associated ```astropy.units```. Default is False.
-            
+
         Returns
         -------
         tuple[float]
@@ -2154,7 +2154,7 @@ class CRISPWidebandSequence(CRISPSequence):
     This class is for having a sequence of wideband or single wavelength images
     (preferrably chronologically but no limit is placed on this so y'know be
     careful).
-    
+
     Parameters
     ----------
     files : list[dict]
@@ -3482,7 +3482,7 @@ class CRISPNonUSequence(CRISPSequence):
     """
     This is a class for a sequence of ``CRISPNonU`` objects and operates
     identically to ``CRISPSequence``.
-    
+
     Parameters
     ----------
     files : list[dict]
