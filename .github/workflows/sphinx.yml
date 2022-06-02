@@ -3,30 +3,26 @@ name: Sphinx build
 on: push
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v2
-            - uses: actions/setup-python@v2
-                with:
-                    python-version: '3.8'
-            # - name: Set up GCC
-            #   uses: egor-tensin/setup-gcc@v1
-            #   with:
-            #           version: latest
-            #           platform: x64
-            - name: Build HTML
-                uses: ammaraskar/sphinx-action@0.4
-                with:
-                    pre-build-command: "apt-get update -y && apt-get install -y python3-dev build-essential"
-            - name: Upload artifacts
-                uses: actions/upload-artifact@v1
-                with:
-                    name: html-docs
-                    path: docs/_build/html
-            - name: Deploy
-                uses: peaceiris/actions-gh-pages@v3
-                if: github.ref == 'refs/heads/main'
-                with:
-                    github-token: ${{ secrets.GITHUB_TOKEN }}
-                    publish_dir: docs/_build/html
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Build HTML
+        uses: ammaraskar/sphinx-action@0.4
+        with:
+          pre-build-command: "apt-get update -y && apt-get install -y python3-dev build-essential"
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: html-docs
+          path: docs/_build/html
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/html
