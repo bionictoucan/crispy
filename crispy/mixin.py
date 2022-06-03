@@ -65,7 +65,10 @@ class InversionSlicingMixin(NDSlicingMixin):
         kwargs["filename"]["temperature_err"] = self.temp_err[item]
         kwargs["filename"]["vel_err"] = self.vel_err[item]
         kwargs["wcs"] = self._slice_wcs(item)
-        kwargs["z"] = self.z[item[0]]
+        if isinstance(item, int):
+            kwargs["z"] = self.z[item]
+        else:
+            kwargs["z"] = self.z[item[0]]
         kwargs["header"] = self.header
 
         return kwargs

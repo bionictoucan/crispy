@@ -59,16 +59,16 @@ class Inversion(InversionSlicingMixin):
             self.header = header
         elif type(filename) == ObjDict:
             self.f = filename
-            if wcs is None:
-                self.wcs = self._inversion_wcs(header)
-            else:
-                self.wcs = wcs
             if type(z) == str:
                 self.z = zarr.open(z, mode="r")["z"][:]
             elif z is None:
                 self.z = filename["z"]
             else:
                 self.z = z
+            if wcs is None:
+                self.wcs = self._inversion_wcs(header)
+            else:
+                self.wcs = wcs
             self.header = header
 
     @property
@@ -224,7 +224,7 @@ class Inversion(InversionSlicingMixin):
         fig = plt.figure()
         ax1 = fig.gca()
         if eb:
-            ax1.errorbar(self.z, self.ne, yerr=self.mad[0], capsize=3)
+            ax1.errorbar(self.z, self.ne, yerr=self.ne_err, capsize=3)
         else:
             ax1.plot(self.z, self.ne)
         ax1.set_ylabel(r"log$_{10}$ n$_{\text{e}}$ \[cm$^{-3}$\]")
@@ -251,7 +251,7 @@ class Inversion(InversionSlicingMixin):
         fig = plt.figure()
         ax1 = fig.gca()
         if eb:
-            ax1.errorbar(self.z, self.temp, yerr=self.mad[1], capsize=3)
+            ax1.errorbar(self.z, self.temp, yerr=self.temp_err, capsize=3)
         else:
             ax1.plot(self.z, self.temp)
         ax1.set_ylabel(r"log$_{10}$ T \[K\]")
@@ -278,7 +278,7 @@ class Inversion(InversionSlicingMixin):
         fig = plt.figure()
         ax1 = fig.gca()
         if eb:
-            ax1.errorbar(self.z, self.vel, yerr=self.mad[2], capsize=3)
+            ax1.errorbar(self.z, self.vel, yerr=self.vel_err, capsize=3)
         else:
             ax1.plot(self.z, self.vel)
         ax1.set_ylabel(r"Bulk Plasma Flow \[km s$^{-1}$\]")
@@ -306,7 +306,7 @@ class Inversion(InversionSlicingMixin):
         fig.suptitle(title)
         ax1 = fig.add_subplot(1, 3, 1)
         if eb:
-            ax1.errorbar(self.z, self.ne, yerr=self.mad[0], capsize=3)
+            ax1.errorbar(self.z, self.ne, yerr=self.ne_err, capsize=3)
         else:
             ax1.plot(self.z, self.ne)
         ax1.set_ylabel(r"log$_{10}$ n$_{e}$ \[cm$^{-3}$\]")
@@ -315,7 +315,7 @@ class Inversion(InversionSlicingMixin):
 
         ax2 = fig.add_subplot(1, 3, 2)
         if eb:
-            ax2.errorbar(self.z, self.temp, yerr=self.mad[1], capsize=3)
+            ax2.errorbar(self.z, self.temp, yerr=self.temp_err, capsize=3)
         else:
             ax2.plot(self.z, self.temp)
         ax2.set_ylabel(r"log$_{10}$ T \[K\]")
@@ -324,7 +324,7 @@ class Inversion(InversionSlicingMixin):
 
         ax3 = fig.add_subplot(1, 3, 3)
         if eb:
-            ax3.errorbar(self.z, self.vel, yerr=self.mad[2], capsize=3)
+            ax3.errorbar(self.z, self.vel, yerr=self.vel_err, capsize=3)
         else:
             ax3.plot(self.z, self.vel)
         ax3.set_ylabel(r"Bulk Plasma Flow \[km s$^{-1}\]")
@@ -342,11 +342,7 @@ class Inversion(InversionSlicingMixin):
         frame : str, optional
             The frame to plot the map in. Default is None therefore uses the WCS frame. Other option is "pix" to plot in the pixel frame.
         """
-        if type(self.ind) == int:
-            idx = self.ind
-        else:
-            idx = self.ind[-1]
-        height = np.round(self.z[idx], decimals=4)
+        height = np.round(self.z, decimals=4)
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
@@ -381,11 +377,7 @@ class Inversion(InversionSlicingMixin):
         frame : str, optional
             The frame to plot the map in. Default is None therefore uses the WCS frame. Other option is "pix" to plot in the pixel frame.
         """
-        if type(self.ind) == int:
-            idx = self.ind
-        else:
-            idx = self.ind[-1]
-        height = np.round(self.z[idx], decimals=4)
+        height = np.round(self.z, decimals=4)
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
@@ -419,11 +411,7 @@ class Inversion(InversionSlicingMixin):
         frame : str, optional
             The frame to plot the map in. Default is None therefore uses the WCS frame. Other option is "pix" to plot in the pixel frame.
         """
-        if type(self.ind) == int:
-            idx = self.ind
-        else:
-            idx = self.ind[-1]
-        height = np.round(self.z[idx], decimals=4)
+        height = np.round(self.z, decimals=4)
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
@@ -457,11 +445,7 @@ class Inversion(InversionSlicingMixin):
         frame : str, optional
             The frame to plot the map in. Default is None therefore uses the WCS frame. Other option is "pix" to plot in the pixel frame.
         """
-        if type(self.ind) == int:
-            idx = self.ind
-        else:
-            idx = self.ind[-1]
-        height = np.round(self.z[idx], decimals=4)
+        height = np.round(self.z, decimals=4)
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
