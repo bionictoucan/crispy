@@ -2,10 +2,11 @@ from astropy.nddata.mixins.ndslicing import NDSlicingMixin
 from .utils import ObjDict
 from typing import Union, Sequence
 
+
 class CRISPSlicingMixin(NDSlicingMixin):
-    '''
+    """
     This is the parent class that will allow the CRISP objects to be sliced without having to create new objects.
-    '''
+    """
 
     def __getitem__(self, item: Union[int, Sequence]):
         kwargs = self._slice(item)
@@ -25,10 +26,11 @@ class CRISPSlicingMixin(NDSlicingMixin):
 
         return kwargs
 
+
 class CRISPSequenceSlicingMixin(CRISPSlicingMixin):
-    '''
+    """
     This is the parent class that will allow the CRISPSequence objects to be sliced without having to create new objects.
-    '''
+    """
 
     def __getitem__(self, item: Union[int, Sequence]):
         args = self._slice(item)
@@ -37,6 +39,7 @@ class CRISPSequenceSlicingMixin(CRISPSlicingMixin):
     def _slice(self, item: Union[int, Sequence]):
         args = [f._slice(item) for f in self.list]
         return args
+
 
 class InversionSlicingMixin(NDSlicingMixin):
     """

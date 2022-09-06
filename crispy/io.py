@@ -4,6 +4,7 @@ from astropy.wcs import WCS
 from scipy.io import readsav
 from tqdm import tqdm
 
+
 def memmap_crisp_cube(path):
     """
     This function memory maps a legacy La Palma data cube pulling metainformation from appropriate files. The function first looks for an ``assoc.pro`` file which contains important information about the first dimension. If this does not exist then the user will have to untangle the first dimension themselves. The first dimension is a multiplicative combination of time and wavelength (and Stokes) with the ``assoc.pro`` providing the necessary information to split these into distinct axes. When unable to access this information, the first dimension will be the multiplicative combination of time and wavelength (and Stokes) with the ordering of one time for all wavelengths sampled. N.B. when Stokes is present, the first axis takes the form of one time for wavelengths sampled of Stokes I, wavelengths sampled of Stokes Q etc.
@@ -19,27 +20,45 @@ def memmap_crisp_cube(path):
 
     folder, item = os.path.split(path)
     files = os.listdir(folder)
-    assoc_name = ".".join(item.split(".")[:-1]) + ".assoc.pro" #assoc file contains some meta information and the name usually follows similar convention to the La Palma cube without the file suffix
+    assoc_name = (
+        ".".join(item.split(".")[:-1]) + ".assoc.pro"
+    )  # assoc file contains some meta information and the name usually follows similar convention to the La Palma cube without the file suffix
 
     if assoc_name in files:
         # Read out of the assoc file so no need to find meta information!!
-        with open(folder+"/"+assoc_name) as f:
-            assoc_pro = f.readlines() #read the file into variable
+        with open(folder + "/" + assoc_name) as f:
+            assoc_pro = f.readlines()  # read the file into variable
         dims = {}
-        keys = ["nx", "ny", "nw", "nt"] #assoc file will contain at least the number of x points, y points, wavelength points ("nw") and time points
+        keys = [
+            "nx",
+            "ny",
+            "nw",
+            "nt",
+        ]  # assoc file will contain at least the number of x points, y points, wavelength points ("nw") and time points
 
         for a in assoc_pro:
             if any(k in a for k in keys) and "=" in a and "assoc" not in a:
                 key_val = a.split("=")
                 dims[key_val[0]] = int(key_val[1])
-        shape = [dims["nt"], dims["nw"], dims["ny"], dims["nx"]] #this is how the data is stored
+        shape = [
+            dims["nt"],
+            dims["nw"],
+            dims["ny"],
+            dims["nx"],
+        ]  # this is how the data is stored
         if "stokes" in item:
             shape.insert(1, 4)
     else:
         # Read directly from the cube (it is really good if there is an assoc pro file but this works *just* fine)
-        header = np.memmap(path, np.uint8, mode="r")[:512].tostring() #this first 512 bytes of the La Palma cube are header information....
+        header = np.memmap(path, np.uint8, mode="r")[
+            :512
+        ].tostring()  # this first 512 bytes of the La Palma cube are header information....
         entries = str(header).split()
-        keys = ["nx", "ny", "nt"] #this meta information stores wavelength and time multiplied as the same axis which is why the assoc pro file is really useful
+        keys = [
+            "nx",
+            "ny",
+            "nt",
+        ]  # this meta information stores wavelength and time multiplied as the same axis which is why the assoc pro file is really useful
         dims = {}
         for e in entries:
             if any(k in e for k in keys) and "=" in e:
@@ -56,6 +75,7 @@ def memmap_crisp_cube(path):
         raise ValueError("Unknown cube type.")
 
     return np.memmap(path, offset=512, dtype=dtype, mode="r", shape=tuple(shape))
+
 
 def zarr_header_to_wcs(zarr_header, nonu=False):
     """
@@ -156,7 +176,22 @@ def zarr_header_to_wcs(zarr_header, nonu=False):
 
     return WCS(wcs_dict)
 
-def la_palma_cube_to_zarr(cube_path, tseries_path, spectfile, date_obs, telescope, instrument, pixel_scale, cadence, element, pointing, mu=None, start_idx=0, save_dir="./"):
+
+def la_palma_cube_to_zarr(
+    cube_path,
+    tseries_path,
+    spectfile,
+    date_obs,
+    telescope,
+    instrument,
+    pixel_scale,
+    cadence,
+    element,
+    pointing,
+    mu=None,
+    start_idx=0,
+    save_dir="./",
+):
     """
     This is a function to save a La Palma legacy cube as zarr files.
 
@@ -204,7 +239,7 @@ def la_palma_cube_to_zarr(cube_path, tseries_path, spectfile, date_obs, telescop
     times = readsav(tseries_path)["time"]
 
     if "wb" not in cube_path and mem_cube.ndim == 5:
-        #this means there is Stokes
+        # this means there is Stokes
         header["ctype"] = ("STOKES", "WAVE", "HPLT-TAN", "HPLN-TAN")
         header["cunit"] = ("Angstrom", "arcsec", "arcsec")
         header["spect_pos"] = readsav(spectfile)["spect_pos"]
@@ -219,26 +254,49 @@ def la_palma_cube_to_zarr(cube_path, tseries_path, spectfile, date_obs, telescop
     for jj, frame in enumerate(tqdm(mem_cube)):
         header["time_obs"] = times[jj].deconde("utf-8")
         if "wb" not in cube_path and frame.ndim == 4:
-            header["crpix"] = (1, np.median(np.arange(frame.shape[-3])), np.median(np.arange(frame.shape[-2])), np.median(np.arange(frame.shape[-1])))
-            header["crval"] = (1, np.median(header["spect_pos"]), pointing[-2], pointing[-1])
-            f = zarr.open(save_dir+str(start_idx).zfill(5)+".zarr", mode="w")
-            data = f.array("data", frame, chunks=(1,1,frame.shape[-2],frame.shape[-1]))
+            header["crpix"] = (
+                1,
+                np.median(np.arange(frame.shape[-3])),
+                np.median(np.arange(frame.shape[-2])),
+                np.median(np.arange(frame.shape[-1])),
+            )
+            header["crval"] = (
+                1,
+                np.median(header["spect_pos"]),
+                pointing[-2],
+                pointing[-1],
+            )
+            f = zarr.open(save_dir + str(start_idx).zfill(5) + ".zarr", mode="w")
+            data = f.array(
+                "data", frame, chunks=(1, 1, frame.shape[-2], frame.shape[-1])
+            )
             for k, v in header.items():
                 data.attrs[k] = v
             start_idx += 1
         elif "wb" not in cube_path and frame.ndim == 3:
-            header["crpix"] = (np.median(np.arange(frame.shape[-3])), np.median(np.arange(frame.shape[-2])), np.median(np.arange(frame.shape[-1])))
-            header["crval"] = (np.median(header["spect_pos"]), pointing[-2], pointing[-1])
-            f = zarr.open(save_dir+str(start_idx).zfill(5)+".zarr", mode="w")
-            data = f.array("data", frame, chunks=(1,frame.shape[-2],frame.shape[-1]))
+            header["crpix"] = (
+                np.median(np.arange(frame.shape[-3])),
+                np.median(np.arange(frame.shape[-2])),
+                np.median(np.arange(frame.shape[-1])),
+            )
+            header["crval"] = (
+                np.median(header["spect_pos"]),
+                pointing[-2],
+                pointing[-1],
+            )
+            f = zarr.open(save_dir + str(start_idx).zfill(5) + ".zarr", mode="w")
+            data = f.array("data", frame, chunks=(1, frame.shape[-2], frame.shape[-1]))
             for k, v in header.items():
                 data.attrs[k] = v
             start_idx += 1
         else:
-            header["crpix"] = (np.median(np.arange(frame.shape[-2])), np.median(np.arange(frame.shape[-1])))
+            header["crpix"] = (
+                np.median(np.arange(frame.shape[-2])),
+                np.median(np.arange(frame.shape[-1])),
+            )
             header["crval"] = (pointing[-2], pointing[-1])
-            f = zarr.open(save_dir+str(start_idx).zfill(5)+".zarr", mode="w")
-            data = f.array("data", frame, chunks=(1,frame.shape[-2],frame.shape[-1]))
+            f = zarr.open(save_dir + str(start_idx).zfill(5) + ".zarr", mode="w")
+            data = f.array("data", frame, chunks=(1, frame.shape[-2], frame.shape[-1]))
             for k, v in header.items():
                 data.attrs[k] = v
             start_idx += 1

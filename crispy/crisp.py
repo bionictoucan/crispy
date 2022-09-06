@@ -11,20 +11,28 @@ from sunpy.coordinates import Helioprojective
 import matplotlib
 from typing import Union, Sequence, List, Dict, Optional, Tuple
 from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
-from .utils import ObjDict, pt_bright, rotate_crop_data, rotate_crop_aligned_data, reconstruct_full_frame, parameter_docstring
+from .utils import (
+    ObjDict,
+    pt_bright,
+    rotate_crop_data,
+    rotate_crop_aligned_data,
+    reconstruct_full_frame,
+    parameter_docstring,
+)
 from .io import zarr_header_to_wcs
 
 rc_context_dict = {
     # "figure.constrained_layout.use" : True,
     # "figure.autolayout" : True,
-    "savefig.bbox" : "tight",
-    "font.family" : "serif",
-    "image.origin" : "lower",
-    "figure.figsize" : (10,6),
+    "savefig.bbox": "tight",
+    "font.family": "serif",
+    "image.origin": "lower",
+    "figure.figsize": (10, 6),
     # "image.aspect" : "auto"
-    "font.size" : 11,
-    "font.serif" : "New Century Schoolbook"
+    "font.size": 11,
+    "font.serif": "New Century Schoolbook",
 }
+
 
 class CRISP(CRISPSlicingMixin):
     """
@@ -56,13 +64,14 @@ class CRISP(CRISPSlicingMixin):
         uniform. This is helpful when constructing the WCS but if True, then the
         ``CRISPNonU`` class should be used. Default is False.
     """
+
     def __init__(
         self,
         filename: Union[str, ObjDict],
         wcs: Optional[WCS] = None,
         uncertainty: Optional[np.ndarray] = None,
         mask: Optional[np.ndarray] = None,
-        nonu: bool = False
+        nonu: bool = False,
     ) -> None:
         if type(filename) == str and ".fits" in filename:
             self.file = fits.open(filename)[0]
@@ -88,7 +97,10 @@ class CRISP(CRISPSlicingMixin):
         self.a = html.unescape("&alpha;")
         self.l = html.unescape("&lambda;")
         self.D = html.unescape("&Delta;")
-        if all(x in self.header.keys() for x in ["frame_dims", "x_min", "x_max", "y_min", "y_max", "angle"]):
+        if all(
+            x in self.header.keys()
+            for x in ["frame_dims", "x_min", "x_max", "y_min", "y_max", "angle"]
+        ):
             self.rotate = True
         else:
             self.rotate = False
@@ -99,7 +111,9 @@ class CRISP(CRISPSlicingMixin):
             date = self.header["DATE-AVG"][:-13]
             cl = str(np.round(self.header["TWAVE1"], decimals=2))
             wwidth = self.header["WWIDTH1"]
-            shape = str([self.header[f"NAXIS{j+1}"] for j in reversed(range(self.data.ndim))])
+            shape = str(
+                [self.header[f"NAXIS{j+1}"] for j in reversed(range(self.data.ndim))]
+            )
             el = self.header["WDESC1"]
             pointing_x = str(self.header["CRVAL1"])
             pointing_y = str(self.header["CRVAL2"])
@@ -179,7 +193,7 @@ class CRISP(CRISPSlicingMixin):
         except KeyError:
             return self.header["date_obs"]
 
-    def rotate_crop(self, sep: bool = False) -> Optional[Tuple[np.ndarray,Dict]]:
+    def rotate_crop(self, sep: bool = False) -> Optional[Tuple[np.ndarray, Dict]]:
         """
         For an image containing the data as a rotated subframe this method
         returns the data after rotation and cropping in addition to the
@@ -216,7 +230,6 @@ class CRISP(CRISPSlicingMixin):
             self.file.data = crop
             self.rotate = True
 
-
     def reconstruct_full_frame(self, sep: bool = False) -> Optional[np.ndarray]:
         """
         If the image has been rotated (which would take it out of its WCS) then this method can be used to reconstruct the image in its original WCS frame.
@@ -232,14 +245,14 @@ class CRISP(CRISPSlicingMixin):
             A derotated, full frame, copy of the input image cube.
         """
 
-        assert("frame_dims" in self.header)
+        assert "frame_dims" in self.header
         crop_dict = {
-            "frameDims" : self.header["frame_dims"],
-            "xMin" : self.header["x_min"],
-            "xMax" : self.header["x_max"],
-            "yMin" : self.header["y_min"],
-            "yMax" : self.header["y_max"],
-            "angle" : self.header["angle"]
+            "frameDims": self.header["frame_dims"],
+            "xMin": self.header["x_min"],
+            "xMax": self.header["x_max"],
+            "yMin": self.header["y_min"],
+            "yMax": self.header["y_max"],
+            "angle": self.header["angle"],
         }
 
         if sep:
@@ -250,7 +263,9 @@ class CRISP(CRISPSlicingMixin):
             self.rotate = False
 
     @plt.rc_context(rc_context_dict)
-    def plot_spectrum(self, unit: Optional[u.Unit] = None, air: bool = False, d: bool = False) -> None:
+    def plot_spectrum(
+        self, unit: Optional[u.Unit] = None, air: bool = False, d: bool = False
+    ) -> None:
         """
         Plots the intensity spectrum for a specified coordinate by slicing.
 
@@ -264,9 +279,13 @@ class CRISP(CRISPSlicingMixin):
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
         if self.data.ndim != 1:
-            raise IndexError("If you are using Stokes data please use the plot_stokes method.")
+            raise IndexError(
+                "If you are using Stokes data please use the plot_stokes method."
+            )
 
-        wavelength = self.wave(np.arange(self.data.shape[0])) #This finds the value of the wavlength axis from the WCS in units of m
+        wavelength = self.wave(
+            np.arange(self.data.shape[0])
+        )  # This finds the value of the wavlength axis from the WCS in units of m
         if unit != None:
             wavelength <<= unit
 
@@ -299,7 +318,13 @@ class CRISP(CRISPSlicingMixin):
         fig.show()
 
     @plt.rc_context(rc_context_dict)
-    def plot_stokes(self, stokes: str, unit: Optional[u.Unit] = None, air: bool = False, d: bool = False) -> None:
+    def plot_stokes(
+        self,
+        stokes: str,
+        unit: Optional[u.Unit] = None,
+        air: bool = False,
+        d: bool = False,
+    ) -> None:
         """
         Plots the Stokes profiles for a given slice of the data.
 
@@ -380,25 +405,25 @@ class CRISP(CRISPSlicingMixin):
             if stokes == "all":
                 fig, ax = plt.subplots(nrows=2, ncols=2)
                 fig.suptitle(f"{datetime} {el} {self.aa} All  Stokes")
-                ax[0,0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0,0].set_ylabel("I [DNs]")
-                ax[0,0].tick_params(labelbottom=False)
-                ax[0,1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[0,1].set_ylabel("Q [DNs]")
-                ax[0,1].yaxis.set_label_position("right")
-                ax[0,1].yaxis.tick_right()
-                ax[0,1].tick_params(labelbottom=False)
+                ax[0, 0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
+                ax[0, 0].set_ylabel("I [DNs]")
+                ax[0, 0].tick_params(labelbottom=False)
+                ax[0, 1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
+                ax[0, 1].set_ylabel("Q [DNs]")
+                ax[0, 1].yaxis.set_label_position("right")
+                ax[0, 1].yaxis.tick_right()
+                ax[0, 1].tick_params(labelbottom=False)
 
-                ax[1,0].plot(wavelength, self.data[2], c=pt_bright["blue"], marker="o")
-                ax[1,0].set_ylabel("U [DNs]")
-                ax[1,0].set_xlabel(xlabel)
+                ax[1, 0].plot(wavelength, self.data[2], c=pt_bright["blue"], marker="o")
+                ax[1, 0].set_ylabel("U [DNs]")
+                ax[1, 0].set_xlabel(xlabel)
                 # ax[1,0].tick_params(direction="in")
 
-                ax[1,1].plot(wavelength, self.data[3], c=pt_bright["blue"], marker="o")
-                ax[1,1].set_ylabel("V [DNs]")
-                ax[1,1].set_xlabel(xlabel)
-                ax[1,1].yaxis.set_label_position("right")
-                ax[1,1].yaxis.ticks_right()
+                ax[1, 1].plot(wavelength, self.data[3], c=pt_bright["blue"], marker="o")
+                ax[1, 1].set_ylabel("V [DNs]")
+                ax[1, 1].set_xlabel(xlabel)
+                ax[1, 1].yaxis.set_label_position("right")
+                ax[1, 1].yaxis.ticks_right()
                 # ax[1,1].tick_params(direction="in")
             elif stokes == "IQU":
                 fig, ax = plt.subplots(nrows=1, ncols=3)
@@ -554,7 +579,11 @@ class CRISP(CRISPSlicingMixin):
         fig.show()
 
     @plt.rc_context(rc_context_dict)
-    def intensity_map(self, frame: Optional[str] = None, norm: Optional[matplotlib.colors.Normalize] = None) -> None:
+    def intensity_map(
+        self,
+        frame: Optional[str] = None,
+        norm: Optional[matplotlib.colors.Normalize] = None,
+    ) -> None:
         """
         This plots the image for a certain wavelength depending on a specific slice.
 
@@ -573,7 +602,13 @@ class CRISP(CRISPSlicingMixin):
         else:
             idx = self.ind[0]
         wvl = np.round(self.wave(idx) << u.Angstrom, decimals=2).value
-        del_wvl = np.round(wvl - (self.wave(self.wcs.low_level_wcs._wcs.array_shape[0]//2) << u.Angstrom).value, decimals=2)
+        del_wvl = np.round(
+            wvl
+            - (
+                self.wave(self.wcs.low_level_wcs._wcs.array_shape[0] // 2) << u.Angstrom
+            ).value,
+            decimals=2,
+        )
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
@@ -590,16 +625,22 @@ class CRISP(CRISPSlicingMixin):
             im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=vmin, norm=norm)
             ax1.set_ylabel("Helioprojective Latitude [arcsec]")
             ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-            ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
+            ax1.set_title(
+                f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})"
+            )
             fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
             fig.show()
         elif frame == "pix":
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1)
-            im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=vmin, origin="lower", norm=norm)
+            im1 = ax1.imshow(
+                self.data, cmap="Greys_r", vmin=vmin, origin="lower", norm=norm
+            )
             ax1.set_ylabel("y [pixels]")
             ax1.set_xlabel("x [pixels]")
-            ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
+            ax1.set_title(
+                f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})"
+            )
             fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
             fig.show()
         elif (frame == "arcsec") or (frame is None and self.rotate):
@@ -611,10 +652,19 @@ class CRISP(CRISPSlicingMixin):
                 ymax = self.header["pixel_scale"] * self.shape[-2]
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1)
-            im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=vmin, origin="lower", norm=norm, extent=[0,xmax,0,ymax])
+            im1 = ax1.imshow(
+                self.data,
+                cmap="Greys_r",
+                vmin=vmin,
+                origin="lower",
+                norm=norm,
+                extent=[0, xmax, 0, ymax],
+            )
             ax1.set_ylabel("y [arcsec]")
             ax1.set_xlabel("x [arcsec]")
-            ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
+            ax1.set_title(
+                f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})"
+            )
             fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
             fig.show()
 
@@ -631,13 +681,28 @@ class CRISP(CRISPSlicingMixin):
             The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
         """
 
-        wvl = np.round(self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(self.ind[1]) << u.Angstrom, decimals=2).value
-        del_wvl = np.round(wvl - (self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(self.wcs.low_level_wcs._wcs.array_shape[1]//2) << u.Angstrom).value, decimals=2)
+        wvl = np.round(
+            self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(self.ind[1])
+            << u.Angstrom,
+            decimals=2,
+        ).value
+        del_wvl = np.round(
+            wvl
+            - (
+                self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(
+                    self.wcs.low_level_wcs._wcs.array_shape[1] // 2
+                )
+                << u.Angstrom
+            ).value,
+            decimals=2,
+        )
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
             datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
-        title = f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l}={del_wvl}{self.aa})"
+        title = (
+            f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l}={del_wvl}{self.aa})"
+        )
 
         if frame is None and not self.rotate:
             if self.data.ndim == 2:
@@ -647,19 +712,19 @@ class CRISP(CRISPSlicingMixin):
                     data = self.data
                     data[data < 0] = np.nan
                     im1 = ax1.imshow(data, cmap="Greys_r")
-                    ax1.set_title("Stokes I "+title)
+                    ax1.set_title("Stokes I " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
                 elif stokes == "Q":
                     im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10)
-                    ax1.set_title("Stokes Q "+title)
+                    ax1.set_title("Stokes Q " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
                 elif stokes == "U":
                     im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10)
-                    ax1.set_title("Stokes U "+title)
+                    ax1.set_title("Stokes U " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
                 elif stokes == "V":
                     im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-100, vmax=100)
-                    ax1.set_title("Stokes V "+title)
+                    ax1.set_title("Stokes V " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="V [DNs]")
                 else:
                     raise ValueError("This is not a Stokes.")
@@ -672,7 +737,9 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(2, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        2, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel(" ")
@@ -682,7 +749,9 @@ class CRISP(CRISPSlicingMixin):
                     ax1.tick_params(axis="x", labelbottom=False)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(2, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        2, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel(" ")
@@ -695,14 +764,18 @@ class CRISP(CRISPSlicingMixin):
                     ax2.tick_params(axis="y", labelleft=False)
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
-                    ax3 = fig.add_subplot(2, 2, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,2))
+                    ax3 = fig.add_subplot(
+                        2, 2, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
+                    )
                     im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10)
                     ax3.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax3.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax3.set_title("Stokes U ")
                     fig.colorbar(im3, ax=ax3, orientation="vertical", label="U [DNs]")
 
-                    ax4 = fig.add_subplot(2, 2, 4, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,3))
+                    ax4 = fig.add_subplot(
+                        2, 2, 4, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 3)
+                    )
                     im4 = ax4.imshow(self.data[3], cmap="Greys_r", vmin=-100, vmax=100)
                     ax4.set_ylabel(" ")
                     ax4.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -717,14 +790,18 @@ class CRISP(CRISPSlicingMixin):
 
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -732,7 +809,9 @@ class CRISP(CRISPSlicingMixin):
                     ax2.tick_params(axis="y", labelleft=False)
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
-                    ax3 = fig.add_subplot(1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,2))
+                    ax3 = fig.add_subplot(
+                        1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
+                    )
                     im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10)
                     ax3.set_ylabel(" ")
                     ax3.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -743,14 +822,18 @@ class CRISP(CRISPSlicingMixin):
                     fig = plt.figure()
                     fig.suptitle(title)
 
-                    ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10)
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
-                    ax2 = fig.add_subplot(1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -758,7 +841,9 @@ class CRISP(CRISPSlicingMixin):
                     ax2.tick_params(axis="y", labelleft=False)
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
 
-                    ax3 = fig.add_subplot(1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,2))
+                    ax3 = fig.add_subplot(
+                        1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
+                    )
                     im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100)
                     ax3.set_ylabel(" ")
                     ax3.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -771,14 +856,18 @@ class CRISP(CRISPSlicingMixin):
 
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -786,7 +875,9 @@ class CRISP(CRISPSlicingMixin):
                     ax2.tick_params(axis="y", labelleft=False)
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
-                    ax3 = fig.add_subplot(1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,2))
+                    ax3 = fig.add_subplot(
+                        1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
+                    )
                     im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100)
                     ax3.set_ylabel(" ")
                     ax3.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -805,7 +896,9 @@ class CRISP(CRISPSlicingMixin):
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -813,7 +906,9 @@ class CRISP(CRISPSlicingMixin):
                     ax2.tick_params(axis="y", labelleft=False)
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
 
-                    ax3 = fig.add_subplot(1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,2))
+                    ax3 = fig.add_subplot(
+                        1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
+                    )
                     im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100)
                     ax3.set_ylabel(" ")
                     ax3.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -826,14 +921,18 @@ class CRISP(CRISPSlicingMixin):
 
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -846,14 +945,18 @@ class CRISP(CRISPSlicingMixin):
 
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -866,14 +969,18 @@ class CRISP(CRISPSlicingMixin):
 
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100)
                     ax2.set_ylabel("")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -884,14 +991,18 @@ class CRISP(CRISPSlicingMixin):
                     fig = plt.figure()
                     fig.suptitle(title)
 
-                    ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10)
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
-                    ax2 = fig.add_subplot(1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -902,14 +1013,18 @@ class CRISP(CRISPSlicingMixin):
                     fig = plt.figure()
                     fig.suptitle(title)
 
-                    ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10)
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
-                    ax2 = fig.add_subplot(1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -920,14 +1035,18 @@ class CRISP(CRISPSlicingMixin):
                     fig = plt.figure()
                     fig.suptitle(title)
 
-                    ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10)
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes U")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
 
-                    ax2 = fig.add_subplot(1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -942,19 +1061,25 @@ class CRISP(CRISPSlicingMixin):
                     data = self.data
                     data[data < 0] = np.nan
                     im1 = ax1.imshow(data, cmap="Greys_r", origin="lower")
-                    ax1.set_title("Stokes I "+title)
+                    ax1.set_title("Stokes I " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
                 elif stokes == "Q":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
-                    ax1.set_title("Stokes Q "+title)
+                    im1 = ax1.imshow(
+                        self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
+                    ax1.set_title("Stokes Q " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
                 elif stokes == "U":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
-                    ax1.set_title("Stokes U "+title)
+                    im1 = ax1.imshow(
+                        self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
+                    ax1.set_title("Stokes U " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
                 elif stokes == "V":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
-                    ax1.set_title("Stokes V "+title)
+                    im1 = ax1.imshow(
+                        self.data, cmap="Greys_r", vmin=-100, vmax=100, origin="lower"
+                    )
+                    ax1.set_title("Stokes V " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="V [DNs]")
                 else:
                     raise ValueError("This is not a Stokes.")
@@ -975,21 +1100,31 @@ class CRISP(CRISPSlicingMixin):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(2, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_yticks([])
                     ax2.set_xticks([])
                     ax2.set_title("Stokes Q")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
                     ax3 = fig.add_subplot(2, 2, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im3 = ax3.imshow(
+                        self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax3.set_ylabel("y [pixels]")
                     ax3.set_xlabel("x [pixels]")
                     ax3.set_title("Stokes U")
                     fig.colorbar(im3, ax=ax3, orientation="vertical", label="U [DNs]")
 
                     ax4 = fig.add_subplot(2, 2, 4)
-                    im4 = ax4.imshow(self.data[3], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im4 = ax4.imshow(
+                        self.data[3],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax4.set_yticks([])
                     ax4.set_xlabel("x [pixels]")
                     ax4.set_title("Stokes V")
@@ -1008,14 +1143,18 @@ class CRISP(CRISPSlicingMixin):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_title("Stokes Q")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im3 = ax3.imshow(
+                        self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax3.set_yticks([])
                     ax3.set_xlabel("x [pixels]")
                     ax3.set_title("Stokes U")
@@ -1025,21 +1164,31 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im1 = ax1.imshow(
+                        self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_title("Stokes U")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax3.set_yticks([])
                     ax3.set_xlabel("x [pixels]")
                     ax3.set_title("Stokes V")
@@ -1058,14 +1207,22 @@ class CRISP(CRISPSlicingMixin):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_title("Stokes Q")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax3.set_yticks([])
                     ax3.set_xlabel("x [pixels]")
                     ax3.set_title("Stokes V")
@@ -1084,14 +1241,22 @@ class CRISP(CRISPSlicingMixin):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_title("Stokes U")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax3.set_yticks([])
                     ax3.set_xlabel("x [pixels]")
                     ax3.set_title("Stokes V")
@@ -1110,7 +1275,9 @@ class CRISP(CRISPSlicingMixin):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_title("Stokes Q")
@@ -1129,7 +1296,9 @@ class CRISP(CRISPSlicingMixin):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_title("Stokes U")
@@ -1148,7 +1317,13 @@ class CRISP(CRISPSlicingMixin):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_title("Stokes V")
@@ -1158,14 +1333,18 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im1 = ax1.imshow(
+                        self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_title("Stokes U")
@@ -1175,14 +1354,22 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im1 = ax1.imshow(
+                        self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_title("Stokes V")
@@ -1192,14 +1379,22 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im1 = ax1.imshow(
+                        self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes U")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_title("Stokes V ")
@@ -1217,20 +1412,43 @@ class CRISP(CRISPSlicingMixin):
                 if stokes == "I":
                     data = self.data
                     data[data < 0] = np.nan
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
-                    ax1.set_title("Stokes I "+title)
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
+                    ax1.set_title("Stokes I " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
                 elif stokes == "Q":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
-                    ax1.set_title("Stokes Q "+title)
+                    im1 = ax1.imshow(
+                        self.data,
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
+                    ax1.set_title("Stokes Q " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
                 elif stokes == "U":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
-                    ax1.set_title("Stokes U "+title)
+                    im1 = ax1.imshow(
+                        self.data,
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
+                    ax1.set_title("Stokes U " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
                 elif stokes == "V":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
-                    ax1.set_title("Stokes V "+title)
+                    im1 = ax1.imshow(
+                        self.data,
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
+                    ax1.set_title("Stokes V " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="V [DNs]")
                 else:
                     raise ValueError("This is not a Stokes.")
@@ -1244,14 +1462,23 @@ class CRISP(CRISPSlicingMixin):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(2, 2, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xticks([])
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(2, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_yticks([])
                     ax2.set_xticks([])
                     ax2.set_title("Stokes Q")
@@ -1259,14 +1486,28 @@ class CRISP(CRISPSlicingMixin):
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
                     ax3 = fig.add_subplot(2, 2, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax3.set_ylabel("y [arcsec]")
                     ax3.set_xlabel("x [arcsed]")
                     ax3.set_title("Stokes U")
                     fig.colorbar(im3, ax=ax3, orientation="vertical", label="U [DNs]")
 
                     ax4 = fig.add_subplot(2, 2, 4)
-                    im4 = ax4.imshow(self.data[3], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im4 = ax4.imshow(
+                        self.data[3],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax4.set_yticks([])
                     ax4.set_xlabel("x [arcsed]")
                     ax4.set_title("Stokes V")
@@ -1278,21 +1519,37 @@ class CRISP(CRISPSlicingMixin):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_title("Stokes Q")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax3.set_yticks([])
                     ax3.set_xlabel("x [arcsec]")
                     ax3.set_title("Stokes U")
@@ -1302,21 +1559,42 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        self.data[0],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_title("Stokes U")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax3.set_yticks([])
                     ax3.set_xlabel("x [arcsec]")
                     ax3.set_title("Stokes V")
@@ -1328,21 +1606,37 @@ class CRISP(CRISPSlicingMixin):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_title("Stokes Q")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax3.set_yticks([])
                     ax3.set_xlabel("x [arcsec]")
                     ax3.set_title("Stokes V")
@@ -1354,21 +1648,37 @@ class CRISP(CRISPSlicingMixin):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_title("Stokes U")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax3.set_yticks([])
                     ax3.set_xlabel("x [arcsec]")
                     ax3.set_title("Stokes V")
@@ -1380,14 +1690,23 @@ class CRISP(CRISPSlicingMixin):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_title("Stokes Q")
@@ -1399,14 +1718,23 @@ class CRISP(CRISPSlicingMixin):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_title("Stokes U")
@@ -1418,14 +1746,23 @@ class CRISP(CRISPSlicingMixin):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_title("Stokes V")
@@ -1435,14 +1772,28 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        self.data[0],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_title("Stokes U")
@@ -1452,14 +1803,28 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        self.data[0],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_title("Stokes V")
@@ -1469,14 +1834,28 @@ class CRISP(CRISPSlicingMixin):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        self.data[0],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes U")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_yticks([])
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_title("Stokes V ")
@@ -1502,30 +1881,64 @@ class CRISP(CRISPSlicingMixin):
         """
         if len(self.wcs.low_level_wcs.array_shape) == 4:
             if hasattr(self, "ind") and type(self.ind[1]) == slice:
-                return self.wcs.low_level_wcs._wcs[0,self.ind[1],0,0].array_index_to_world(idx) << u.Angstrom
+                return (
+                    self.wcs.low_level_wcs._wcs[
+                        0, self.ind[1], 0, 0
+                    ].array_index_to_world(idx)
+                    << u.Angstrom
+                )
             elif hasattr(self, "ind") and type(self.ind[1]) != slice:
-                return self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(idx) << u.Angstrom
+                return (
+                    self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(idx)
+                    << u.Angstrom
+                )
             else:
-                return self.wcs[0,:,0,0].array_index_to_world(idx) << u.Angstrom
+                return self.wcs[0, :, 0, 0].array_index_to_world(idx) << u.Angstrom
         elif len(self.wcs.low_level_wcs.array_shape) == 3:
             if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
                 if type(self.ind[1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,self.ind[1],0,0].array_index_to_world(idx) << u.Angstrom
+                    return (
+                        self.wcs.low_level_wcs._wcs[
+                            0, self.ind[1], 0, 0
+                        ].array_index_to_world(idx)
+                        << u.Angstrom
+                    )
                 else:
-                    return self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(idx) << u.Angstrom
+                    return (
+                        self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(
+                            idx
+                        )
+                        << u.Angstrom
+                    )
             else:
                 if hasattr(self, "ind") and type(self.ind[0]) == slice:
-                    return self.wcs.low_level_wcs._wcs[self.ind[0],0,0].array_index_to_world(idx) << u.Angstrom
+                    return (
+                        self.wcs.low_level_wcs._wcs[
+                            self.ind[0], 0, 0
+                        ].array_index_to_world(idx)
+                        << u.Angstrom
+                    )
                 elif hasattr(self, "ind") and type(self.ind[0]) != slice:
-                    return self.wcs.low_level_wcs._wcs[:,0,0].array_index_to_world(idx) << u.Angstrom
+                    return (
+                        self.wcs.low_level_wcs._wcs[:, 0, 0].array_index_to_world(idx)
+                        << u.Angstrom
+                    )
                 else:
                     return self.wcs.array_index_to_world(idx, 0, 0)[1] << u.Angstrom
         elif len(self.wcs.low_level_wcs.array_shape) == 2:
             if hasattr(self, "ind"):
                 if self.wcs.low_level_wcs._wcs.naxis == 4:
-                    return self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(idx) << u.Angstrom
+                    return (
+                        self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(
+                            idx
+                        )
+                        << u.Angstrom
+                    )
                 elif self.wcs.low_level_wcs._wcs.naxis == 3:
-                    return self.wcs.low_level_wcs._wcs[:,0,0].array_index_to_world(idx) << u.Angstrom
+                    return (
+                        self.wcs.low_level_wcs._wcs[:, 0, 0].array_index_to_world(idx)
+                        << u.Angstrom
+                    )
                 else:
                     raise IndexError("There is no spectral component to your data.")
             else:
@@ -1533,9 +1946,13 @@ class CRISP(CRISPSlicingMixin):
         elif len(self.wcs.low_level_wcs.array_shape) == 1:
             return self.wcs.array_index_to_world(idx) << u.Angstrom
         else:
-            raise NotImplementedError("This is way too many dimensions for me to handle.")
+            raise NotImplementedError(
+                "This is way too many dimensions for me to handle."
+            )
 
-    def to_lonlat(self, y: int, x: int, coord: bool = False, unit: bool = False) -> Tuple[float, float]:
+    def to_lonlat(
+        self, y: int, x: int, coord: bool = False, unit: bool = False
+    ) -> Tuple[float, float]:
         """
         This function will take a y, x coordinate in pixel space and map it to Helioprojective Longitude, Helioprojective Latitude according to the transform in the WCS. This will return the Helioprojective coordinates in units of arcseconds. Note this function takes arguments in the order of numpy indexing (y,x) but returns a pair longitude/latitude which is Solar-X, Solar-Y.
 
@@ -1561,39 +1978,67 @@ class CRISP(CRISPSlicingMixin):
             if len(self.wcs.low_level_wcs.array_shape) == 4:
                 if hasattr(self, "ind"):
                     if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                        return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                        return self.wcs.low_level_wcs._wcs[
+                            0, 0, self.ind[-2], self.ind[-1]
+                        ].array_index_to_world(y, x)
                     elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                        return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
+                        return self.wcs.low_level_wcs._wcs[
+                            0, 0, self.ind[-2]
+                        ].array_index_to_world(y, x)
                     elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                        return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
+                        return self.wcs.low_level_wcs._wcs[
+                            0, 0, :, self.ind[-1]
+                        ].array_index_to_world(y, x)
                     else:
-                        return self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
+                        return self.wcs.low_level_wcs._wcs[0, 0].array_index_to_world(
+                            y, x
+                        )
                 else:
-                    return self.wcs[0,0].array_index_to_world(y,x)
+                    return self.wcs[0, 0].array_index_to_world(y, x)
             elif len(self.wcs.low_level_wcs.array_shape) == 3:
                 if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
                     if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                        return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                        return self.wcs.low_level_wcs._wcs[
+                            0, 0, self.ind[-2], self.ind[-1]
+                        ].array_index_to_world(y, x)
                     elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                        return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
+                        return self.wcs.low_level_wcs._wcs[
+                            0, 0, self.ind[-2]
+                        ].array_index_to_world(y, x)
                     elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                        return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
+                        return self.wcs.low_level_wcs._wcs[
+                            0, 0, :, self.ind[-1]
+                        ].array_index_to_world(y, x)
                     else:
-                        return self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
+                        return self.wcs.low_level_wcs._wcs[0, 0].array_index_to_world(
+                            y, x
+                        )
                 else:
                     if hasattr(self, "ind"):
                         if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                            return self.wcs.low_level_wcs._wcs[0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
-                        elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                            return self.wcs.low_level_wcs._wcs[0,self.ind[-2]].array_index_to_world(y,x)
-                        elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                            return self.wcs.low_level_wcs._wcs[0,:,self.ind[-1]].array_index_to_world(y,x)
+                            return self.wcs.low_level_wcs._wcs[
+                                0, self.ind[-2], self.ind[-1]
+                            ].array_index_to_world(y, x)
+                        elif (
+                            type(self.ind[-2]) == slice and type(self.ind[-1]) != slice
+                        ):
+                            return self.wcs.low_level_wcs._wcs[
+                                0, self.ind[-2]
+                            ].array_index_to_world(y, x)
+                        elif (
+                            type(self.ind[-2]) != slice and type(self.ind[-1]) == slice
+                        ):
+                            return self.wcs.low_level_wcs._wcs[
+                                0, :, self.ind[-1]
+                            ].array_index_to_world(y, x)
                         else:
-                            return self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
+                            return self.wcs.low_level_wcs._wcs[0].array_index_to_world(
+                                y, x
+                            )
                     else:
-                        return self.wcs[0].array_index_to_world(y,x)
+                        return self.wcs[0].array_index_to_world(y, x)
             elif len(self.wcs.low_level_wcs.array_shape) == 2:
-                return self.wcs.array_index_to_world(y,x)
+                return self.wcs.array_index_to_world(y, x)
             else:
                 raise NotImplementedError("Too many or too little dimensions.")
         else:
@@ -1601,53 +2046,94 @@ class CRISP(CRISPSlicingMixin):
                 if len(self.wcs.low_level_wcs.array_shape) == 4:
                     if hasattr(self, "ind"):
                         if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                            sc = self.wcs.low_level_wcs._wcs[
+                                0, 0, self.ind[-2], self.ind[-1]
+                            ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
-                        elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
+                        elif (
+                            type(self.ind[-2]) == slice and type(self.ind[-1]) != slice
+                        ):
+                            sc = self.wcs.low_level_wcs._wcs[
+                                0, 0, self.ind[-2]
+                            ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
-                        elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                            sc = self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
+                        elif (
+                            type(self.ind[-2]) != slice and type(self.ind[-1]) == slice
+                        ):
+                            sc = self.wcs.low_level_wcs._wcs[
+                                0, 0, :, self.ind[-1]
+                            ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
                         else:
-                            sc = self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
+                            sc = self.wcs.low_level_wcs._wcs[0, 0].array_index_to_world(
+                                y, x
+                            )
                             return sc.Tx, sc.Ty
                     else:
-                        sc =  self.wcs[0,0].array_index_to_world(y,x)
+                        sc = self.wcs[0, 0].array_index_to_world(y, x)
                         return sc.Tx, sc.Ty
                 elif len(self.wcs.low_level_wcs.array_shape) == 3:
                     if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
                         if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                            sc = self.wcs.low_level_wcs._wcs[
+                                0, 0, self.ind[-2], self.ind[-1]
+                            ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
-                        elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
+                        elif (
+                            type(self.ind[-2]) == slice and type(self.ind[-1]) != slice
+                        ):
+                            sc = self.wcs.low_level_wcs._wcs[
+                                0, 0, self.ind[-2]
+                            ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
-                        elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                            sc = self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
+                        elif (
+                            type(self.ind[-2]) != slice and type(self.ind[-1]) == slice
+                        ):
+                            sc = self.wcs.low_level_wcs._wcs[
+                                0, 0, :, self.ind[-1]
+                            ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
                         else:
-                            sc = self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
+                            sc = self.wcs.low_level_wcs._wcs[0, 0].array_index_to_world(
+                                y, x
+                            )
                             return sc.Tx, sc.Ty
                     else:
                         if hasattr(self, "ind"):
-                            if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                                sc = self.wcs.low_level_wcs._wcs[0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                            if (
+                                type(self.ind[-2]) == slice
+                                and type(self.ind[-1]) == slice
+                            ):
+                                sc = self.wcs.low_level_wcs._wcs[
+                                    0, self.ind[-2], self.ind[-1]
+                                ].array_index_to_world(y, x)
                                 return sc.Tx, sc.Ty
-                            elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                                sc = self.wcs.low_level_wcs._wcs[0,self.ind[-2]].array_index_to_world(y,x)
+                            elif (
+                                type(self.ind[-2]) == slice
+                                and type(self.ind[-1]) != slice
+                            ):
+                                sc = self.wcs.low_level_wcs._wcs[
+                                    0, self.ind[-2]
+                                ].array_index_to_world(y, x)
                                 return sc.Tx, sc.Ty
-                            elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                                sc = self.wcs.low_level_wcs._wcs[0,:,self.ind[-1]].array_index_to_world(y,x)
+                            elif (
+                                type(self.ind[-2]) != slice
+                                and type(self.ind[-1]) == slice
+                            ):
+                                sc = self.wcs.low_level_wcs._wcs[
+                                    0, :, self.ind[-1]
+                                ].array_index_to_world(y, x)
                                 return sc.Tx, sc.Ty
                             else:
-                                sc = self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
+                                sc = self.wcs.low_level_wcs._wcs[
+                                    0
+                                ].array_index_to_world(y, x)
                                 return sc.Tx, sc.Ty
                         else:
-                            sc = self.wcs[0].array_index_to_world(y,x)
+                            sc = self.wcs[0].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
                 elif len(self.wcs.low_level_wcs.array_shape) == 2:
-                    sc = self.wcs.array_index_to_world(y,x)
+                    sc = self.wcs.array_index_to_world(y, x)
                     return sc.Tx, sc.Ty
                 else:
                     raise NotImplementedError("Too many or too little dimensions.")
@@ -1655,58 +2141,99 @@ class CRISP(CRISPSlicingMixin):
                 if len(self.wcs.low_level_wcs.array_shape) == 4:
                     if hasattr(self, "ind"):
                         if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                            sc = self.wcs.low_level_wcs._wcs[
+                                0, 0, self.ind[-2], self.ind[-1]
+                            ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
-                        elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
+                        elif (
+                            type(self.ind[-2]) == slice and type(self.ind[-1]) != slice
+                        ):
+                            sc = self.wcs.low_level_wcs._wcs[
+                                0, 0, self.ind[-2]
+                            ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
-                        elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                            sc = self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
+                        elif (
+                            type(self.ind[-2]) != slice and type(self.ind[-1]) == slice
+                        ):
+                            sc = self.wcs.low_level_wcs._wcs[
+                                0, 0, :, self.ind[-1]
+                            ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
                         else:
-                            sc = self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
+                            sc = self.wcs.low_level_wcs._wcs[0, 0].array_index_to_world(
+                                y, x
+                            )
                             return sc.Tx.value, sc.Ty.value
                     else:
-                        sc =  self.wcs[0,0].array_index_to_world(y,x)
+                        sc = self.wcs[0, 0].array_index_to_world(y, x)
                         return sc.Tx.value, sc.Ty.value
                 elif len(self.wcs.low_level_wcs.array_shape) == 3:
                     if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
                         if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                            sc = self.wcs.low_level_wcs._wcs[
+                                0, 0, self.ind[-2], self.ind[-1]
+                            ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
-                        elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                            sc = self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].array_index_to_world(y,x)
+                        elif (
+                            type(self.ind[-2]) == slice and type(self.ind[-1]) != slice
+                        ):
+                            sc = self.wcs.low_level_wcs._wcs[
+                                0, 0, self.ind[-2]
+                            ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
-                        elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                            sc = self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].array_index_to_world(y,x)
+                        elif (
+                            type(self.ind[-2]) != slice and type(self.ind[-1]) == slice
+                        ):
+                            sc = self.wcs.low_level_wcs._wcs[
+                                0, 0, :, self.ind[-1]
+                            ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
                         else:
-                            sc = self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(y,x)
+                            sc = self.wcs.low_level_wcs._wcs[0, 0].array_index_to_world(
+                                y, x
+                            )
                             return sc.Tx.value, sc.Ty.value
                     else:
                         if hasattr(self, "ind"):
-                            if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                                sc = self.wcs.low_level_wcs._wcs[0,self.ind[-2],self.ind[-1]].array_index_to_world(y,x)
+                            if (
+                                type(self.ind[-2]) == slice
+                                and type(self.ind[-1]) == slice
+                            ):
+                                sc = self.wcs.low_level_wcs._wcs[
+                                    0, self.ind[-2], self.ind[-1]
+                                ].array_index_to_world(y, x)
                                 return sc.Tx.value, sc.Ty.value
-                            elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                                sc = self.wcs.low_level_wcs._wcs[0,self.ind[-2]].array_index_to_world(y,x)
+                            elif (
+                                type(self.ind[-2]) == slice
+                                and type(self.ind[-1]) != slice
+                            ):
+                                sc = self.wcs.low_level_wcs._wcs[
+                                    0, self.ind[-2]
+                                ].array_index_to_world(y, x)
                                 return sc.Tx.value, sc.Ty.value
-                            elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                                sc = self.wcs.low_level_wcs._wcs[0,:,self.ind[-1]].array_index_to_world(y,x)
+                            elif (
+                                type(self.ind[-2]) != slice
+                                and type(self.ind[-1]) == slice
+                            ):
+                                sc = self.wcs.low_level_wcs._wcs[
+                                    0, :, self.ind[-1]
+                                ].array_index_to_world(y, x)
                                 return sc.Tx.value, sc.Ty.value
                             else:
-                                sc = self.wcs.low_level_wcs._wcs[0].array_index_to_world(y,x)
+                                sc = self.wcs.low_level_wcs._wcs[
+                                    0
+                                ].array_index_to_world(y, x)
                                 return sc.Tx.value, sc.Ty.value
                         else:
-                            sc = self.wcs[0].array_index_to_world(y,x)
+                            sc = self.wcs[0].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
                 elif len(self.wcs.low_level_wcs.array_shape) == 2:
-                    sc = self.wcs.array_index_to_world(y,x)
+                    sc = self.wcs.array_index_to_world(y, x)
                     return sc.Tx.value, sc.Ty.value
                 else:
                     raise NotImplementedError("Too many or too little dimensions.")
 
-    def from_lonlat(self,lon: float,lat: float) -> Tuple[float, float]:
+    def from_lonlat(self, lon: float, lat: float) -> Tuple[float, float]:
         """
         This function takes a Helioprojective Longitude, Helioprojective Latitude pair and converts them to the y, x indices to index the object correctly. The function takes its arguments in the order Helioprojective Longitude, Helioprojective Latitude but returns the indices in the (y,x) format so that the output of this function can be used to directly index the object.
 
@@ -1728,33 +2255,51 @@ class CRISP(CRISPSlicingMixin):
         if len(self.wcs.low_level_wcs.array_shape) == 4:
             if hasattr(self, "ind"):
                 if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].world_to_array_index(sc)
+                    return self.wcs.low_level_wcs._wcs[
+                        0, 0, self.ind[-2], self.ind[-1]
+                    ].world_to_array_index(sc)
                 elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].world_to_array_index(sc)
+                    return self.wcs.low_level_wcs._wcs[
+                        0, 0, self.ind[-2]
+                    ].world_to_array_index(sc)
                 elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].world_to_array_index(sc)
+                    return self.wcs.low_level_wcs._wcs[
+                        0, 0, :, self.ind[-1]
+                    ].world_to_array_index(sc)
                 else:
-                    return self.wcs.low_level_wcs._wcs[0,0].world_to_array_index(sc)
+                    return self.wcs.low_level_wcs._wcs[0, 0].world_to_array_index(sc)
             else:
-                return self.wcs[0,0].world_to_array_index(sc)
+                return self.wcs[0, 0].world_to_array_index(sc)
         elif len(self.wcs.low_level_wcs.array_shape) == 3:
             if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
                 if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2],self.ind[-1]].world_to_array_index(sc)
+                    return self.wcs.low_level_wcs._wcs[
+                        0, 0, self.ind[-2], self.ind[-1]
+                    ].world_to_array_index(sc)
                 elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,self.ind[-2]].world_to_array_index(sc)
+                    return self.wcs.low_level_wcs._wcs[
+                        0, 0, self.ind[-2]
+                    ].world_to_array_index(sc)
                 elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                    return self.wcs.low_level_wcs._wcs[0,0,:,self.ind[-1]].world_to_array_index(sc)
+                    return self.wcs.low_level_wcs._wcs[
+                        0, 0, :, self.ind[-1]
+                    ].world_to_array_index(sc)
                 else:
-                    return self.wcs.low_level_wcs._wcs[0,0].world_to_array_index(sc)
+                    return self.wcs.low_level_wcs._wcs[0, 0].world_to_array_index(sc)
             else:
                 if hasattr(self, "ind"):
                     if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
-                        return self.wcs.low_level_wcs._wcs[0,self.ind[-2],self.ind[-1]].world_to_array_index(sc)
+                        return self.wcs.low_level_wcs._wcs[
+                            0, self.ind[-2], self.ind[-1]
+                        ].world_to_array_index(sc)
                     elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
-                        return self.wcs.low_level_wcs._wcs[0,self.ind[-2]].world_to_array_index(sc)
+                        return self.wcs.low_level_wcs._wcs[
+                            0, self.ind[-2]
+                        ].world_to_array_index(sc)
                     elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
-                        return self.wcs.low_level_wcs._wcs[0,:,self.ind[-1]].world_to_array_index(sc)
+                        return self.wcs.low_level_wcs._wcs[
+                            0, :, self.ind[-1]
+                        ].world_to_array_index(sc)
                     else:
                         return self.wcs.low_level_wcs._wcs[0].world_to_array_index(sc)
                 else:
@@ -1763,6 +2308,7 @@ class CRISP(CRISPSlicingMixin):
             return self.wcs.world_to_array_index(sc)
         else:
             raise NotImplementedError("Too many or too little dimensions.")
+
 
 class CRISPSequence(CRISPSequenceSlicingMixin):
     """
@@ -1776,6 +2322,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         ``crispy.utils.CRISP_sequence_generator`` can be used to generate this
         list.
     """
+
     def __init__(self, files: List[Dict]) -> None:
         self.list = [CRISP(**f) for f in files]
         self.aa = html.unescape("#&8491;")
@@ -1786,7 +2333,15 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             date = self.list[0].file.header["DATE-AVG"][:-13]
             cl = [str(np.round(f.file.header["TWAVE1"], decimals=2)) for f in self.list]
             wwidth = [f.file.header["WWIDTH1"] for f in self.list]
-            shape = [str([f.file.header[f"NAXIS{j+1}"] for j in reversed(range(f.file.data.ndim))]) for f in self.list]
+            shape = [
+                str(
+                    [
+                        f.file.header[f"NAXIS{j+1}"]
+                        for j in reversed(range(f.file.data.ndim))
+                    ]
+                )
+                for f in self.list
+            ]
             el = [f.file.header["WDESC1"] for f in self.list]
             pointing_x = str(self.list[0].file.header["CRVAL1"])
             pointing_y = str(self.list[0].file.header["CRVAL2"])
@@ -1860,7 +2415,9 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         """
         return [f.date for f in self.list]
 
-    def rotate_crop(self, sep: bool = False, diff_t: bool = False) -> Optional[List[np.ndarray]]:
+    def rotate_crop(
+        self, sep: bool = False, diff_t: bool = False
+    ) -> Optional[List[np.ndarray]]:
         """
         Instance method for rotating and cropping data if there is a rotation
         with respect to the image plane.
@@ -1896,7 +2453,9 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
                 return rotate_crop_aligned_data(self.list[0].data, self.list[1].data)
             else:
                 self.full_frame = [self.list[0].data, self.list[1].data]
-                crop_a, crop_b, crop_dict = rotate_crop_aligned_data(self.list[0].data, self.list[1].data)
+                crop_a, crop_b, crop_dict = rotate_crop_aligned_data(
+                    self.list[0].data, self.list[1].data
+                )
                 self.list[0].file.data = crop_a
                 self.list[1].file.data = crop_b
                 self.list[0].file.header["frame_dims"] = crop_dict["frameDims"]
@@ -1934,7 +2493,13 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
                 f.rotate = False
 
     @plt.rc_context(rc_context_dict)
-    def plot_spectrum(self, idx: Union[str, int], unit: Optional[u.Unit] = None, air: bool = False, d: bool = False) -> None:
+    def plot_spectrum(
+        self,
+        idx: Union[str, int],
+        unit: Optional[u.Unit] = None,
+        air: bool = False,
+        d: bool = False,
+    ) -> None:
         """
         Function for plotting the intensity spectrum for a given slice. Can be done either for all of the instances or for a single instance.
 
@@ -1956,7 +2521,14 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
                 f.plot_spectrum(unit=unit, air=air, d=d)
 
     @plt.rc_context(rc_context_dict)
-    def plot_stokes(self, idx: Union[str, int], stokes: str, unit: Optional[u.Unit] = None, air: bool = False, d: bool = False) -> None:
+    def plot_stokes(
+        self,
+        idx: Union[str, int],
+        stokes: str,
+        unit: Optional[u.Unit] = None,
+        air: bool = False,
+        d: bool = False,
+    ) -> None:
         """
         Function for plotting the Stokes profiles for a given slice. Can be done either for all of the instances or for a single instance.
 
@@ -1980,7 +2552,12 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
                 f.plot_stokes(stokes, unit=unit, air=air, d=d)
 
     @plt.rc_context(rc_context_dict)
-    def intensity_map(self, idx: Union[str, int], frame: Optional[str] = None, norm: Optional[matplotlib.colors.Normalize] = None) -> None:
+    def intensity_map(
+        self,
+        idx: Union[str, int],
+        frame: Optional[str] = None,
+        norm: Optional[matplotlib.colors.Normalize] = None,
+    ) -> None:
         """
         Function for plotting the intensity image for a given wavelength. Can be done either for all of the instances or for a single instance.
 
@@ -2000,7 +2577,9 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
                 f.intensity_map(frame=frame, norm=norm)
 
     @plt.rc_context(rc_context_dict)
-    def stokes_map(self, idx: Union[str, int], stokes: str, frame: Optional[str] = None) -> None:
+    def stokes_map(
+        self, idx: Union[str, int], stokes: str, frame: Optional[str] = None
+    ) -> None:
         """
         Function to plot the Stokes maps for a given wavelength. Can be done either for all of the instances or for a single instance.
 
@@ -2061,17 +2640,22 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         """
         return self.list[0].to_lonlat(y, x)
 
+
 class CRISPWideband(CRISP):
     """
     Class for wideband or single wavelength CRISP images. This class expects the
     data to be two-dimensional.
     """
+
     __doc__ += parameter_docstring(CRISP)
+
     def __str__(self) -> str:
         try:
             time = self.header["DATE-AVG"][-12:]
             date = self.header["DATE-AVG"][:-13]
-            shape = str([self.header[f"NAXIS{j+1}"] for j in reversed(range(self.data.ndim))])
+            shape = str(
+                [self.header[f"NAXIS{j+1}"] for j in reversed(range(self.data.ndim))]
+            )
             el = self.header["WDESC1"]
             pointing_x = str(self.header["CRVAL1"])
             pointing_y = str(self.header["CRVAL2"])
@@ -2093,7 +2677,9 @@ class CRISPWideband(CRISP):
         Shape: {shape}"""
 
     @plt.rc_context(rc_context_dict)
-    def intensity_map(self, frame: Optional[str] = None, norm: Optional[str] = None) -> None:
+    def intensity_map(
+        self, frame: Optional[str] = None, norm: Optional[str] = None
+    ) -> None:
         """
         This function plots the image in the same manner as the ``crispy.crisp.CRISP.intensity_map`` method.
 
@@ -2142,12 +2728,22 @@ class CRISPWideband(CRISP):
                 ymax = self.header["pixel_scale"] * self.shape[-2]
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1)
-            im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=vmin, origin="lower", norm=norm, extent=[0,xmax,0,ymax])
+            im1 = ax1.imshow(
+                self.data,
+                cmap="Greys_r",
+                vmin=vmin,
+                origin="lower",
+                norm=norm,
+                extent=[0, xmax, 0, ymax],
+            )
             ax1.set_ylabel("y [arcsec]")
             ax1.set_xlabel("x [arcsec]")
-            ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
+            ax1.set_title(
+                f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})"
+            )
             fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
             fig.show()
+
 
 class CRISPWidebandSequence(CRISPSequence):
     """
@@ -2162,6 +2758,7 @@ class CRISPWidebandSequence(CRISPSequence):
         ``CRISPWideband`` instances. The function
         ``crispy.utils.CRISP_sequence_generator`` can be used to generate this list.
     """
+
     def __init__(self, files: List[Dict]) -> None:
         self.list = [CRISPWideband(**f) for f in files]
 
@@ -2169,7 +2766,15 @@ class CRISPWidebandSequence(CRISPSequence):
         try:
             time = [f.file.header["DATE-AVG"][-12:] for f in self.list]
             date = self.list[0].file.header["DATE-AVG"][:-13]
-            shape = [str([f.file.header[f"NAXIS{j+1}"] for j in reversed(range(f.file.data.ndim))]) for f in self.list]
+            shape = [
+                str(
+                    [
+                        f.file.header[f"NAXIS{j+1}"]
+                        for j in reversed(range(f.file.data.ndim))
+                    ]
+                )
+                for f in self.list
+            ]
             el = [f.file.header["WDESC1"] for f in self.list]
             pointing_x = str(self.list[0].file.header["CRVAL1"])
             pointing_y = str(self.list[0].file.header["CRVAL2"])
@@ -2190,16 +2795,30 @@ class CRISPWidebandSequence(CRISPSequence):
         Pointing: ({pointing_x}, {pointing_y})
         Shape: {shape}"""
 
+
 class CRISPNonU(CRISP):
     """
     This is a class for narrowband CRISP observations whose wavelength axis is sampled non-uniformly. What this means is that each pair of sampled wavelengths is not necessarily separated by the same :math:`\\Delta \\lambda` and thus the ``CDELT3`` fits keyword becomes meaningless as this can only comprehend constant changes in the third axis. This also means that the WCS does not work for the wavelength axis but is still constructed as it holds true in the y,x spatial plane. This class assumes that if the sampling is non-uniform then the true wavelengths that are sampled are stored in the first non-PrimaryHDU in the fits file.
     """
+
     __doc__ += parameter_docstring(CRISP)
-    def __init__(self, filename: str, wcs: Optional[WCS] = None, uncertainty: Optional[np.ndarray] = None, mask: Optional[np.ndarray ] = None, nonu: bool = True) -> None:
-        super().__init__(filename=filename, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu)
+
+    def __init__(
+        self,
+        filename: str,
+        wcs: Optional[WCS] = None,
+        uncertainty: Optional[np.ndarray] = None,
+        mask: Optional[np.ndarray] = None,
+        nonu: bool = True,
+    ) -> None:
+        super().__init__(
+            filename=filename, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu
+        )
 
         if ".fits" in filename:
-            self.wvl = fits.open(filename)[1].data #This assumes that the true wavelength points are stored in the first HDU of the FITS file as a numpy array
+            self.wvl = fits.open(filename)[
+                1
+            ].data  # This assumes that the true wavelength points are stored in the first HDU of the FITS file as a numpy array
         else:
             self.wvl = self.header["wavels"]
 
@@ -2209,7 +2828,9 @@ class CRISPNonU(CRISP):
             date = self.header["DATE-AVG"][:-13]
             cl = str(np.round(self.header["TWAVE1"], decimals=2))
             wwidth = self.header["WWIDTH1"]
-            shape = str([self.header[f"NAXIS{j+1}"] for j in reversed(range(self.data.ndim))])
+            shape = str(
+                [self.header[f"NAXIS{j+1}"] for j in reversed(range(self.data.ndim))]
+            )
             el = self.header["WDESC1"]
             pointing_x = str(self.header["CRVAL1"])
             pointing_y = str(self.header["CRVAL2"])
@@ -2244,7 +2865,9 @@ class CRISPNonU(CRISP):
         return self.wvl
 
     @plt.rc_context(rc_context_dict)
-    def plot_spectrum(self, unit: Optional[u.Unit] = None, air: bool = False, d: bool = False) -> None:
+    def plot_spectrum(
+        self, unit: Optional[u.Unit] = None, air: bool = False, d: bool = False
+    ) -> None:
         """
         Plots the intensity spectrum for a specified coordinate by slicing.
 
@@ -2258,7 +2881,9 @@ class CRISPNonU(CRISP):
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
         if self.data.ndim != 1:
-            raise IndexError("If you are using Stokes data please use the plot_stokes method.")
+            raise IndexError(
+                "If you are using Stokes data please use the plot_stokes method."
+            )
 
         wavelength = self.wvls
         if unit != None:
@@ -2291,7 +2916,13 @@ class CRISPNonU(CRISP):
         fig.show()
 
     @plt.rc_context(rc_context_dict)
-    def plot_stokes(self, stokes: str, unit: Optional[u.Unit] = None, air: bool = False, d: bool = False) -> None:
+    def plot_stokes(
+        self,
+        stokes: str,
+        unit: Optional[u.Unit] = None,
+        air: bool = False,
+        d: bool = False,
+    ) -> None:
         """
         Plots the Stokes profiles for a given slice of the data.
 
@@ -2371,26 +3002,26 @@ class CRISPNonU(CRISP):
             if stokes == "all":
                 fig, ax = plt.subplots(nrows=2, ncols=2)
                 fig.suptitle(f"{datetime} {el} {self.aa} All Stokes")
-                ax[0,0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0,0].set_ylabel("I [DNs]")
-                ax[0,0].tick_params(labelbottom=False)
+                ax[0, 0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
+                ax[0, 0].set_ylabel("I [DNs]")
+                ax[0, 0].tick_params(labelbottom=False)
 
-                ax[0,1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[0,1].set_ylabel("Q [DNs]")
-                ax[0,1].yaxis.set_label_position("right")
-                ax[0,1].yaxis.tick_right()
-                ax[0,1].tick_params(labelbottom=False)
+                ax[0, 1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
+                ax[0, 1].set_ylabel("Q [DNs]")
+                ax[0, 1].yaxis.set_label_position("right")
+                ax[0, 1].yaxis.tick_right()
+                ax[0, 1].tick_params(labelbottom=False)
 
-                ax[1,0].plot(wavelength, self.data[2], c=pt_bright["blue"], marker="o")
-                ax[1,0].set_ylabel("U [DNs]")
-                ax[1,0].set_xlabel(xlabel)
+                ax[1, 0].plot(wavelength, self.data[2], c=pt_bright["blue"], marker="o")
+                ax[1, 0].set_ylabel("U [DNs]")
+                ax[1, 0].set_xlabel(xlabel)
                 # ax[1,0].tick_params(direction="in")
 
-                ax[1,1].plot(wavelength, self.data[3], c=pt_bright["blue"], marker="o")
-                ax[1,1].set_ylabel("V [DNs]")
-                ax[1,1].set_xlabel(xlabel)
-                ax[1,1].yaxis.set_label_position("right")
-                ax[1,1].yaxis.tick_right()
+                ax[1, 1].plot(wavelength, self.data[3], c=pt_bright["blue"], marker="o")
+                ax[1, 1].set_ylabel("V [DNs]")
+                ax[1, 1].set_xlabel(xlabel)
+                ax[1, 1].yaxis.set_label_position("right")
+                ax[1, 1].yaxis.tick_right()
                 # ax[1,1].tick_params(direction="in")
             elif stokes == "IQU":
                 fig, ax = plt.subplots(nrows=1, ncols=3)
@@ -2546,7 +3177,11 @@ class CRISPNonU(CRISP):
         fig.show()
 
     @plt.rc_context(rc_context_dict)
-    def intensity_map(self, frame: Optional[str] = None, norm: Optional[matplotlib.colors.Normalize] = None) -> None:
+    def intensity_map(
+        self,
+        frame: Optional[str] = None,
+        norm: Optional[matplotlib.colors.Normalize] = None,
+    ) -> None:
         """
         This plots the image for a certain wavelength depending on a specific slice.
 
@@ -2565,7 +3200,13 @@ class CRISPNonU(CRISP):
         else:
             idx = self.ind[0]
         wvl = np.round(self.wave(idx) << u.Angstrom, decimals=2).value
-        del_wvl = np.round(wvl - (self.wave(self.wcs.low_level_wcs._wcs.array_shape[0]//2) << u.Angstrom).value, decimals=2)
+        del_wvl = np.round(
+            wvl
+            - (
+                self.wave(self.wcs.low_level_wcs._wcs.array_shape[0] // 2) << u.Angstrom
+            ).value,
+            decimals=2,
+        )
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
@@ -2579,7 +3220,9 @@ class CRISPNonU(CRISP):
             im1 = ax1.imshow(data, cmap="Greys_r", norm=norm)
             ax1.set_ylabel("Helioprojective Latitude [arcsec]")
             ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-            ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
+            ax1.set_title(
+                f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})"
+            )
             fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
             fig.show()
         elif frame == "pix":
@@ -2590,7 +3233,9 @@ class CRISPNonU(CRISP):
             im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", norm=norm)
             ax1.set_ylabel("y [pixels]")
             ax1.set_xlabel("x [pixels]")
-            ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
+            ax1.set_title(
+                f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})"
+            )
             fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
             fig.show()
         elif (frame == "arcsec") or (frame is None and self.rotate):
@@ -2602,10 +3247,19 @@ class CRISPNonU(CRISP):
                 ymax = self.header["pixel_scale"] * self.shape[-2]
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1)
-            im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=vmin, origin="lower", norm=norm, extent=[0,xmax,0,ymax])
+            im1 = ax1.imshow(
+                self.data,
+                cmap="Greys_r",
+                vmin=vmin,
+                origin="lower",
+                norm=norm,
+                extent=[0, xmax, 0, ymax],
+            )
             ax1.set_ylabel("y [arcsec]")
             ax1.set_xlabel("x [arcsec]")
-            ax1.set_title(f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})")
+            ax1.set_title(
+                f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})"
+            )
             fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
             fig.show()
 
@@ -2622,13 +3276,28 @@ class CRISPNonU(CRISP):
             The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
         """
 
-        wvl = np.round(self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(self.ind[1]) << u.Angstrom, decimals=2).value
-        del_wvl = np.round(wvl - (self.wcs.low_level_wcs._wcs[0,:,0,0].array_index_to_world(self.wcs.low_level_wcs._wcs.array_shape[1]//2) << u.Angstrom).value, decimals=2)
+        wvl = np.round(
+            self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(self.ind[1])
+            << u.Angstrom,
+            decimals=2,
+        ).value
+        del_wvl = np.round(
+            wvl
+            - (
+                self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(
+                    self.wcs.low_level_wcs._wcs.array_shape[1] // 2
+                )
+                << u.Angstrom
+            ).value,
+            decimals=2,
+        )
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
             datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
-        title = f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l}={del_wvl}{self.aa})"
+        title = (
+            f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l}={del_wvl}{self.aa})"
+        )
 
         if (frame is None) and (not self.rotate):
             if self.data.ndim == 2:
@@ -2638,19 +3307,19 @@ class CRISPNonU(CRISP):
                     data = self.data
                     data[data < 0] = np.nan
                     im1 = ax1.imshow(data, cmap="Greys_r")
-                    ax1.set_title("Stokes I "+title)
+                    ax1.set_title("Stokes I " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
                 elif stokes == "Q":
                     im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10)
-                    ax1.set_title("Stokes Q "+title)
+                    ax1.set_title("Stokes Q " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
                 elif stokes == "U":
                     im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10)
-                    ax1.set_title("Stokes U "+title)
+                    ax1.set_title("Stokes U " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
                 elif stokes == "V":
                     im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-100, vmax=100)
-                    ax1.set_title("Stokes V "+title)
+                    ax1.set_title("Stokes V " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="V [DNs]")
                 else:
                     raise ValueError("This is not a Stokes.")
@@ -2663,7 +3332,9 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(2, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        2, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel(" ")
@@ -2671,7 +3342,9 @@ class CRISPNonU(CRISP):
                     ax1.tick_params(axis="x", labelbottom=False)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(2, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        2, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel(" ")
@@ -2680,14 +3353,18 @@ class CRISPNonU(CRISP):
                     ax2.tick_params(axis="y", labelleft=False)
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
-                    ax3 = fig.add_subplot(2, 2, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,2))
+                    ax3 = fig.add_subplot(
+                        2, 2, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
+                    )
                     im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10)
                     ax3.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax3.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax3.set_title("Stokes U ")
                     fig.colorbar(im3, ax=ax3, orientation="vertical", label="U [DNs]")
 
-                    ax4 = fig.add_subplot(2, 2, 4, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,3))
+                    ax4 = fig.add_subplot(
+                        2, 2, 4, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 3)
+                    )
                     im4 = ax4.imshow(self.data[3], cmap="Greys_r", vmin=-100, vmax=100)
                     ax4.set_ylabel(" ")
                     ax4.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2700,14 +3377,18 @@ class CRISPNonU(CRISP):
 
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2715,7 +3396,9 @@ class CRISPNonU(CRISP):
                     ax2.tick_params(axis="y", labelleft=False)
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
-                    ax3 = fig.add_subplot(1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,2))
+                    ax3 = fig.add_subplot(
+                        1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
+                    )
                     im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10)
                     ax3.set_ylabel(" ")
                     ax3.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2726,14 +3409,18 @@ class CRISPNonU(CRISP):
                     fig = plt.figure()
                     fig.suptitle(title)
 
-                    ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10)
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
-                    ax2 = fig.add_subplot(1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2741,7 +3428,9 @@ class CRISPNonU(CRISP):
                     ax2.tick_params(axis="y", labelleft=False)
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
 
-                    ax3 = fig.add_subplot(1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,2))
+                    ax3 = fig.add_subplot(
+                        1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
+                    )
                     im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100)
                     ax3.set_ylabel(" ")
                     ax3.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2754,14 +3443,18 @@ class CRISPNonU(CRISP):
 
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2769,7 +3462,9 @@ class CRISPNonU(CRISP):
                     ax2.tick_params(axis="y", labelleft=False)
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
-                    ax3 = fig.add_subplot(1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,2))
+                    ax3 = fig.add_subplot(
+                        1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
+                    )
                     im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100)
                     ax3.set_ylabel(" ")
                     ax3.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2782,14 +3477,18 @@ class CRISPNonU(CRISP):
 
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2797,7 +3496,9 @@ class CRISPNonU(CRISP):
                     ax2.tick_params(axis="y", labelleft=False)
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
 
-                    ax3 = fig.add_subplot(1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,2))
+                    ax3 = fig.add_subplot(
+                        1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
+                    )
                     im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100)
                     ax3.set_ylabel(" ")
                     ax3.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2810,14 +3511,18 @@ class CRISPNonU(CRISP):
 
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2830,14 +3535,18 @@ class CRISPNonU(CRISP):
 
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2850,14 +3559,18 @@ class CRISPNonU(CRISP):
 
                     data = self.data[0]
                     data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(data, cmap="Greys_r")
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
-                    ax2 = fig.add_subplot(1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2868,14 +3581,18 @@ class CRISPNonU(CRISP):
                     fig = plt.figure()
                     fig.suptitle(title)
 
-                    ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10)
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
-                    ax2 = fig.add_subplot(1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2886,14 +3603,18 @@ class CRISPNonU(CRISP):
                     fig = plt.figure()
                     fig.suptitle(title)
 
-                    ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10)
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
-                    ax2 = fig.add_subplot(1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2904,14 +3625,18 @@ class CRISPNonU(CRISP):
                     fig = plt.figure()
                     fig.suptitle(title)
 
-                    ax1 = fig.add_subplot(1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,0))
+                    ax1 = fig.add_subplot(
+                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
+                    )
                     im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10)
                     ax1.set_ylabel("Helioprojective Latitude [arcsec]")
                     ax1.set_xlabel("Helioprojective Longitude [arcsec]")
                     ax1.set_title("Stokes U")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
 
-                    ax2 = fig.add_subplot(1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs,1))
+                    ax2 = fig.add_subplot(
+                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
+                    )
                     im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100)
                     ax2.set_ylabel(" ")
                     ax2.set_xlabel("Helioprojective Longitude [arcsec]")
@@ -2926,19 +3651,25 @@ class CRISPNonU(CRISP):
                     data = self.data
                     data[data < 0] = np.nan
                     im1 = ax1.imshow(data, cmap="Greys_r", origin="lower")
-                    ax1.set_title("Stokes I "+title)
+                    ax1.set_title("Stokes I " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
                 elif stokes == "Q":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
-                    ax1.set_title("Stokes Q "+title)
+                    im1 = ax1.imshow(
+                        self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
+                    ax1.set_title("Stokes Q " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
                 elif stokes == "U":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
-                    ax1.set_title("Stokes U "+title)
+                    im1 = ax1.imshow(
+                        self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
+                    ax1.set_title("Stokes U " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
                 elif stokes == "V":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
-                    ax1.set_title("Stokes V "+title)
+                    im1 = ax1.imshow(
+                        self.data, cmap="Greys_r", vmin=-100, vmax=100, origin="lower"
+                    )
+                    ax1.set_title("Stokes V " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="V [DNs]")
                 else:
                     raise ValueError("This is not a Stokes.")
@@ -2958,7 +3689,9 @@ class CRISPNonU(CRISP):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(2, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_yticks([])
                     ax2.set_xticks([])
                     ax2.set_title("Stokes Q")
@@ -2966,14 +3699,22 @@ class CRISPNonU(CRISP):
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
                     ax3 = fig.add_subplot(2, 2, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im3 = ax3.imshow(
+                        self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax3.set_ylabel("y [pixels]")
                     ax3.set_xlabel("x [pixels]")
                     ax3.set_title("Stokes U")
                     fig.colorbar(im3, ax=ax3, orientation="vertical", label="U [DNs]")
 
                     ax4 = fig.add_subplot(2, 2, 4)
-                    im4 = ax4.imshow(self.data[3], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im4 = ax4.imshow(
+                        self.data[3],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax4.set_xlabel("x [pixels]")
                     ax4.set_yticks([])
                     ax4.set_title("Stokes V")
@@ -2992,14 +3733,18 @@ class CRISPNonU(CRISP):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes Q")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im3 = ax3.imshow(
+                        self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax3.set_xlabel("x [pixels]")
                     ax3.set_yticks([])
                     ax3.set_title("Stokes U")
@@ -3009,21 +3754,31 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im1 = ax1.imshow(
+                        self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes U")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax3.set_xlabel("x [pixels]")
                     ax3.set_yticks([])
                     ax3.set_title("Stokes V")
@@ -3042,14 +3797,22 @@ class CRISPNonU(CRISP):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes Q")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax3.set_xlabel("x [pixels]")
                     ax3.set_yticks([])
                     ax3.set_title("Stokes V")
@@ -3068,14 +3831,22 @@ class CRISPNonU(CRISP):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes U")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax3.set_xlabel("x [pixels]")
                     ax3.set_yticks([])
                     ax3.set_title("Stokes V")
@@ -3094,7 +3865,9 @@ class CRISPNonU(CRISP):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes Q")
@@ -3113,7 +3886,9 @@ class CRISPNonU(CRISP):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes U")
@@ -3132,7 +3907,13 @@ class CRISPNonU(CRISP):
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes V")
@@ -3142,14 +3923,18 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im1 = ax1.imshow(
+                        self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes U")
@@ -3159,14 +3944,22 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im1 = ax1.imshow(
+                        self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes V")
@@ -3176,14 +3969,22 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower")
+                    im1 = ax1.imshow(
+                        self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
+                    )
                     ax1.set_ylabel("y [pixels]")
                     ax1.set_xlabel("x [pixels]")
                     ax1.set_title("Stokes U")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower")
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                    )
                     ax2.set_xlabel("x [pixels]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes V ")
@@ -3201,20 +4002,43 @@ class CRISPNonU(CRISP):
                 if stokes == "I":
                     data = self.data
                     data[data < 0] = np.nan
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
-                    ax1.set_title("Stokes I "+title)
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
+                    ax1.set_title("Stokes I " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
                 elif stokes == "Q":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
-                    ax1.set_title("Stokes Q "+title)
+                    im1 = ax1.imshow(
+                        self.data,
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
+                    ax1.set_title("Stokes Q " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
                 elif stokes == "U":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
-                    ax1.set_title("Stokes U "+title)
+                    im1 = ax1.imshow(
+                        self.data,
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
+                    ax1.set_title("Stokes U " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
                 elif stokes == "V":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
-                    ax1.set_title("Stokes V "+title)
+                    im1 = ax1.imshow(
+                        self.data,
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
+                    ax1.set_title("Stokes V " + title)
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="V [DNs]")
                 else:
                     raise ValueError("This is not a Stokes.")
@@ -3228,28 +4052,51 @@ class CRISPNonU(CRISP):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(2, 2, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xticks([])
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(2, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_yticks([])
                     ax2.set_xticks([])
                     ax2.set_title("Stokes Q")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
                     ax3 = fig.add_subplot(2, 2, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax3.set_ylabel("y [arcsec]")
                     ax3.set_xlabel("x [arcsed]")
                     ax3.set_title("Stokes U")
                     fig.colorbar(im3, ax=ax3, orientation="vertical", label="U [DNs]")
 
                     ax4 = fig.add_subplot(2, 2, 4)
-                    im4 = ax4.imshow(self.data[3], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im4 = ax4.imshow(
+                        self.data[3],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax4.set_xlabel("x [arcsed]")
                     ax4.set_yticks([])
                     ax4.set_title("Stokes V")
@@ -3261,21 +4108,37 @@ class CRISPNonU(CRISP):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes Q")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax3.set_xlabel("x [arcsec]")
                     ax3.set_yticks([])
                     ax3.set_title("Stokes U")
@@ -3285,21 +4148,42 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        self.data[0],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes U")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax3.set_xlabel("x [arcsec]")
                     ax3.set_yticks([])
                     ax3.set_title("Stokes V")
@@ -3311,21 +4195,37 @@ class CRISPNonU(CRISP):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes Q")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax3.set_xlabel("x [arcsec]")
                     ax3.set_yticks([])
                     ax3.set_title("Stokes V")
@@ -3337,21 +4237,37 @@ class CRISPNonU(CRISP):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes U")
                     fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
 
                     ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im3 = ax3.imshow(
+                        self.data[2],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax3.set_xlabel("x [arcsec]")
                     ax3.set_yticks([])
                     ax3.set_title("Stokes V")
@@ -3363,14 +4279,23 @@ class CRISPNonU(CRISP):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes Q")
@@ -3382,14 +4307,23 @@ class CRISPNonU(CRISP):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes U")
@@ -3401,14 +4335,23 @@ class CRISPNonU(CRISP):
                     data = self.data[0]
                     data[data < 0] = np.nan
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes I")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes V")
@@ -3418,14 +4361,28 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        self.data[0],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes U")
@@ -3435,14 +4392,28 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        self.data[0],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes Q")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes V")
@@ -3452,14 +4423,28 @@ class CRISPNonU(CRISP):
                     fig.suptitle(title)
 
                     ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower", extent=[0,xmax,0,ymax])
+                    im1 = ax1.imshow(
+                        self.data[0],
+                        cmap="Greys_r",
+                        vmin=-10,
+                        vmax=10,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax1.set_ylabel("y [arcsec]")
                     ax1.set_xlabel("x [arcsec]")
                     ax1.set_title("Stokes U")
                     fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
 
                     ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100, origin="lower", extent=[0,xmax,0,ymax])
+                    im2 = ax2.imshow(
+                        self.data[1],
+                        cmap="Greys_r",
+                        vmin=-100,
+                        vmax=100,
+                        origin="lower",
+                        extent=[0, xmax, 0, ymax],
+                    )
                     ax2.set_xlabel("x [arcsec]")
                     ax2.set_yticks([])
                     ax2.set_title("Stokes V ")
@@ -3478,6 +4463,7 @@ class CRISPNonU(CRISP):
         """
         return self.wvl[idx]
 
+
 class CRISPNonUSequence(CRISPSequence):
     """
     This is a class for a sequence of ``CRISPNonU`` objects and operates
@@ -3490,6 +4476,7 @@ class CRISPNonUSequence(CRISPSequence):
         ``CRISPNonU`` instances. The function
         ``crispy.utils.CRISP_sequence_generator`` can be used to generate this list.
     """
+
     def __init__(self, files: List[Dict]) -> None:
         self.list = [CRISPNonU(**f) for f in files]
 
@@ -3499,7 +4486,15 @@ class CRISPNonUSequence(CRISPSequence):
             date = self.list[0].file.header["DATE-AVG"][:-13]
             cl = [str(np.round(f.file.header["TWAVE1"], decimals=2)) for f in self.list]
             wwidth = [f.file.header["WWIDTH1"] for f in self.list]
-            shape = [str([f.file.header[f"NAXIS{j+1}"] for j in reversed(range(f.file.data.ndim))]) for f in self.list]
+            shape = [
+                str(
+                    [
+                        f.file.header[f"NAXIS{j+1}"]
+                        for j in reversed(range(f.file.data.ndim))
+                    ]
+                )
+                for f in self.list
+            ]
             el = [f.file.header["WDESC1"] for f in self.list]
             pointing_x = str(self.list[0].file.header["CRVAL1"])
             pointing_y = str(self.list[0].file.header["CRVAL2"])
