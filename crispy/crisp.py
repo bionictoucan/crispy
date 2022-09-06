@@ -203,7 +203,10 @@ class CRISP(CRISPSlicingMixin):
         Parameters
         ----------
         sep : bool, optional
-            Whether or not to return just the rotated array i.e. if False then ```self.data```is replaced with the rotated object and the full frame is moved to ```self.full_frame``` else the rotated data is returned as a numpy array. Default is False.
+            Whether or not to return just the rotated array i.e. if False then
+            ```self.data```is replaced with the rotated object and the full
+            frame is moved to ```self.full_frame``` else the rotated data is
+            returned as a numpy array. Default is False.
 
         Returns
         -------
@@ -232,12 +235,17 @@ class CRISP(CRISPSlicingMixin):
 
     def reconstruct_full_frame(self, sep: bool = False) -> Optional[np.ndarray]:
         """
-        If the image has been rotated (which would take it out of its WCS) then this method can be used to reconstruct the image in its original WCS frame.
+        If the image has been rotated (which would take it out of its WCS) then
+        this method can be used to reconstruct the image in its original WCS
+        frame.
 
         Parameters
         ----------
         sep : bool, optional
-            Whether or not to return just the array of the full frame i.e. if False, then ```self.data``` is replaced with the full frame object and the rotated is moved to ```self.rot_data``` else the full frame is return as a numpy array. Default is False.
+            Whether or not to return just the array of the full frame i.e. if
+            False, then ```self.data``` is replaced with the full frame object
+            and the rotated is moved to ```self.rot_data``` else the full frame
+            is return as a numpy array. Default is False.
 
         Returns
         -------
@@ -274,7 +282,12 @@ class CRISP(CRISPSlicingMixin):
         unit : astropy.units.Unit or None, optional
             The unit to have the wavelength axis in. Default is None which changes the units to Angstrom.
         air : bool, optional
-            Whether or not to convert the wavelength axis to air wavelength (if it is not already been converted). e.g. for the Ca II 8542  spectral line, 8542 is the rest wavelength of the spectral line measured in air. It is possible that the header data (and by proxy the WCS) will have the value of the rest wavelength in vacuum (which in this case is 8544). Default is False.
+            Whether or not to convert the wavelength axis to air wavelength (if
+            it is not already been converted). e.g. for the Ca II 8542  spectral
+            line, 8542 is the rest wavelength of the spectral line measured in
+            air. It is possible that the header data (and by proxy the WCS) will
+            have the value of the rest wavelength in vacuum (which in this case
+            is 8544). Default is False.
         d : bool, optional
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
@@ -331,11 +344,19 @@ class CRISP(CRISPSlicingMixin):
         Parameters
         ----------
         stokes : str
-            This is to ensure the plots are labelled correctly. Choose "all" to plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or single letter to plot just one of the Stokes parameters e.g. "U".
+            This is to ensure the plots are labelled correctly. Choose "all" to
+            plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or
+            single letter to plot just one of the Stokes parameters e.g. "U".
         unit : astropy.units.Unit or None, optional
-            The unit to have the wavelength axis in. Default is None which changes the units to Angstrom.
+            The unit to have the wavelength axis in. Default is None which
+            changes the units to Angstrom.
         air : bool, optional
-            Whether or not to convert the wavelength axis to air wavelength (if it is not already been converted). e.g. for the Ca II 8542  spectral line, 8542 is the rest wavelength of the spectral line measured in air. It is possible that the header data (and by proxy the WCS) will have the value of the rest wavelength in vacuum (which in this case is 8544). Default is False.
+            Whether or not to convert the wavelength axis to air wavelength (if
+            it is not already been converted). e.g. for the Ca II 8542  spectral
+            line, 8542 is the rest wavelength of the spectral line measured in
+            air. It is possible that the header data (and by proxy the WCS) will
+            have the value of the rest wavelength in vacuum (which in this case
+            is 8544). Default is False.
         d : bool, optional
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
@@ -590,7 +611,8 @@ class CRISP(CRISPSlicingMixin):
         Parameters
         ----------
         frame : str or None, optional
-            The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+            The units to use on the axes. Default is None so the WCS is used.
+            Other option is "pix" for pixel frame.
         norm : matplotlib.colors.Normalize or None, optional
             The normalisation to use in the colourmap.
         """
@@ -676,9 +698,12 @@ class CRISP(CRISPSlicingMixin):
         Parameters
         ----------
         stokes : str
-            This is to ensure the plots are labelled correctly. Choose "all" to plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or single letter to plot just one of the Stokes parameters e.g. "U".
+            This is to ensure the plots are labelled correctly. Choose "all" to
+            plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or
+            single letter to plot just one of the Stokes parameters e.g. "U".
         frame : str or None, optional
-            The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+            The units to use on the axes. Default is None so the WCS is used.
+            Other option is "pix" for pixel frame.
         """
 
         wvl = np.round(
@@ -1954,7 +1979,12 @@ class CRISP(CRISPSlicingMixin):
         self, y: int, x: int, coord: bool = False, unit: bool = False
     ) -> Tuple[float, float]:
         """
-        This function will take a y, x coordinate in pixel space and map it to Helioprojective Longitude, Helioprojective Latitude according to the transform in the WCS. This will return the Helioprojective coordinates in units of arcseconds. Note this function takes arguments in the order of numpy indexing (y,x) but returns a pair longitude/latitude which is Solar-X, Solar-Y.
+        This function will take a y, x coordinate in pixel space and map it to
+        Helioprojective Longitude, Helioprojective Latitude according to the
+        transform in the WCS. This will return the Helioprojective coordinates
+        in units of arcseconds. Note this function takes arguments in the order
+        of numpy indexing (y,x) but returns a pair longitude/latitude which is
+        Solar-X, Solar-Y.
 
         Parameters
         ----------
@@ -2235,7 +2265,12 @@ class CRISP(CRISPSlicingMixin):
 
     def from_lonlat(self, lon: float, lat: float) -> Tuple[float, float]:
         """
-        This function takes a Helioprojective Longitude, Helioprojective Latitude pair and converts them to the y, x indices to index the object correctly. The function takes its arguments in the order Helioprojective Longitude, Helioprojective Latitude but returns the indices in the (y,x) format so that the output of this function can be used to directly index the object.
+        This function takes a Helioprojective Longitude, Helioprojective
+        Latitude pair and converts them to the y, x indices to index the object
+        correctly. The function takes its arguments in the order Helioprojective
+        Longitude, Helioprojective Latitude but returns the indices in the (y,x)
+        format so that the output of this function can be used to directly index
+        the object.
 
         Parameters
         ----------
@@ -2501,16 +2536,24 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         d: bool = False,
     ) -> None:
         """
-        Function for plotting the intensity spectrum for a given slice. Can be done either for all of the instances or for a single instance.
+        Function for plotting the intensity spectrum for a given slice. Can be
+        done either for all of the instances or for a single instance.
 
         Parameters
         ----------
         idx : str or int
-            If "all" then the spectrum for a specific slice is plotted for all instances. If an int, then the spectrum for a specific slice for a specific instance is plotted.
+            If "all" then the spectrum for a specific slice is plotted for all
+            instances. If an int, then the spectrum for a specific slice for a
+            specific instance is plotted.
         unit : astropy.units.Unit or None, optional
             The unit to have the wavelength axis in. Default is None which changes the units to Angstrom.
         air : bool, optional
-            Whether or not to convert the wavelength axis to air wavelength (if it is not already been converted). e.g. for the Ca II 8542  spectral line, 8542 is the rest wavelength of the spectral line measured in air. It is possible that the header data (and by proxy the WCS) will have the value of the rest wavelength in vacuum (which in this case is 8544). Default is False.
+            Whether or not to convert the wavelength axis to air wavelength (if
+            it is not already been converted). e.g. for the Ca II 8542  spectral
+            line, 8542 is the rest wavelength of the spectral line measured in
+            air. It is possible that the header data (and by proxy the WCS) will
+            have the value of the rest wavelength in vacuum (which in this case
+            is 8544). Default is False.
         d : bool, optional
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
@@ -2530,18 +2573,29 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         d: bool = False,
     ) -> None:
         """
-        Function for plotting the Stokes profiles for a given slice. Can be done either for all of the instances or for a single instance.
+        Function for plotting the Stokes profiles for a given slice. Can be done
+        either for all of the instances or for a single instance.
 
         Parameters
         ----------
         idx : str or int
-            If "all" then the spectrum for a specific slice is plotted for all instances. If an int, then the spectrum for a specific slice for a specific instance is plotted.
+            If "all" then the spectrum for a specific slice is plotted for all
+            instances. If an int, then the spectrum for a specific slice for a
+            specific instance is plotted.
         stokes : str
-            This is to ensure the plots are labelled correctly. Choose "all" to plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or single letter to plot just one of the Stokes parameters e.g. "U".
+            This is to ensure the plots are labelled correctly. Choose "all" to
+            plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or
+            single letter to plot just one of the Stokes parameters e.g. "U".
         unit : astropy.units.Unit or None, optional
-            The unit to have the wavelength axis in. Default is None which changes the units to Angstrom.
+            The unit to have the wavelength axis in. Default is None which
+            changes the units to Angstrom.
         air : bool, optional
-            Whether or not to convert the wavelength axis to air wavelength (if it is not already been converted). e.g. for the Ca II 8542  spectral line, 8542 is the rest wavelength of the spectral line measured in air. It is possible that the header data (and by proxy the WCS) will have the value of the rest wavelength in vacuum (which in this case is 8544). Default is False.
+            Whether or not to convert the wavelength axis to air wavelength (if
+            it is not already been converted). e.g. for the Ca II 8542  spectral
+            line, 8542 is the rest wavelength of the spectral line measured in
+            air. It is possible that the header data (and by proxy the WCS) will
+            have the value of the rest wavelength in vacuum (which in this case
+            is 8544). Default is False.
         d : bool, optional
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
@@ -2559,14 +2613,18 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         norm: Optional[matplotlib.colors.Normalize] = None,
     ) -> None:
         """
-        Function for plotting the intensity image for a given wavelength. Can be done either for all of the instances or for a single instance.
+        Function for plotting the intensity image for a given wavelength. Can be
+        done either for all of the instances or for a single instance.
 
         Parameters
         ----------
         idx : str or int
-            If "all" then the spectrum for a specific slice is plotted for all instances. If an int, then the spectrum for a specific slice for a specific instance is plotted.
+            If "all" then the spectrum for a specific slice is plotted for all
+            instances. If an int, then the spectrum for a specific slice for a
+            specific instance is plotted.
         frame : str or None, optional
-            The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+            The units to use on the axes. Default is None so the WCS is used.
+            Other option is "pix" for pixel frame.
         norm : matplotlib.colors.Normalize or None, optional
             The normalisation to use in the colourmap.
         """
@@ -2581,16 +2639,22 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         self, idx: Union[str, int], stokes: str, frame: Optional[str] = None
     ) -> None:
         """
-        Function to plot the Stokes maps for a given wavelength. Can be done either for all of the instances or for a single instance.
+        Function to plot the Stokes maps for a given wavelength. Can be done
+        either for all of the instances or for a single instance.
 
         Parameters
         ----------
         idx : str or int
-            If "all" then the spectrum for a specific slice is plotted for all instances. If an int, then the spectrum for a specific slice for a specific instance is plotted.
+            If "all" then the spectrum for a specific slice is plotted for all
+            instances. If an int, then the spectrum for a specific slice for a
+            specific instance is plotted.
         stokes : str
-            This is to ensure the plots are labelled correctly. Choose "all" to plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or single letter to plot just one of the Stokes parameters e.g. "U".
+            This is to ensure the plots are labelled correctly. Choose "all" to
+            plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or
+            single letter to plot just one of the Stokes parameters e.g. "U".
         frame : str or None, optional
-            The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+            The units to use on the axes. Default is None so the WCS is used.
+            Other option is "pix" for pixel frame.
         """
         if idx != "all":
             self.list[idx].stokes_map(stokes, frame=frame)
@@ -2600,7 +2664,12 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
 
     def from_lonlat(self, lon: float, lat: float) -> Tuple[float, float]:
         """
-        This function takes a Helioprojective Longitude, Helioprojective Latitude pair and converts them to the y, x indices to index the object correctly. The function takes its arguments in the order Helioprojective Longitude, Helioprojective Latitude but returns the indices in the (y,x) format so that the output of this function can be used to directly index the object.
+        This function takes a Helioprojective Longitude, Helioprojective
+        Latitude pair and converts them to the y, x indices to index the object
+        correctly. The function takes its arguments in the order Helioprojective
+        Longitude, Helioprojective Latitude but returns the indices in the (y,x)
+        format so that the output of this function can be used to directly index
+        the object.
 
         Parameters
         ----------
@@ -2619,7 +2688,12 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
 
     def to_lonlat(self, y: int, x: int) -> Tuple[float, float]:
         """
-        This function will take a y, x coordinate in pixel space and map it to Helioprojective Longitude, Helioprojective Latitude according to the transform in the WCS. This will return the Helioprojective coordinates in units of arcseconds. Note this function takes arguments in the order of numpy indexing (y,x) but returns a pair longitude/latitude which is Solar-X, Solar-Y.
+        This function will take a y, x coordinate in pixel space and map it to
+        Helioprojective Longitude, Helioprojective Latitude according to the
+        transform in the WCS. This will return the Helioprojective coordinates
+        in units of arcseconds. Note this function takes arguments in the order
+        of numpy indexing (y,x) but returns a pair longitude/latitude which is
+        Solar-X, Solar-Y.
 
         Parameters
         ----------
@@ -2681,12 +2755,14 @@ class CRISPWideband(CRISP):
         self, frame: Optional[str] = None, norm: Optional[str] = None
     ) -> None:
         """
-        This function plots the image in the same manner as the ``crispy.crisp.CRISP.intensity_map`` method.
+        This function plots the image in the same manner as the
+        ``crispy.crisp.CRISP.intensity_map`` method.
 
         Parameters
         ----------
         frame : str or None, optional
-            The frame to plot the data in. Default is None, meaning the WCS frame is used. The other option is "pix" to plot in the pixel plane.
+            The frame to plot the data in. Default is None, meaning the WCS
+            frame is used. The other option is "pix" to plot in the pixel plane.
         norm : matplotlib.colors.Normalize or None, optional
             The normalisation to use in the colourmap.
         """
@@ -2798,7 +2874,15 @@ class CRISPWidebandSequence(CRISPSequence):
 
 class CRISPNonU(CRISP):
     """
-    This is a class for narrowband CRISP observations whose wavelength axis is sampled non-uniformly. What this means is that each pair of sampled wavelengths is not necessarily separated by the same :math:`\\Delta \\lambda` and thus the ``CDELT3`` fits keyword becomes meaningless as this can only comprehend constant changes in the third axis. This also means that the WCS does not work for the wavelength axis but is still constructed as it holds true in the y,x spatial plane. This class assumes that if the sampling is non-uniform then the true wavelengths that are sampled are stored in the first non-PrimaryHDU in the fits file.
+    This is a class for narrowband CRISP observations whose wavelength axis is
+    sampled non-uniformly. What this means is that each pair of sampled
+    wavelengths is not necessarily separated by the same :math:`\\Delta
+    \\lambda` and thus the ``CDELT3`` fits keyword becomes meaningless as this
+    can only comprehend constant changes in the third axis. This also means that
+    the WCS does not work for the wavelength axis but is still constructed as it
+    holds true in the y,x spatial plane. This class assumes that if the sampling
+    is non-uniform then the true wavelengths that are sampled are stored in the
+    first non-PrimaryHDU in the fits file.
     """
 
     __doc__ += parameter_docstring(CRISP)
@@ -2874,9 +2958,15 @@ class CRISPNonU(CRISP):
         Parameters
         ----------
         unit : astropy.units.Unit or None, optional
-            The unit to have the wavelength axis in. Default is None which changes the units to Angstrom.
+            The unit to have the wavelength axis in. Default is None which
+            changes the units to Angstrom.
         air : bool, optional
-            Whether or not to convert the wavelength axis to air wavelength (if it is not already been converted). e.g. for the Ca II 8542  spectral line, 8542 is the rest wavelength of the spectral line measured in air. It is possible that the header data (and by proxy the WCS) will have the value of the rest wavelength in vacuum (which in this case is 8544). Default is False.
+            Whether or not to convert the wavelength axis to air wavelength (if
+            it is not already been converted). e.g. for the Ca II 8542  spectral
+            line, 8542 is the rest wavelength of the spectral line measured in
+            air. It is possible that the header data (and by proxy the WCS) will
+            have the value of the rest wavelength in vacuum (which in this case
+            is 8544). Default is False.
         d : bool, optional
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
@@ -2929,11 +3019,19 @@ class CRISPNonU(CRISP):
         Parameters
         ----------
         stokes : str
-            This is to ensure the plots are labelled correctly. Choose "all" to plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or single letter to plot just one of the Stokes parameters e.g. "U".
+            This is to ensure the plots are labelled correctly. Choose "all" to
+            plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or
+            single letter to plot just one of the Stokes parameters e.g. "U".
         unit : astropy.units.Unit or None, optional
-            The unit to have the wavelength axis in. Default is None which changes the units to Angstrom.
+            The unit to have the wavelength axis in. Default is None which
+            changes the units to Angstrom.
         air : bool, optional
-            Whether or not to convert the wavelength axis to air wavelength (if it is not already been converted). e.g. for the Ca II 8542  spectral line, 8542 is the rest wavelength of the spectral line measured in air. It is possible that the header data (and by proxy the WCS) will have the value of the rest wavelength in vacuum (which in this case is 8544). Default is False.
+            Whether or not to convert the wavelength axis to air wavelength (if
+            it is not already been converted). e.g. for the Ca II 8542  spectral
+            line, 8542 is the rest wavelength of the spectral line measured in
+            air. It is possible that the header data (and by proxy the WCS) will
+            have the value of the rest wavelength in vacuum (which in this case
+            is 8544). Default is False.
         d : bool, optional
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
@@ -3188,7 +3286,8 @@ class CRISPNonU(CRISP):
         Parameters
         ----------
         frame : str or None, optional
-            The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+            The units to use on the axes. Default is None so the WCS is used.
+            Other option is "pix" for pixel frame.
         norm : matplotlib.colors.Normalize or None, optional
             The normalisation to use in the colourmap.
         """
@@ -3271,9 +3370,12 @@ class CRISPNonU(CRISP):
         Parameters
         ----------
         stokes : str
-            This is to ensure the plots are labelled correctly. Choose "all" to plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or single letter to plot just one of the Stokes parameters e.g. "U".
+            This is to ensure the plots are labelled correctly. Choose "all" to
+            plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or
+            single letter to plot just one of the Stokes parameters e.g. "U".
         frame : str or None, optional
-            The units to use on the axes. Default is None so the WCS is used. Other option is "pix" for pixel frame.
+            The units to use on the axes. Default is None so the WCS is used.
+            Other option is "pix" for pixel frame.
         """
 
         wvl = np.round(

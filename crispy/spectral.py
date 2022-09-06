@@ -49,7 +49,8 @@ def integrated_intensity(intensity_vector, wavelengths, idx_range="all", axis=-1
 
 def intensity_ratio(I_1, I_2):
     """
-    A function that calculates the intensity ratio of two previously integrated intensities.
+    A function that calculates the intensity ratio of two previously integrated
+    intensities.
 
     Parameters
     ----------
@@ -74,7 +75,8 @@ def doppler_vel(l, del_l=None):
     l : float
         The rest wavelength of the transition.
     del_l : float, optional
-        The difference between the observed wavelength and the rest wavelength of the transition.
+        The difference between the observed wavelength and the rest wavelength
+        of the transition.
     """
 
     return (del_l / l) * 3e5
@@ -94,7 +96,8 @@ def bar_lambda(intensity_vector, wavelengths, axis=-1):
     wavelengths : numpy.ndarray
         The wavelengths to integrate over.
     axis : int, optional
-        The axis to integrate over. Allows for vectorisation for integral over multi-d arrays. Default is -1, the last axis.
+        The axis to integrate over. Allows for vectorisation for integral over
+        multi-d arrays. Default is -1, the last axis.
     """
 
     if type(intensity_vector) != np.ndarray:
@@ -125,9 +128,12 @@ def variance(intensity_vector, wavelengths, bar_l=None, axis=-1):
     wavelengths : numpy.ndarray
         The wavelengths to integrate over.
     bar_l : float or None, optional
-        The intensity-averaged line core of the spectral line. Default is None will call ``crispy.spectral.bar_lambda`` function on the ``intensity_vector`` and ``wavelengths`` argument to calculate.
+        The intensity-averaged line core of the spectral line. Default is None
+        will call ``crispy.spectral.bar_lambda`` function on the
+        ``intensity_vector`` and ``wavelengths`` argument to calculate.
     axis : int, optional
-        The axis to integrate over. Allows for vectorisation for integral over multi-d arrays. Default is -1, the last axis.
+        The axis to integrate over. Allows for vectorisation for integral over
+        multi-d arrays. Default is -1, the last axis.
     """
 
     if type(intensity_vector) != np.ndarray:
@@ -151,7 +157,9 @@ def variance(intensity_vector, wavelengths, bar_l=None, axis=-1):
 
 def wing_idxs(intensity_vector, wavelengths, var=None, bar_l=None, axis=-1):
     """
-    A function to work out the index range for the wings of the spectral line. This is working on the definition of wings that says the wings are defined as being one standard deviation away from the intensity-averaged line core.
+    A function to work out the index range for the wings of the spectral line.
+    This is working on the definition of wings that says the wings are defined
+    as being one standard deviation away from the intensity-averaged line core.
 
     Parameters
     ----------
@@ -160,11 +168,16 @@ def wing_idxs(intensity_vector, wavelengths, var=None, bar_l=None, axis=-1):
     wavelengths : numpy.ndarray
         The wavelengths to integrate over.
     var : float or None, optional
-        The variance of the spectral line. Default is None will call ``crispy.spectral.variance`` function on the ``intensity_vector`` and ``wavelengths`` argument to calculate.
+        The variance of the spectral line. Default is None will call
+        ``crispy.spectral.variance`` function on the ``intensity_vector`` and
+        ``wavelengths`` argument to calculate.
     bar_l : float or None, optional
-        The intensity-averaged line core of the spectral line. Default is None will call ``crispy.spectral.bar_lambda`` function on the ``intensity_vector`` and ``wavelengths`` argument to calculate.
+        The intensity-averaged line core of the spectral line. Default is None
+        will call ``crispy.spectral.bar_lambda`` function on the
+        ``intensity_vector`` and ``wavelengths`` argument to calculate.
     axis : int, optional
-        The axis to integrate over. Allows for vectorisation for integral over multi-d arrays. Default is -1, the last axis.
+        The axis to integrate over. Allows for vectorisation for integral over
+        multi-d arrays. Default is -1, the last axis.
     """
 
     if type(intensity_vector) != np.ndarray:
@@ -215,7 +228,10 @@ def wing_idxs(intensity_vector, wavelengths, var=None, bar_l=None, axis=-1):
 
 def delta_lambda(wing_idxs, wavelengths):
     """
-    Calculates the half-width in an intensity range i.e. there are N indices spanning a wing then the half-width is half of those indices multiplied by the change in wavelength between two entries. N.B. this is only the case when the space in the spectral axis is uniform.
+    Calculates the half-width in an intensity range i.e. there are N indices
+    spanning a wing then the half-width is half of those indices multiplied by
+    the change in wavelength between two entries. N.B. this is only the case
+    when the space in the spectral axis is uniform.
 
     .. math::
        \delta \lambda = \\frac{N}{2} \\times (\Delta \lambda)
@@ -249,7 +265,9 @@ def lambda_0_wing(wing_idxs, wavelengths, d_lambda=None):
     wavelengths : numpy.ndarray
         The wavelengths to integrate over.
     d_lambda : float, optional
-        The half-width of the wing of the spectral line. Default is None will call ``crispy.spectral.delta_lambda`` function on the ``wing_idxs`` and ``wavelengths`` arguments to calculate.
+        The half-width of the wing of the spectral line. Default is None will
+        call ``crispy.spectral.delta_lambda`` function on the ``wing_idxs`` and
+        ``wavelengths`` arguments to calculate.
     """
 
     if d_lambda is None:
@@ -260,12 +278,15 @@ def lambda_0_wing(wing_idxs, wavelengths, d_lambda=None):
 
 def interp_fine(wavels, intensity, pts=101):
     """
-    Interpolates the spectral line onto a finer grid for more accurate calculations for the wing properties.
+    Interpolates the spectral line onto a finer grid for more accurate
+    calculations for the wing properties.
 
     Parameters
     ----------
     spec_line : tuple [numpy.ndarray]
-        The spectral line to be interpolated onto a finer grid. This is a tuple of the intensities and the wavelengths in the order (wavelengths, intensities).
+        The spectral line to be interpolated onto a finer grid. This is a tuple
+        of the intensities and the wavelengths in the order (wavelengths,
+        intensities).
     """
 
     x, y = wavels, intensity

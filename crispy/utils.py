@@ -7,7 +7,8 @@ from numba import njit
 
 class ObjDict(dict):
     """
-    This is an abstract class for allowing the keys of a dictionary to be accessed like class attributes.
+    This is an abstract class for allowing the keys of a dictionary to be
+    accessed like class attributes.
     """
 
     def __getattr__(self, name):
@@ -82,14 +83,16 @@ def CRISP_sequence_constructor(
     files, wcs=None, uncertainty=None, mask=None, nonu=False
 ):
     """
-    This is a helper function for constructing the kind of dictionary needed to make a CRISPSequence or CRISPWidebandSequence or CRISPNonUSequence object.
+    This is a helper function for constructing the kind of dictionary needed to
+    make a CRISPSequence or CRISPWidebandSequence or CRISPNonUSequence object.
 
     Parameters
     ----------
     files : list
         A list of paths to the files.
     wcs : list [astropy.wcs.WCS] or None, optional
-        A list of WCS of each of the files. Default is None, the data classes will work out the WCS for the observations.
+        A list of WCS of each of the files. Default is None, the data classes
+        will work out the WCS for the observations.
     uncertainty : list [float] or None, optional
         A list of the uncertainty associated with each observation. Default is None.
     mask : list [numpy.ndarray] or None, optional
@@ -119,7 +122,8 @@ def parameter_docstring(cls: object):
     """
     A function to extract the parameters section of a docstring. Can be used to
     add these parameters to an inheriting class without all the effort of
-    copying and pasting. This assumes docstrings following the `numpy convention <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
+    copying and pasting. This assumes docstrings following the `numpy convention
+    <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
 
     Parameters
     ----------
@@ -621,7 +625,9 @@ def reconstruct_full_frame(cropData, im):
 
 def segmentation(img, n):
     """
-    This is a preprocessing function that will segment the images into segments with dimensions n x n.
+    This is a preprocessing function that will segment the images into segments
+    with dimensions n x n.
+
     Parameters
     ----------
     img : numpy.ndarray
@@ -684,6 +690,7 @@ def segmentation(img, n):
 def segment_cube(img_cube, n):
     """
     A function to segment a three-dimensional datacube.
+
     Parameters
     ----------
     img_cube : numpy.ndarray
@@ -716,6 +723,7 @@ def segment_cube(img_cube, n):
 def mosaic(segments, img_shape, n):
     """
     A processing function to mosaic the segments back together.
+
     Parameters
     ----------
     segments : numpy.ndarray
@@ -919,6 +927,7 @@ def mosaic(segments, img_shape, n):
 def mosaic_cube(segments, img_shape, n):
     """
     A function to mosaic a segment list into an image cube.
+
     Parameters
     ----------
     segments : numpy.ndarray

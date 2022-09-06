@@ -215,12 +215,15 @@ class Inversion(InversionSlicingMixin):
     @plt.rc_context(rc_context_dict)
     def plot_ne(self, eb: bool = False) -> None:
         """
-        Class method to plot the electron number density for a given location within the field-of-view. This works by slicing the ``Inversion`` object.
+        Class method to plot the electron number density for a given location
+        within the field-of-view. This works by slicing the ``Inversion``
+        object.
 
         Parameters
         ----------
         eb : bool, optional
-            Whether or not to plot the median absolute deviation (MAD) for the electron number density as errorbars. Default is False.
+            Whether or not to plot the median absolute deviation (MAD) for the
+            electron number density as errorbars. Default is False.
         """
         try:
             datetime = self.header["DATE-AVG"]
@@ -242,12 +245,14 @@ class Inversion(InversionSlicingMixin):
     @plt.rc_context(rc_context_dict)
     def plot_temp(self, eb: bool = False) -> None:
         """
-        Class method to plot the electron temperature for a given point in the field-of-view. This is done by slicing the ``Inversion`` object.
+        Class method to plot the electron temperature for a given point in the
+        field-of-view. This is done by slicing the ``Inversion`` object.
 
         Parameters
         ----------
         eb : bool, optional
-            Whether or not to plot the median absolute deviation (MAD) of the estimated electron temperatures as errorbars. Default is False.
+            Whether or not to plot the median absolute deviation (MAD) of the
+            estimated electron temperatures as errorbars. Default is False.
         """
         try:
             datetime = self.header["DATE-AVG"]
@@ -269,12 +274,14 @@ class Inversion(InversionSlicingMixin):
     @plt.rc_context(rc_context_dict)
     def plot_vel(self, eb: bool = False) -> None:
         """
-        Class method to plot the bulk velocity for a certain point within the field-of-view. This is done using a slice of the ``Inversion`` instance.
+        Class method to plot the bulk velocity for a certain point within the
+        field-of-view. This is done using a slice of the ``Inversion`` instance.
 
         Parameters
         ----------
         eb : bool, optional
-            Whether or not to plot the median absolute deviation (MAD) of the bulk velocity as errorbars. Default is False.
+            Whether or not to plot the median absolute deviation (MAD) of the
+            bulk velocity as errorbars. Default is False.
         """
         try:
             datetime = self.header["DATE-AVG"]
@@ -296,12 +303,15 @@ class Inversion(InversionSlicingMixin):
     @plt.rc_context(rc_context_dict)
     def plot_params(self, eb: bool = False) -> None:
         """
-        Class method to plot the electron number density, electron temperature, and bulk velocity for a certain point within the field-of-view. This is done using a slice of the ``Inversion`` instance.
+        Class method to plot the electron number density, electron temperature,
+        and bulk velocity for a certain point within the field-of-view. This is
+        done using a slice of the ``Inversion`` instance.
 
         Parameters
         ----------
         eb : bool, optional
-            Whether or not to plot the median absolute deviation (MAD) for each estimated quantity as errorbars. Default is False.
+            Whether or not to plot the median absolute deviation (MAD) for each
+            estimated quantity as errorbars. Default is False.
         """
         try:
             datetime = self.header["DATE-AVG"]
@@ -342,12 +352,14 @@ class Inversion(InversionSlicingMixin):
     @plt.rc_context(rc_context_dict)
     def ne_map(self, frame: Optional[str] = None) -> None:
         """
-        Creates an electron density map at a specified height denoted in the ``Inversion`` slice.
+        Creates an electron density map at a specified height denoted in the
+        ``Inversion`` slice.
 
         Parameters
         ----------
         frame : str, optional
-            The frame to plot the map in. Default is None therefore uses the WCS frame. Other option is "pix" to plot in the pixel frame.
+            The frame to plot the map in. Default is None therefore uses the WCS
+            frame. Other option is "pix" to plot in the pixel frame.
         """
         height = np.round(self.z, decimals=4)
         try:
@@ -377,12 +389,14 @@ class Inversion(InversionSlicingMixin):
     @plt.rc_context(rc_context_dict)
     def temp_map(self, frame: Optional[str] = None) -> None:
         """
-        Creates an electron temperature map at a specified height denoted in the ``Inversion`` slice.
+        Creates an electron temperature map at a specified height denoted in the
+        ``Inversion`` slice.
 
         Parameters
         ----------
         frame : str, optional
-            The frame to plot the map in. Default is None therefore uses the WCS frame. Other option is "pix" to plot in the pixel frame.
+            The frame to plot the map in. Default is None therefore uses the WCS
+            frame. Other option is "pix" to plot in the pixel frame.
         """
         height = np.round(self.z, decimals=4)
         try:
@@ -411,12 +425,14 @@ class Inversion(InversionSlicingMixin):
     @plt.rc_context(rc_context_dict)
     def vel_map(self, frame: Optional[str] = None) -> None:
         """
-        Creates a bulk velocity map at a specified height denoted in the ``Inversion`` slice.
+        Creates a bulk velocity map at a specified height denoted in the
+        ``Inversion`` slice.
 
         Parameters
         ----------
         frame : str, optional
-            The frame to plot the map in. Default is None therefore uses the WCS frame. Other option is "pix" to plot in the pixel frame.
+            The frame to plot the map in. Default is None therefore uses the WCS
+            frame. Other option is "pix" to plot in the pixel frame.
         """
         height = np.round(self.z, decimals=4)
         try:
@@ -445,12 +461,14 @@ class Inversion(InversionSlicingMixin):
     @plt.rc_context(rc_context_dict)
     def params_map(self, frame: Optional[str] = None) -> None:
         """
-        Creates maps of electron number density, electron temperature, and bulk velocity at a specified height denoted in the ``Inversion`` slice.
+        Creates maps of electron number density, electron temperature, and bulk
+        velocity at a specified height denoted in the ``Inversion`` slice.
 
         Parameters
         ----------
         frame : str, optional
-            The frame to plot the map in. Default is None therefore uses the WCS frame. Other option is "pix" to plot in the pixel frame.
+            The frame to plot the map in. Default is None therefore uses the WCS
+            frame. Other option is "pix" to plot in the pixel frame.
         """
         height = np.round(self.z, decimals=4)
         try:
@@ -521,7 +539,12 @@ class Inversion(InversionSlicingMixin):
         self, y: int, x: int, coord: bool = False, unit: bool = False
     ) -> Tuple[float, float]:
         """
-        This function will take a y, x coordinate in pixel space and map it to Helioprojective Longitude, Helioprojective Latitude according to the transform in the WCS. This will return the Helioprojective coordinates in units of arcseconds. Note this function takes arguments in the order of numpy indexing (y,x) but returns a pair longitude/latitude which is Solar-X, Solar-Y.
+        This function will take a y, x coordinate in pixel space and map it to
+        Helioprojective Longitude, Helioprojective Latitude according to the
+        transform in the WCS. This will return the Helioprojective coordinates
+        in units of arcseconds. Note this function takes arguments in the order
+        of numpy indexing (y,x) but returns a pair longitude/latitude which is
+        Solar-X, Solar-Y.
 
         Parameters
         ----------
@@ -791,7 +814,12 @@ class Inversion(InversionSlicingMixin):
 
     def from_lonlat(self, lon: float, lat: float) -> Tuple[float]:
         """
-        This function takes a Helioprojective Longitude, Helioprojective Latitude pair and converts them to the y, x indices to index the object correctly. The function takes its arguments in the order Helioprojective Longitude, Helioprojective Latitude but returns the indices in the (y,x) format so that the output of this function can be used to directly index the object.
+        This function takes a Helioprojective Longitude, Helioprojective
+        Latitude pair and converts them to the y, x indices to index the object
+        correctly. The function takes its arguments in the order Helioprojective
+        Longitude, Helioprojective Latitude but returns the indices in the (y,x)
+        format so that the output of this function can be used to directly index
+        the object.
 
         Parameters
         ----------

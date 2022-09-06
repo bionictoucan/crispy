@@ -7,7 +7,18 @@ from tqdm import tqdm
 
 def memmap_crisp_cube(path):
     """
-    This function memory maps a legacy La Palma data cube pulling metainformation from appropriate files. The function first looks for an ``assoc.pro`` file which contains important information about the first dimension. If this does not exist then the user will have to untangle the first dimension themselves. The first dimension is a multiplicative combination of time and wavelength (and Stokes) with the ``assoc.pro`` providing the necessary information to split these into distinct axes. When unable to access this information, the first dimension will be the multiplicative combination of time and wavelength (and Stokes) with the ordering of one time for all wavelengths sampled. N.B. when Stokes is present, the first axis takes the form of one time for wavelengths sampled of Stokes I, wavelengths sampled of Stokes Q etc.
+    This function memory maps a legacy La Palma data cube pulling
+    metainformation from appropriate files. The function first looks for an
+    ``assoc.pro`` file which contains important information about the first
+    dimension. If this does not exist then the user will have to untangle the
+    first dimension themselves. The first dimension is a multiplicative
+    combination of time and wavelength (and Stokes) with the ``assoc.pro``
+    providing the necessary information to split these into distinct axes. When
+    unable to access this information, the first dimension will be the
+    multiplicative combination of time and wavelength (and Stokes) with the
+    ordering of one time for all wavelengths sampled. N.B. when Stokes is
+    present, the first axis takes the form of one time for wavelengths sampled
+    of Stokes I, wavelengths sampled of Stokes Q etc.
 
     Parameters
     ----------
@@ -200,7 +211,8 @@ def la_palma_cube_to_zarr(
     cube_path : str
         The path to the legacy La Palma data cube.
     tseries_path : str
-        The path to the ``tseries`` file containing the information on the times of the observations.
+        The path to the ``tseries`` file containing the information on the times
+        of the observations.
     spectfile : str
         The path to the file containing the spectral positions sampled.
     data_obs : str
@@ -235,7 +247,7 @@ def la_palma_cube_to_zarr(
     if mu is not None:
         header["mu"] = mu
 
-    mem_cube = memmmap_crisp_cube(cube_path)
+    mem_cube = memmap_crisp_cube(cube_path)
     times = readsav(tseries_path)["time"]
 
     if "wb" not in cube_path and mem_cube.ndim == 5:

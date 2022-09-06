@@ -25,25 +25,39 @@ from matplotlib.dates import date2num, DateFormatter
 
 class SpectralViewer:
     """
-    Imaging spectroscopic viewer. SpectralViewer should be used when one wants to click on points of an image and have the spectrum displayed for that point. This works **exclusively** in Jupyter notebook but can be a nice data exploration tool. This viewer utilises the data structures defined in `crispy.crisp` and has many variable options.
+    Imaging spectroscopic viewer. SpectralViewer should be used when one wants
+    to click on points of an image and have the spectrum displayed for that
+    point. This works **exclusively** in Jupyter notebook but can be a nice data
+    exploration tool. This viewer utilises the data structures defined in
+    `crispy.crisp` and has many variable options.
 
-    :param data: The data to explore, this can be either one or two spectral lines (support for more than two can be added if required). This is the only required argument to view the data.
-    :type data: str or list or CRISP or CRISPSequence or CRISPNonU or CRISPNonUSequence
-    :param wcs: A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.
-    :type wcs: astropy.wcs.WCS or None, optional
-    :param uncertainty: The uncertainty in the intensity values of the data. Default is None.
-    :type uncertainty: numpy.ndarray or None, optional
-    :param mask: A mask to be used on the data. Default is None.
-    :type mask: numpy.ndarray or None, optional
-    :param nonu: Whether or not the spectral axis is non-uniform. Default is False.
-    :type nonu: bool, optional
+    Parameters
+    ----------
+    data : str or list or CRISP or CRISPSequence or CRISPNonU or CRISPNonUSequence
+        The data to explore, this can be either one or two spectral lines
+        (support for more than two can be added if required). This is the only
+        required argument to view the data.
+    wcs : astropy.wcs.WCS or None, optional
+        A prescribed world coordinate system. If None, the world coordinate
+        system is derived from the data. Default is None.
+    uncertainty :  numpy.ndarray or None, optional
+        The uncertainty in the intensity values of the data. Default is None.
+    mask : numpy.ndarray or None, optional
+        A mask to be used on the data. Default is None.
+    nonu : bool, optional
+        Whether or not the spectral axis is non-uniform. Default is False.
 
-    :cvar coords: The coordinates selected to produce spectra.
-    :type coords: list[tuple]
-    :cvar px_coords: The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.
-    :type px_coords: list[tuple]
-    :cvar shape_type: The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.
-    :type shape_type: list[str]
+    Attributes
+    ----------
+    coords : list[tuple]
+        The coordinates selected to produce spectra.
+    px_coords : list[tuple]
+        The coordinates selected to produce spectra in pixel space. This is
+        important for indexing the data later to get the correct spectra.
+    shape_type : list[str]
+        The spectra can be selected for a single point or for a box with
+        specified dimensions with top-left corner where the user clicks. This
+        attribute tells the user which point is described by which shape.
     """
 
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, nonu=False):
@@ -890,17 +904,23 @@ class SpectralViewer:
 
 class WidebandViewer:
     """
-    Wideband image viewer. This visualisation tool is useful for exploring the time series evolution of the wideband images.
+    Wideband image viewer. This visualisation tool is useful for exploring the
+    time series evolution of the wideband images.
 
-    :param files: The files to explore the time series for.
-    :type files: CRISPWidebandSequence or list
+    Parameters
+    ----------
+    files : CRISPWidebandSequence or list
+        The files to explore the time series for.
 
-    :cvar coords: The coordinates selected to produce spectra.
-    :type coords: list[tuple]
-    :cvar px_coords: The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.
-    :type px_coords: list[tuple]
-    :cvar shape_type: The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.
-    :type shape_type: list[str]
+    coords : list[tuple]
+        The coordinates selected to produce spectra.
+    px_coords : list[tuple]
+        The coordinates selected to produce spectra in pixel space. This is
+        important for indexing the data later to get the correct spectra.
+    shape_type : list[str]
+        The spectra can be selected for a single point or for a box with
+        specified dimensions with top-left corner where the user clicks. This
+        attribute tells the user which point is described by which shape.
     """
 
     def __init__(self, files):
@@ -1484,25 +1504,42 @@ class WidebandViewer:
 
 class AtmosViewer:
     """
-    This visualisation tool is for the investigation of atmospheric parameters found via inversion techniques. This makes use of the ``Inversion`` class. This assumes that there are three atmospheric parameters in the inversion: electron number density, electron temperature and bulk line-of-sight velocity. These are the estimated quantities by RADYNVERSION.
+    This visualisation tool is for the investigation of atmospheric parameters
+    found via inversion techniques. This makes use of the ``Inversion`` class.
+    This assumes that there are three atmospheric parameters in the inversion:
+    electron number density, electron temperature and bulk line-of-sight
+    velocity. These are the estimated quantities by RADYNVERSION.
 
-    :param filename: The inversion file to be used.
-    :type filename: str or Inversion
-    :param z: The physical height grid of the estimated atmospheric parameters in megametres. Can only be None if filename is already an ``Inversion`` instance. Default is None. (N.B. the RADYNVERSION height grid is available from ``crispy.radynversion.utils``).
-    :type z: numpy.ndarray or None, optional
-    :param wcs: The world coordinate system that the inversion parameters are defined by. Can be None only if filename is already an ``Inversion`` instance. Default is None.
-    :type wcs: astropy.wcs.WCS or None, optional
-    :param header: The additional header information from the observations. Default is None.
-    :type header: dict or None, optional
-    :param eb: Whether or not to plot the errorbars on the parameter profiles. Default is False.
-    :type eb: bool, optional
+    Parameters
+    ----------
+    filename : str or Inversion
+        The inversion file to be used.
+    z : numpy.ndarray or None, optional
+        The physical height grid of the estimated atmospheric parameters in
+        megametres. Can only be None if filename is already an ``Inversion``
+        instance. Default is None. (N.B. the RADYNVERSION height grid is
+        available from ``crispy.radynversion.utils``).
+    wcs : astropy.wcs.WCS or None, optional
+        The world coordinate system that the inversion parameters are defined
+        by. Can be None only if filename is already an ``Inversion`` instance.
+        Default is None.
+    header : dict or None, optional
+        The additional header information from the observations. Default is None.
+    eb : bool, optional
+        Whether or not to plot the errorbars on the parameter profiles. Default
+        is False.
 
-    :cvar coords: The coordinates selected to produce spectra.
-    :type coords: list[tuple]
-    :cvar px_coords: The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.
-    :type px_coords: list[tuple]
-    :cvar shape_type: The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.
-    :type shape_type: list[str]
+    Attributes
+    ----------
+    coords : list[tuple]
+        The coordinates selected to produce spectra.
+    px_coords : list[tuple]
+        The coordinates selected to produce spectra in pixel space. This is
+        important for indexing the data later to get the correct spectra.
+    shape_type : list[str]
+        The spectra can be selected for a single point or for a box with
+        specified dimensions with top-left corner where the user clicks. This
+        attribute tells the user which point is described by which shape.
     """
 
     def __init__(self, filename, z=None, wcs=None, header=None, eb=False):
@@ -2042,18 +2079,23 @@ class AtmosViewer:
 
 class ImageViewer:
     """
-    This visualiser only views the images for data, not the spectra. For use when interested only in imaging data. Includes sliders to change the wavelength of the observation.
+    This visualiser only views the images for data, not the spectra. For use
+    when interested only in imaging data. Includes sliders to change the
+    wavelength of the observation.
 
-    :param data: The data to explore, this can be either one or two spectral lines (support for more than two can be added if required). This is the only required argument to view the data.
-    :type data: str or list or CRISP or CRISPSequence or CRISPNonU or CRISPNonUSequence
-    :param wcs: A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.
-    :type wcs: astropy.wcs.WCS or None, optional
-    :param uncertainty: The uncertainty in the intensity values of the data. Default is None.
-    :type uncertainty: numpy.ndarray or None, optional
-    :param mask: A mask to be used on the data. Default is None.
-    :type mask: numpy.ndarray or None, optional
-    :param nonu: Whether or not the spectral axis is non-uniform. Default is False.
-    :type nonu: bool, optional
+    data : str or list or CRISP or CRISPSequence or CRISPNonU or CRISPNonUSequence
+        The data to explore, this can be either one or two spectral lines
+        (support for more than two can be added if required). This is the only
+        required argument to view the data.
+    wcs : astropy.wcs.WCS or None, optional
+        A prescribed world coordinate system. If None, the world coordinate
+        system is derived from the data. Default is None.
+    uncertainty : numpy.ndarray or None, optional
+        The uncertainty in the intensity values of the data. Default is None.
+    mask : numpy.ndarray or None, optional
+        A mask to be used on the data. Default is None.
+    nonu : bool, optional
+        Whether or not the spectral axis is non-uniform. Default is False.
     """
 
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, nonu=False):
@@ -2401,27 +2443,41 @@ class ImageViewer:
 
 class SpectralTimeViewer:
     """
-    Imaging spectroscopic viewer. SpectralTimeViewer should be used when one wants to click on points of an image and have the spectrum displayed for that point and the time series for a certain time range of observations. This works **exclusively** in Jupyter notebook but can be a nice data exploration tool. This viewer utilises the data structures defined in `crispy.crisp` and has many variable options.
+    Imaging spectroscopic viewer. SpectralTimeViewer should be used when one
+    wants to click on points of an image and have the spectrum displayed for
+    that point and the time series for a certain time range of observations.
+    This works **exclusively** in Jupyter notebook but can be a nice data
+    exploration tool. This viewer utilises the data structures defined in
+    `crispy.crisp` and has many variable options.
 
-    :param data1: The data to explore, this is one spectral line. This is the only required argument to view the data.
-    :type data1: list or CRISPSequence or CRISPNonUSequence
-    :param data2: If there is a second set of data to explore.
-    :type data2: list or CRISPSequence or CRISPNonUSequence
-    :param wcs: A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.
-    :type wcs: astropy.wcs.WCS or None, optional
-    :param uncertainty: The uncertainty in the intensity values of the data. Default is None.
-    :type uncertainty: numpy.ndarray or None, optional
-    :param mask: A mask to be used on the data. Default is None.
-    :type mask: numpy.ndarray or None, optional
-    :param nonu: Whether or not the spectral axis is non-uniform. Default is False.
-    :type nonu: bool, optional
+    Parameters
+    ----------
+    data1 : list or CRISPSequence or CRISPNonUSequence
+        The data to explore, this is one spectral line. This is the only
+        required argument to view the data.
+    data2 : list or CRISPSequence or CRISPNonUSequence
+        If there is a second set of data to explore.
+    wcs : astropy.wcs.WCS or None, optional
+        A prescribed world coordinate system. If None, the world coordinate
+        system is derived from the data. Default is None.
+    uncertainty : numpy.ndarray or None, optional
+        The uncertainty in the intensity values of the data. Default is None.
+    mask : numpy.ndarray or None, optional
+        A mask to be used on the data. Default is None.
+    nonu : bool, optional
+        Whether or not the spectral axis is non-uniform. Default is False.
 
-    :cvar coords: The coordinates selected to produce spectra.
-    :type coords: list[tuple]
-    :cvar px_coords: The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.
-    :type px_coords: list[tuple]
-    :cvar shape_type: The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.
-    :type shape_type: list[str]
+    Attributes
+    ----------
+    coords : list[tuple]
+        The coordinates selected to produce spectra.
+    px_coords : list[tuple]
+        The coordinates selected to produce spectra in pixel space. This is
+        important for indexing the data later to get the correct spectra.
+    shape_type : shape_type: list[str]
+        The spectra can be selected for a single point or for a box with
+        specified dimensions with top-left corner where the user clicks. This
+        attribute tells the user which point is described by which shape.
     """
 
     def __init__(
@@ -3560,25 +3616,38 @@ class SpectralTimeViewer:
 
 class PolarimetricViewer:
     """
-    This class defines the visualisation tool for exploring narrowband imaging spectropolarimetric data. This currently is only developed to look at one spectral line at a time. The functionality is similar to the ``SpectralViewer`` defines above but with an added Stokes parameter that can be changed.
+    This class defines the visualisation tool for exploring narrowband imaging
+    spectropolarimetric data. This currently is only developed to look at one
+    spectral line at a time. The functionality is similar to the
+    ``SpectralViewer`` defines above but with an added Stokes parameter that can
+    be changed.
 
-    :param data: The data to explore, this is one spectral line. This is the only required argument to view the data.
-    :type data: str or CRISP or CRISPNonU
-    :param wcs: A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.
-    :type wcs: astropy.wcs.WCS or None, optional
-    :param uncertainty: The uncertainty in the intensity values of the data. Default is None.
-    :type uncertainty: numpy.ndarray or None, optional
-    :param mask: A mask to be used on the data. Default is None.
-    :type mask: numpy.ndarray or None, optional
-    :param nonu: Whether or not the spectral axis is non-uniform. Default is False.
-    :type nonu: bool, optional
+    Parameters
+    ----------
+    data : str or CRISP or CRISPNonU
+        The data to explore, this is one spectral line. This is the only
+        required argument to view the data.
+    wcs : astropy.wcs.WCS or None, optional
+        A prescribed world coordinate system. If None, the world coordinate
+        system is derived from the data. Default is None.
+    uncertainty : numpy.ndarray or None, optional
+        The uncertainty in the intensity values of the data. Default is None.
+    mask : numpy.ndarray or None, optional
+        A mask to be used on the data. Default is None.
+    nonu : bool, optional
+        Whether or not the spectral axis is non-uniform. Default is False.
 
-    :cvar coords: The coordinates selected to produce spectra.
-    :type coords: list[tuple]
-    :cvar px_coords: The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.
-    :type px_coords: list[tuple]
-    :cvar shape_type: The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.
-    :type shape_type: list[str]
+    Attributes
+    ----------
+    coords : list[tuple]
+        The coordinates selected to produce spectra.
+    px_coords : list[tuple]
+        The coordinates selected to produce spectra in pixel space. This is
+        important for indexing the data later to get the correct spectra.
+    shape_type : list[str]
+        The spectra can be selected for a single point or for a box with
+        specified dimensions with top-left corner where the user clicks. This
+        attribute tells the user which point is described by which shape.
     """
 
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, nonu=False):
@@ -3960,25 +4029,38 @@ class PolarimetricViewer:
 
 class PolarimetricTimeViewer:
     """
-    This class defines the visualisation tool for exploring a time series narrowband imaging spectropolarimetric data. This currently is only developed to look at one spectral line at a time. The functionality is similar to the ``SpectralTimeViewer`` defines above but with an added Stokes parameter that can be changed.
+    This class defines the visualisation tool for exploring a time series
+    narrowband imaging spectropolarimetric data. This currently is only
+    developed to look at one spectral line at a time. The functionality is
+    similar to the ``SpectralTimeViewer`` defines above but with an added Stokes
+    parameter that can be changed.
 
-    :param data: The data to explore, this is one spectral line. This is the only required argument to view the data.
-    :type data: str or CRISPSequence or CRISPNonUSequence
-    :param wcs: A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.
-    :type wcs: astropy.wcs.WCS or None, optional
-    :param uncertainty: The uncertainty in the intensity values of the data. Default is None.
-    :type uncertainty: numpy.ndarray or None, optional
-    :param mask: A mask to be used on the data. Default is None.
-    :type mask: numpy.ndarray or None, optional
-    :param nonu: Whether or not the spectral axis is non-uniform. Default is False.
-    :type nonu: bool, optional
+    Parameters
+    ----------
+    data : str or CRISPSequence or CRISPNonUSequence
+        The data to explore, this is one spectral line. This is the only
+        required argument to view the data.
+    wcs : astropy.wcs.WCS or None, optional
+        A prescribed world coordinate system. If None, the world coordinate
+        system is derived from the data. Default is None.
+    uncertainty : numpy.ndarray or None, optional
+        The uncertainty in the intensity values of the data. Default is None.
+    mask : numpy.ndarray or None, optional
+        A mask to be used on the data. Default is None.
+    nonu : bool, optional
+        Whether or not the spectral axis is non-uniform. Default is False.
 
-    :cvar coords: The coordinates selected to produce spectra.
-    :type coords: list[tuple]
-    :cvar px_coords: The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.
-    :type px_coords: list[tuple]
-    :cvar shape_type: The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.
-    :type shape_type: list[str]
+    Attributes
+    ----------
+    coords : list[tuple]
+        The coordinates selected to produce spectra.
+    px_coords : list[tuple]
+        The coordinates selected to produce spectra in pixel space. This is
+        important for indexing the data later to get the correct spectra.
+    shape_type : list[str]
+        The spectra can be selected for a single point or for a box with
+        specified dimensions with top-left corner where the user clicks. This
+        attribute tells the user which point is described by which shape.
     """
 
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, nonu=False):
