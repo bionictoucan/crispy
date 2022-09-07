@@ -245,7 +245,9 @@ class SpectralViewer:
 
             display(widgets.HBox([ll, shape]))
 
-        elif isinstance(self.cube, CRISPSequence) or isinstance(self.cube, CRISPNonUSequence):
+        elif isinstance(self.cube, CRISPSequence) or isinstance(
+            self.cube, CRISPNonUSequence
+        ):
             self.fig = plt.figure(figsize=(8, 10))
             try:
                 self.ax1 = self.fig.add_subplot(
@@ -508,7 +510,9 @@ class SpectralViewer:
                 self.ax2.legend()
                 self.colour_idx += 1
                 self.fig.canvas.draw()
-        elif isinstance(self.cube, CRISPSequence) or isinstance(self.cube, CRISPNonUSequence):
+        elif isinstance(self.cube, CRISPSequence) or isinstance(
+            self.cube, CRISPNonUSequence
+        ):
             if self.shape == "point":
                 if self.colour_idx > len(pt_bright_cycler) - 1:
                     self.colour_idx = 0
@@ -815,7 +819,7 @@ class SpectralViewer:
     def _img_plot1(self, ll):
         if self.ax1.images == []:
             pass
-        elif self.ax1.images[-1].colorbar != None:
+        elif self.ax1.images[-1].colorbar is not None:
             self.ax1.images[-1].colorbar.remove()
 
         ll_idx = int(
@@ -845,12 +849,12 @@ class SpectralViewer:
     def _img_plot2(self, ll1, ll2):
         if self.ax1.images == []:
             pass
-        elif self.ax1.images[-1].colorbar != None:
+        elif self.ax1.images[-1].colorbar is not None:
             self.ax1.images[-1].colorbar.remove()
 
         if self.ax2.images == []:
             pass
-        elif self.ax2.images[-1].colorbar != None:
+        elif self.ax2.images[-1].colorbar is not None:
             self.ax2.images[-1].colorbar.remove()
 
         ll1_idx = int(
@@ -2044,15 +2048,15 @@ class AtmosViewer:
     def _img_plot(self, z):
         if self.ax1.images == []:
             pass
-        elif self.ax1.images[-1].colorbar != None:
+        elif self.ax1.images[-1].colorbar is not None:
             self.ax1.images[-1].colorbar.remove()
         if self.ax2.images == []:
             pass
-        elif self.ax2.images[-1].colorbar != None:
+        elif self.ax2.images[-1].colorbar is not None:
             self.ax2.images[-1].colorbar.remove()
         if self.ax3.images == []:
             pass
-        elif self.ax3.images[-1].colorbar != None:
+        elif self.ax3.images[-1].colorbar is not None:
             self.ax3.images[-1].colorbar.remove()
         z_idx = int(
             np.where(np.round(self.inv.z, decimals=3) == np.round(z, decimals=3))[0]
@@ -2273,7 +2277,9 @@ class ImageViewer:
 
             display(widgets.HBox([ll]))
 
-        elif isinstance(self.cube, CRISPSequence) or isinstance(self.cube, CRISPNonUSequence):
+        elif isinstance(self.cube, CRISPSequence) or isinstance(
+            self.cube, CRISPNonUSequence
+        ):
             self.fig = plt.figure(figsize=(8, 10))
             try:
                 self.ax1 = self.fig.add_subplot(
@@ -3527,7 +3533,7 @@ class SpectralTimeViewer:
     def _img_plot1(self, ll, t):
         if self.ax1.images == []:
             pass
-        elif self.ax1.images[-1].colorbar != None:
+        elif self.ax1.images[-1].colorbar is not None:
             self.ax1.images[-1].colorbar.remove()
 
         ll_idx = int(
@@ -3557,12 +3563,12 @@ class SpectralTimeViewer:
     def _img_plot2(self, ll1, ll2, t1, t2):
         if self.ax1.images == []:
             pass
-        elif self.ax1.images[-1].colorbar != None:
+        elif self.ax1.images[-1].colorbar is not None:
             self.ax1.images[-1].colorbar.remove()
 
         if self.ax2.images == []:
             pass
-        elif self.ax2.images[-1].colorbar != None:
+        elif self.ax2.images[-1].colorbar is not None:
             self.ax2.images[-1].colorbar.remove()
 
         ll1_idx = int(
@@ -3991,7 +3997,7 @@ class PolarimetricViewer:
     def _img_plot1(self, ll, s):
         if self.ax1.images == []:
             pass
-        elif self.ax1.images[-1].colorbar != None:
+        elif self.ax1.images[-1].colorbar is not None:
             self.ax1.images[-1].colorbar.remove()
 
         ll_idx = int(
@@ -4597,7 +4603,7 @@ class PolarimetricTimeViewer:
     def _img_plot1(self, ll, s, t):
         if self.ax1.images == []:
             pass
-        elif self.ax1.images[-1].colorbar != None:
+        elif self.ax1.images[-1].colorbar is not None:
             self.ax1.images[-1].colorbar.remove()
 
         ll_idx = int(

@@ -556,15 +556,21 @@ class Inversion(InversionSlicingMixin):
         if coord:
             if len(self.wcs.low_level_wcs.array_shape) == 4:
                 if hasattr(self, "ind"):
-                    if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                    if isinstance(self.ind[-2], slice) and isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, self.ind[-2], self.ind[-1]
                         ].array_index_to_world(y, x)
-                    elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
+                    elif isinstance(self.ind[-2], slice) and not isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, self.ind[-2]
                         ].array_index_to_world(y, x)
-                    elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                    elif not isinstance(self.ind[-2], slice) and isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, :, self.ind[-1]
                         ].array_index_to_world(y, x)
@@ -576,15 +582,21 @@ class Inversion(InversionSlicingMixin):
                     return self.wcs[0, 0].array_index_to_world(y, x)
             elif len(self.wcs.low_level_wcs.array_shape) == 3:
                 if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                    if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                    if isinstance(self.ind[-2], slice) and isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, self.ind[-2], self.ind[-1]
                         ].array_index_to_world(y, x)
-                    elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
+                    elif isinstance(self.ind[-2], slice) and not isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, self.ind[-2]
                         ].array_index_to_world(y, x)
-                    elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                    elif not isinstance(self.ind[-2], slice) and isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, :, self.ind[-1]
                         ].array_index_to_world(y, x)
@@ -594,18 +606,20 @@ class Inversion(InversionSlicingMixin):
                         )
                 else:
                     if hasattr(self, "ind"):
-                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                        if isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
+                        ):
                             return self.wcs.low_level_wcs._wcs[
                                 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
-                        elif (
-                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
+                        elif isinstance(self.ind[-2], slice) and not isinstance(
+                            self.ind[-1], slice
                         ):
                             return self.wcs.low_level_wcs._wcs[
                                 0, self.ind[-2]
                             ].array_index_to_world(y, x)
-                        elif (
-                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
+                        elif not isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
                         ):
                             return self.wcs.low_level_wcs._wcs[
                                 0, :, self.ind[-1]
@@ -624,20 +638,22 @@ class Inversion(InversionSlicingMixin):
             if unit:
                 if len(self.wcs.low_level_wcs.array_shape) == 4:
                     if hasattr(self, "ind"):
-                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                        if isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
+                        ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
-                        elif (
-                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
+                        elif isinstance(self.ind[-2], slice) and not isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
-                        elif (
-                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
+                        elif not isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, :, self.ind[-1]
@@ -653,20 +669,22 @@ class Inversion(InversionSlicingMixin):
                         return sc.Tx, sc.Ty
                 elif len(self.wcs.low_level_wcs.array_shape) == 3:
                     if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                        if isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
+                        ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
-                        elif (
-                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
+                        elif isinstance(self.ind[-2], slice) and not isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
-                        elif (
-                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
+                        elif not isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, :, self.ind[-1]
@@ -679,25 +697,22 @@ class Inversion(InversionSlicingMixin):
                             return sc.Tx, sc.Ty
                     else:
                         if hasattr(self, "ind"):
-                            if (
-                                isinstance(self.ind[-2], slice)
-                                and isinstance(self.ind[-1], slice)
+                            if isinstance(self.ind[-2], slice) and isinstance(
+                                self.ind[-1], slice
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, self.ind[-2], self.ind[-1]
                                 ].array_index_to_world(y, x)
                                 return sc.Tx, sc.Ty
-                            elif (
-                                isinstance(self.ind[-2], slice)
-                                and not isinstance(self.ind[-1], slice)
+                            elif isinstance(self.ind[-2], slice) and not isinstance(
+                                self.ind[-1], slice
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, self.ind[-2]
                                 ].array_index_to_world(y, x)
                                 return sc.Tx, sc.Ty
-                            elif (
-                                not isinstance(self.ind[-2], slice)
-                                and isinstance(self.ind[-1], slice)
+                            elif not isinstance(self.ind[-2], slice) and isinstance(
+                                self.ind[-1], slice
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, :, self.ind[-1]
@@ -719,20 +734,22 @@ class Inversion(InversionSlicingMixin):
             else:
                 if len(self.wcs.low_level_wcs.array_shape) == 4:
                     if hasattr(self, "ind"):
-                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                        if isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
+                        ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
-                        elif (
-                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
+                        elif isinstance(self.ind[-2], slice) and not isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
-                        elif (
-                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
+                        elif not isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, :, self.ind[-1]
@@ -748,20 +765,22 @@ class Inversion(InversionSlicingMixin):
                         return sc.Tx.value, sc.Ty.value
                 elif len(self.wcs.low_level_wcs.array_shape) == 3:
                     if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                        if isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
+                        ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
-                        elif (
-                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
+                        elif isinstance(self.ind[-2], slice) and not isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
-                        elif (
-                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
+                        elif not isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, :, self.ind[-1]
@@ -774,25 +793,22 @@ class Inversion(InversionSlicingMixin):
                             return sc.Tx.value, sc.Ty.value
                     else:
                         if hasattr(self, "ind"):
-                            if (
-                                isinstance(self.ind[-2], slice)
-                                and isinstance(self.ind[-1], slice)
+                            if isinstance(self.ind[-2], slice) and isinstance(
+                                self.ind[-1], slice
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, self.ind[-2], self.ind[-1]
                                 ].array_index_to_world(y, x)
                                 return sc.Tx.value, sc.Ty.value
-                            elif (
-                                isinstance(self.ind[-2], slice)
-                                and not isinstance(self.ind[-1], slice)
+                            elif isinstance(self.ind[-2], slice) and not isinstance(
+                                self.ind[-1], slice
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, self.ind[-2]
                                 ].array_index_to_world(y, x)
                                 return sc.Tx.value, sc.Ty.value
-                            elif (
-                                not isinstance(self.ind[-2], slice)
-                                and isinstance(self.ind[-1], slice)
+                            elif not isinstance(self.ind[-2], slice) and isinstance(
+                                self.ind[-1], slice
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, :, self.ind[-1]
@@ -836,11 +852,15 @@ class Inversion(InversionSlicingMixin):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, self.ind[-2], self.ind[-1]
                     ].world_to_array_index(sc)
-                elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
+                elif isinstance(self.ind[-2], slice) and not isinstance(
+                    self.ind[-1], slice
+                ):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, self.ind[-2]
                     ].world_to_array_index(sc)
-                elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                elif not isinstance(self.ind[-2], slice) and isinstance(
+                    self.ind[-1], slice
+                ):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, :, self.ind[-1]
                     ].world_to_array_index(sc)
@@ -854,11 +874,15 @@ class Inversion(InversionSlicingMixin):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, self.ind[-2], self.ind[-1]
                     ].world_to_array_index(sc)
-                elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
+                elif isinstance(self.ind[-2], slice) and not isinstance(
+                    self.ind[-1], slice
+                ):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, self.ind[-2]
                     ].world_to_array_index(sc)
-                elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                elif not isinstance(self.ind[-2], slice) and isinstance(
+                    self.ind[-1], slice
+                ):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, :, self.ind[-1]
                     ].world_to_array_index(sc)
@@ -866,15 +890,21 @@ class Inversion(InversionSlicingMixin):
                     return self.wcs.low_level_wcs._wcs[0, 0].world_to_array_index(sc)
             else:
                 if hasattr(self, "ind"):
-                    if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                    if isinstance(self.ind[-2], slice) and isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, self.ind[-2], self.ind[-1]
                         ].world_to_array_index(sc)
-                    elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
+                    elif isinstance(self.ind[-2], slice) and not isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, self.ind[-2]
                         ].world_to_array_index(sc)
-                    elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                    elif not isinstance(self.ind[-2], slice) and isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, :, self.ind[-1]
                         ].world_to_array_index(sc)

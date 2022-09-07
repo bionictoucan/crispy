@@ -20,18 +20,13 @@ from .utils import (
     parameter_docstring,
 )
 from .io import zarr_header_to_wcs
-
-rc_context_dict = {
-    # "figure.constrained_layout.use" : True,
-    # "figure.autolayout" : True,
-    "savefig.bbox": "tight",
-    "font.family": "serif",
-    "image.origin": "lower",
-    "figure.figsize": (10, 6),
-    # "image.aspect" : "auto"
-    "font.size": 11,
-    "font.serif": "New Century Schoolbook",
-}
+from .crisp_plotting import (
+    plot_multi_component_spectrum,
+    plot_multi_frame,
+    plot_single_frame,
+    plot_single_spectrum,
+    rc_context_dict,
+)
 
 
 class CRISP(CRISPSlicingMixin):
@@ -252,7 +247,8 @@ class CRISP(CRISPSlicingMixin):
 
         assert "frame_dims" in self.header
         crop_dict = {
-            k: self.header[k] for k in ["frame_dims", "x_min", "x_max", "y_min", "y_max", "angle"]
+            k: self.header[k]
+            for k in ["frame_dims", "x_min", "x_max", "y_min", "y_max", "angle"]
         }
 
         if sep:
@@ -263,7 +259,6 @@ class CRISP(CRISPSlicingMixin):
         self.rotate = False
         return None
 
-    @plt.rc_context(rc_context_dict)
     def plot_spectrum(
         self, unit: Optional[u.Unit] = None, air: bool = False, d: bool = False
     ) -> None:
@@ -289,41 +284,8 @@ class CRISP(CRISPSlicingMixin):
                 "If you are using Stokes data please use the plot_stokes method."
             )
 
-        wavelength = self.wave(
-            np.arange(self.data.shape[0])
-        )  # This finds the value of the wavlength axis from the WCS in units of m
-        if unit != None:
-            wavelength <<= unit
+        self.plot_stokes(stokes="I", unit=unit, air=air, d=d)
 
-        if air:
-            wavelength = vac_to_air(wavelength)
-
-        if d:
-            wavelength = wavelength - np.median(wavelength)
-            xlabel = f"{self.D}{self.l} [{self.aa}]"
-        else:
-            xlabel = f"{self.l} [{self.aa}]"
-
-        # coord = self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(*self.ind[-2:])
-        # lon, lat = np.round(coord.Tx, decimals=2), np.round(coord.Ty, decimals=2)
-        try:
-            datetime = self.header["DATE-AVG"]
-            el = self.header["WDESC1"]
-        except KeyError:
-            datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
-            el = self.header["element"]
-
-        fig = plt.figure()
-        ax1 = fig.gca()
-        ax1.plot(wavelength, self.data, c=pt_bright["blue"])
-        ax1.set_ylabel("Intensity [DNs]")
-        ax1.set_xlabel(xlabel)
-        fig.suptitle(f"{datetime} {el}{self.aa}")
-        # ax1.set_title(f"({lon}, {lat})")
-        # ax1.tick_params(direction="in")
-        fig.show()
-
-    @plt.rc_context(rc_context_dict)
     def plot_stokes(
         self,
         stokes: str,
@@ -354,8 +316,6 @@ class CRISP(CRISPSlicingMixin):
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
 
-        # coord = self.wcs.low_level_wcs._wcs[0,0].array_index_to_world(*self.ind[-2:])
-        # lon, lat = np.round(coord.Tx, decimals=2), np.round(coord.Ty, decimals=2)
         try:
             datetime = self.header["DATE-AVG"]
             el = self.header["WDESC1"]
@@ -363,234 +323,46 @@ class CRISP(CRISPSlicingMixin):
             datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
             el = self.header["element"]
 
+        stokes_components = ["I", "Q", "U", "V"]
+        y_labels = {
+            "I": "I [DNs]",
+            "Q": "Q [DNs]",
+            "U": "U [DNs]",
+            "V": "V [DNs]",
+        }
+
+        wavelength = self.wave(np.arange(self.data.shape[0]))
+
+        if unit is not None:
+            wavelength <<= unit
+
+        if air:
+            wavelength = vac_to_air(wavelength)
+
         if self.data.ndim == 1:
-            wavelength = self.wave(np.arange(self.data.shape[0]))
+            if stokes not in ["I", "Q", "U", "V"]:
+                raise ValueError(
+                    f"This ({stokes}) is not a Stokes. Expected (I, Q, U, V)"
+                )
 
-            if unit != None:
-                wavelength <<= unit
+            title = f"{datetime} {el} {self.aa} Stokes {y_labels[stokes]}"
 
-            if air:
-                wavelength = vac_to_air(wavelength)
+            plot_single_spectrum(
+                wavelength, self.data, title=title, y_label=y_labels[stokes], d=d
+            )
 
-            if d:
-                wavelength = wavelength - np.median(wavelength)
-                xlabel = f"{self.D}{self.l} [{self.aa}]"
-            else:
-                xlabel = f"{self.l} [{self.aa}]"
-
-            fig = plt.figure()
-            ax1 = fig.gca()
-            ax1.plot(wavelength, self.data, c=pt_bright["blue"], marker="o")
-            if stokes == "I":
-                ax1.set_ylabel("Intensity [DNs]")
-                ax1.set_xlabel(xlabel)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes I")
-            elif stokes == "Q":
-                ax1.set_ylabel("Q [DNs]")
-                ax1.set_xlabel(xlabel)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes Q")
-            elif stokes == "U":
-                ax1.set_ylabel("U [DNs]")
-                ax1.set_xlabel(xlabel)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes U")
-            elif stokes == "V":
-                ax1.set_ylabel("V [DNs]")
-                ax1.set_xlabel(xlabel)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes V")
-            else:
-                raise ValueError("This is not a Stokes.")
-            # ax1.tick_params(direction="in")
-            fig.show()
         elif self.data.ndim == 2:
-            wavelength = self.wave(np.arange(self.data.shape[0])) << u.m
-
-            if unit != None:
-                wavelength <<= unit
-
-            if air:
-                wavelength = vac_to_air(wavelength)
-
-            if d:
-                wavelength = wavelength - np.median(wavelength)
-                xlabel = f"{self.D}{self.l} [{self.aa}]"
-            else:
-                xlabel = f"{self.l} [{self.aa}]"
-
             if stokes == "all":
-                fig, ax = plt.subplots(nrows=2, ncols=2)
-                fig.suptitle(f"{datetime} {el} {self.aa} All  Stokes")
-                ax[0, 0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0, 0].set_ylabel("I [DNs]")
-                ax[0, 0].tick_params(labelbottom=False)
-                ax[0, 1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[0, 1].set_ylabel("Q [DNs]")
-                ax[0, 1].yaxis.set_label_position("right")
-                ax[0, 1].yaxis.tick_right()
-                ax[0, 1].tick_params(labelbottom=False)
-
-                ax[1, 0].plot(wavelength, self.data[2], c=pt_bright["blue"], marker="o")
-                ax[1, 0].set_ylabel("U [DNs]")
-                ax[1, 0].set_xlabel(xlabel)
-                # ax[1,0].tick_params(direction="in")
-
-                ax[1, 1].plot(wavelength, self.data[3], c=pt_bright["blue"], marker="o")
-                ax[1, 1].set_ylabel("V [DNs]")
-                ax[1, 1].set_xlabel(xlabel)
-                ax[1, 1].yaxis.set_label_position("right")
-                ax[1, 1].yaxis.ticks_right()
-                # ax[1,1].tick_params(direction="in")
-            elif stokes == "IQU":
-                fig, ax = plt.subplots(nrows=1, ncols=3)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes I, Q, U")
-
-                ax[0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0].set_ylabel("I [DNs]")
-                ax[0].set_xlabel(xlabel)
-                # ax[0].tick_params(direction="in")
-
-                ax[1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[1].set_ylabel("Q [DNs]")
-                ax[1].set_xlabel(xlabel)
-                # ax[1].tick_params(direction="in")
-
-                ax[2].plot(wavelength, self.data[2], c=pt_bright["blue"], marker="o")
-                ax[2].set_ylabel("U [DNs]")
-                ax[2].set_xlabel(xlabel)
-                # ax[2].tick_params(direction="in")
-            elif stokes == "QUV":
-                fig, ax = plt.subplots(nrows=1, ncols=3)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes Q, U, V")
-
-                ax[0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0].set_ylabel("Q [DNs]")
-                ax[0].set_xlabel(xlabel)
-                # ax[0].tick_params(direction="in")
-
-                ax[1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[1].set_ylabel("U [DNs]")
-                ax[1].set_xlabel(xlabel)
-                # ax[1].tick_params(direction="in")
-
-                ax[2].plot(wavelength, self.data[2], c=pt_bright["blue"], marker="o")
-                ax[2].set_ylabel("V [DNs]")
-                ax[2].set_xlabel(xlabel)
-                # ax[2].tick_params(direction="in")
-            elif stokes == "IQV":
-                fig, ax = plt.subplots(nrows=1, ncols=3)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes I, Q, V")
-
-                ax[0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0].set_ylabel("I [DNs]")
-                ax[0].set_xlabel(xlabel)
-                # ax[0].tick_params(direction="in")
-
-                ax[1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[1].set_ylabel("Q [DNs]")
-                ax[1].set_xlabel(xlabel)
-                # ax[1].tick_params(direction="in")
-
-                ax[2].plot(wavelength, self.data[2], c=pt_bright["blue"], marker="o")
-                ax[2].set_ylabel("V [DNs]")
-                ax[2].set_xlabel(xlabel)
-                # ax[2].tick_params(direction="in")
-            elif stokes == "IUV":
-                fig, ax = plt.subplots(nrows=1, ncols=3)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes I, U, V")
-
-                ax[0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0].set_ylabel("I [DNs]")
-                ax[0].set_xlabel(xlabel)
-                # ax[0].tick_params(direction="in")
-
-                ax[1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[1].set_ylabel("U [DNs]")
-                ax[1].set_xlabel(xlabel)
-                # ax[1].tick_params(direction="in")
-
-                ax[2].plot(wavelength, self.data[2], c=pt_bright["blue"], marker="o")
-                ax[2].set_ylabel("V [DNs]")
-                ax[2].set_xlabel(xlabel)
-                # ax[2].tick_params(direction="in")
-            elif stokes == "IQ":
-                fig, ax = plt.subplots(nrows=1, ncols=2)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes I, Q")
-
-                ax[0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0].set_ylabel("I [DNs]")
-                ax[0].set_xlabel(xlabel)
-                # ax[0].tick_params(direction="in")
-
-                ax[1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[1].set_ylabel("Q [DNs]")
-                ax[1].set_xlabel(xlabel)
-                # ax[1].tick_params(direction="in")
-            elif stokes == "IU":
-                fig, ax = plt.subplots(nrows=1, ncols=2)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes I, U")
-
-                ax[0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0].set_ylabel("I [DNs]")
-                ax[0].set_xlabel(xlabel)
-                # ax[0].tick_params(direction="in")
-
-                ax[1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[1].set_ylabel("U [DNs]")
-                ax[1].set_xlabel(xlabel)
-                # ax[1].tick_params(direction="in")
-            elif stokes == "IV":
-                fig, ax = plt.subplots(nrows=1, ncols=2)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes I, V")
-
-                ax[0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0].set_ylabel("I [DNs]")
-                ax[0].set_xlabel(xlabel)
-                # ax[0].tick_params(direction="in")
-
-                ax[1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[1].set_ylabel("V [DNs]")
-                ax[1].set_xlabel(xlabel)
-                # ax[1].tick_params(direction="in")
-            elif stokes == "QU":
-                fig, ax = plt.subplots(nrows=1, ncols=2)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes Q, U")
-
-                ax[0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0].set_ylabel("Q [DNs]")
-                ax[0].set_xlabel(xlabel)
-                # ax[0].tick_params(direction="in")
-
-                ax[1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[1].set_ylabel("U [DNs]")
-                ax[1].set_xlabel(xlabel)
-                # ax[1].tick_params(direction="in")
-            elif stokes == "QV":
-                fig, ax = plt.subplots(nrows=1, ncols=2)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes Q, V")
-
-                ax[0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0].set_ylabel("Q [DNs]")
-                ax[0].set_xlabel(xlabel)
-                # ax[0].tick_params(direction="in")
-
-                ax[1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[1].set_ylabel("V [DNs]")
-                ax[1].set_xlabel(xlabel)
-                # ax[1].tick_params(direction="in")
-            elif stokes == "UV":
-                fig, ax = plt.subplots(nrows=1, ncols=2)
-                fig.suptitle(f"{datetime} {el} {self.aa} Stokes U, V")
-
-                ax[0].plot(wavelength, self.data[0], c=pt_bright["blue"], marker="o")
-                ax[0].set_ylabel("U [DNs]")
-                ax[0].set_xlabel(xlabel)
-                # ax[0].tick_params(direction="in")
-
-                ax[1].plot(wavelength, self.data[1], c=pt_bright["blue"], marker="o")
-                ax[1].set_ylabel("V [DNs]")
-                ax[1].set_xlabel(xlabel)
-                # ax[1].tick_params(direction="in")
-
-        fig.show()
+                title = f"{datetime} {el} {self.aa} All  Stokes"
+                components = stokes_components
+            elif len(stokes) < 5 and all(s in stokes_components for s in stokes):
+                components = [s for s in stokes]
+                title = f"{datetime} {el} {self.aa} Stokes {', '.join(components)}"
+            else:
+                raise ValueError(
+                    f"Not all Stokes components requested ({stokes}) are valid (I, Q, U, V)."
+                )
+            plot_multi_component_spectrum(components, wavelength, self.data, title, d=d)
 
     @plt.rc_context(rc_context_dict)
     def intensity_map(
@@ -629,61 +401,24 @@ class CRISP(CRISPSlicingMixin):
         except KeyError:
             datetime = self.header["date_obs"] + "T" + self.header["time_obs"]
 
-        if self.data.min() < 0:
-            vmin = 0
-        else:
-            vmin = self.data.min()
+        if frame is None:
+            frame = "WCS"
+        if frame == "WCS" and self.rotate:
+            frame = "arcsec"
 
-        if frame is None and not self.rotate:
-            fig = plt.figure()
-            ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
-            im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=vmin, norm=norm)
-            ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-            ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-            ax1.set_title(
-                f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})"
-            )
-            fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-            fig.show()
-        elif frame == "pix":
-            fig = plt.figure()
-            ax1 = fig.add_subplot(1, 1, 1)
-            im1 = ax1.imshow(
-                self.data, cmap="Greys_r", vmin=vmin, origin="lower", norm=norm
-            )
-            ax1.set_ylabel("y [pixels]")
-            ax1.set_xlabel("x [pixels]")
-            ax1.set_title(
-                f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})"
-            )
-            fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-            fig.show()
-        elif (frame == "arcsec") or (frame is None and self.rotate):
+        extent = None
+        if frame == "arcsec":
             try:
                 xmax = self.header["CDELT1"] * self.shape[-1]
                 ymax = self.header["CDELT2"] * self.shape[-2]
             except KeyError:
                 xmax = self.header["pixel_scale"] * self.shape[-1]
                 ymax = self.header["pixel_scale"] * self.shape[-2]
-            fig = plt.figure()
-            ax1 = fig.add_subplot(1, 1, 1)
-            im1 = ax1.imshow(
-                self.data,
-                cmap="Greys_r",
-                vmin=vmin,
-                origin="lower",
-                norm=norm,
-                extent=[0, xmax, 0, ymax],
-            )
-            ax1.set_ylabel("y [arcsec]")
-            ax1.set_xlabel("x [arcsec]")
-            ax1.set_title(
-                f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})"
-            )
-            fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-            fig.show()
+            extent = [0.0, xmax, 0.0, ymax]
 
-    @plt.rc_context(rc_context_dict)
+        title = f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})"
+        plot_single_frame(self, frame, title, extent=extent, norm=norm)
+
     def stokes_map(self, stokes: str, frame: Optional[str] = None) -> None:
         """
         This plots the Stokes images for certain wavelength.
@@ -698,6 +433,8 @@ class CRISP(CRISPSlicingMixin):
             The units to use on the axes. Default is None so the WCS is used.
             Other option is "pix" for pixel frame.
         """
+
+        stokes_components = ["I", "Q", "U", "V"]
 
         wvl = np.round(
             self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(self.ind[1])
@@ -721,1165 +458,60 @@ class CRISP(CRISPSlicingMixin):
         title = (
             f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l}={del_wvl}{self.aa})"
         )
+        if frame is None:
+            frame = "WCS"
+        if frame == "WCS" and self.rotate:
+            frame = "arcsec"
 
-        if frame is None and not self.rotate:
-            if self.data.ndim == 2:
-                fig = plt.figure()
-                ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs.low_level_wcs)
-                if stokes == "I":
-                    data = self.data
-                    data[data < 0] = np.nan
-                    im1 = ax1.imshow(data, cmap="Greys_r")
-                    ax1.set_title("Stokes I " + title)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-                elif stokes == "Q":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10)
-                    ax1.set_title("Stokes Q " + title)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
-                elif stokes == "U":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-10, vmax=10)
-                    ax1.set_title("Stokes U " + title)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
-                elif stokes == "V":
-                    im1 = ax1.imshow(self.data, cmap="Greys_r", vmin=-100, vmax=100)
-                    ax1.set_title("Stokes V " + title)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="V [DNs]")
-                else:
-                    raise ValueError("This is not a Stokes.")
-                ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-                ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-                fig.show()
-            elif self.data.ndim == 3:
-                if stokes == "all":
-                    fig = plt.figure(constrained_layout=True)
-                    fig.suptitle(title)
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(
-                        2, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
-                    )
-                    im1 = ax1.imshow(data, cmap="Greys_r")
-                    ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-                    ax1.set_xlabel(" ")
-                    # ax1.xaxis.set_label_position("top")
-                    ax1.xaxis.tick_top()
-                    ax1.set_title("Stokes I ")
-                    ax1.tick_params(axis="x", labelbottom=False)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(
-                        2, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
-                    )
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax2.set_ylabel(" ")
-                    ax2.set_xlabel(" ")
-                    # ax2.xaxis.set_label_position("top")
-                    ax2.xaxis.tick_top()
-                    # ax2.yaxis.set_label_position("right")
-                    ax2.yaxis.tick_right()
-                    ax2.set_title("Stokes Q ")
-                    ax2.tick_params(axis="x", labelbottom=False)
-                    ax2.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
-
-                    ax3 = fig.add_subplot(
-                        2, 2, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
-                    )
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax3.set_ylabel("Helioprojective Latitude [arcsec]")
-                    ax3.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax3.set_title("Stokes U ")
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="U [DNs]")
-
-                    ax4 = fig.add_subplot(
-                        2, 2, 4, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 3)
-                    )
-                    im4 = ax4.imshow(self.data[3], cmap="Greys_r", vmin=-100, vmax=100)
-                    ax4.set_ylabel(" ")
-                    ax4.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax4.yaxis.set_label_position("right")
-                    ax4.yaxis.ticks_right()
-                    ax4.set_title("Stokes V ")
-                    ax4.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im4, ax=ax4, orientation="vertical", label="V [DNs]")
-                elif stokes == "IQU":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(
-                        1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
-                    )
-                    im1 = ax1.imshow(data, cmap="Greys_r")
-                    ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-                    ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(
-                        1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
-                    )
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax2.set_ylabel(" ")
-                    ax2.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax2.set_title("Stokes Q")
-                    ax2.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
-
-                    ax3 = fig.add_subplot(
-                        1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
-                    )
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax3.set_ylabel(" ")
-                    ax3.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax3.set_title("Stokes U")
-                    ax3.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="U [DNs]")
-                elif stokes == "QUV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    ax1 = fig.add_subplot(
-                        1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
-                    )
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-                    ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax1.set_title("Stokes Q")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
-
-                    ax2 = fig.add_subplot(
-                        1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
-                    )
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax2.set_ylabel(" ")
-                    ax2.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax2.set_title("Stokes U")
-                    ax2.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
-
-                    ax3 = fig.add_subplot(
-                        1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
-                    )
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100)
-                    ax3.set_ylabel(" ")
-                    ax3.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax3.set_title("Stokes V")
-                    ax3.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="V [DNs]")
-                elif stokes == "IQV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(
-                        1, 3, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
-                    )
-                    im1 = ax1.imshow(data, cmap="Greys_r")
-                    ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-                    ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(
-                        1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
-                    )
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax2.set_ylabel(" ")
-                    ax2.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax2.set_title("Stokes Q")
-                    ax2.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
-
-                    ax3 = fig.add_subplot(
-                        1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
-                    )
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100)
-                    ax3.set_ylabel(" ")
-                    ax3.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax3.set_title("Stokes V")
-                    ax3.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="V [DNs]")
-                elif stokes == "IUV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    im1 = ax1.imshow(data, cmap="Greys_r")
-                    ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-                    ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(
-                        1, 3, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
-                    )
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax2.set_ylabel(" ")
-                    ax2.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax2.set_title("Stokes U")
-                    ax2.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
-
-                    ax3 = fig.add_subplot(
-                        1, 3, 3, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 2)
-                    )
-                    im3 = ax3.imshow(self.data[2], cmap="Greys_r", vmin=-100, vmax=100)
-                    ax3.set_ylabel(" ")
-                    ax3.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax3.set_title("Stokes V")
-                    ax3.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="V [DNs]")
-                elif stokes == "IQ":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(
-                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
-                    )
-                    im1 = ax1.imshow(data, cmap="Greys_r")
-                    ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-                    ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(
-                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
-                    )
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax2.set_ylabel(" ")
-                    ax2.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax2.set_title("Stokes Q")
-                    ax2.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
-                elif stokes == "IU":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(
-                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
-                    )
-                    im1 = ax1.imshow(data, cmap="Greys_r")
-                    ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-                    ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(
-                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
-                    )
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax2.set_ylabel(" ")
-                    ax2.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax2.set_title("Stokes U")
-                    ax2.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
-                elif stokes == "IV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(
-                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
-                    )
-                    im1 = ax1.imshow(data, cmap="Greys_r")
-                    ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-                    ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(
-                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
-                    )
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100)
-                    ax2.set_ylabel("")
-                    ax2.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax2.set_title("Stokes V")
-                    ax2.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="V [DNs]")
-                elif stokes == "QU":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    ax1 = fig.add_subplot(
-                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
-                    )
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-                    ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax1.set_title("Stokes Q")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
-
-                    ax2 = fig.add_subplot(
-                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
-                    )
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax2.set_ylabel(" ")
-                    ax2.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax2.set_title("Stokes U")
-                    ax2.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
-                elif stokes == "QV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    ax1 = fig.add_subplot(
-                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
-                    )
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-                    ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax1.set_title("Stokes Q")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
-
-                    ax2 = fig.add_subplot(
-                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
-                    )
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100)
-                    ax2.set_ylabel(" ")
-                    ax2.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax2.set_title("Stokes V")
-                    ax2.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="V [DNs]")
-                elif stokes == "UV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    ax1 = fig.add_subplot(
-                        1, 2, 1, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 0)
-                    )
-                    im1 = ax1.imshow(self.data[0], cmap="Greys_r", vmin=-10, vmax=10)
-                    ax1.set_ylabel("Helioprojective Latitude [arcsec]")
-                    ax1.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax1.set_title("Stokes U")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
-
-                    ax2 = fig.add_subplot(
-                        1, 2, 2, projection=SlicedLowLevelWCS(self.wcs.low_level_wcs, 1)
-                    )
-                    im2 = ax2.imshow(self.data[1], cmap="Greys_r", vmin=-100, vmax=100)
-                    ax2.set_ylabel(" ")
-                    ax2.set_xlabel("Helioprojective Longitude [arcsec]")
-                    ax2.set_title("Stokes V")
-                    ax2.tick_params(axis="y", labelleft=False)
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="V [DNs]")
-        elif frame == "pix":
-            if self.data.ndim == 2:
-                fig = plt.figure()
-                ax1 = fig.add_subplot(1, 1, 1)
-                if stokes == "I":
-                    data = self.data
-                    data[data < 0] = np.nan
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower")
-                    ax1.set_title("Stokes I " + title)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-                elif stokes == "Q":
-                    im1 = ax1.imshow(
-                        self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax1.set_title("Stokes Q " + title)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
-                elif stokes == "U":
-                    im1 = ax1.imshow(
-                        self.data, cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax1.set_title("Stokes U " + title)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
-                elif stokes == "V":
-                    im1 = ax1.imshow(
-                        self.data, cmap="Greys_r", vmin=-100, vmax=100, origin="lower"
-                    )
-                    ax1.set_title("Stokes V " + title)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="V [DNs]")
-                else:
-                    raise ValueError("This is not a Stokes.")
-                ax1.set_ylabel("y [pixels]")
-                ax1.set_xlabel("x [pixels]")
-                fig.show()
-            elif self.data.ndim == 3:
-                if stokes == "all":
-                    fig = plt.figure(constrained_layout=True)
-                    fig.suptitle(title)
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(2, 2, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower")
-                    ax1.set_ylabel("y [pixels]")
-                    ax1.set_xticks([])
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(2, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xticks([])
-                    ax2.set_title("Stokes Q")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
-
-                    ax3 = fig.add_subplot(2, 2, 3)
-                    im3 = ax3.imshow(
-                        self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax3.set_ylabel("y [pixels]")
-                    ax3.set_xlabel("x [pixels]")
-                    ax3.set_title("Stokes U")
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="U [DNs]")
-
-                    ax4 = fig.add_subplot(2, 2, 4)
-                    im4 = ax4.imshow(
-                        self.data[3],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                    )
-                    ax4.set_yticks([])
-                    ax4.set_xlabel("x [pixels]")
-                    ax4.set_title("Stokes V")
-                    fig.colorbar(im4, ax=ax4, orientation="vertical", label="V [DNs]")
-                elif stokes == "IQU":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower")
-                    ax1.set_ylabel("y [pixels]")
-                    ax1.set_xlabel("x [pixels]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(
-                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [pixels]")
-                    ax2.set_title("Stokes Q")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
-
-                    ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(
-                        self.data[2], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax3.set_yticks([])
-                    ax3.set_xlabel("x [pixels]")
-                    ax3.set_title("Stokes U")
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="U [DNs]")
-                elif stokes == "QUV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(
-                        self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax1.set_ylabel("y [pixels]")
-                    ax1.set_xlabel("x [pixels]")
-                    ax1.set_title("Stokes Q")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
-
-                    ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(
-                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [pixels]")
-                    ax2.set_title("Stokes U")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
-
-                    ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(
-                        self.data[2],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                    )
-                    ax3.set_yticks([])
-                    ax3.set_xlabel("x [pixels]")
-                    ax3.set_title("Stokes V")
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="V [DNs]")
-                elif stokes == "IQV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower")
-                    ax1.set_ylabel("y [pixels]")
-                    ax1.set_xlabel("x [pixels]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(
-                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [pixels]")
-                    ax2.set_title("Stokes Q")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
-
-                    ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(
-                        self.data[2],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                    )
-                    ax3.set_yticks([])
-                    ax3.set_xlabel("x [pixels]")
-                    ax3.set_title("Stokes V")
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="V [DNs]")
-                elif stokes == "IUV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower")
-                    ax1.set_ylabel("y [pixels]")
-                    ax1.set_xlabel("x [pixels]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(
-                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [pixels]")
-                    ax2.set_title("Stokes U")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
-
-                    ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(
-                        self.data[2],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                    )
-                    ax3.set_yticks([])
-                    ax3.set_xlabel("x [pixels]")
-                    ax3.set_title("Stokes V")
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="V [DNs]")
-                elif stokes == "IQ":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower")
-                    ax1.set_ylabel("y [pixels]")
-                    ax1.set_xlabel("x [pixels]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [pixels]")
-                    ax2.set_title("Stokes Q")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
-                elif stokes == "IU":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower")
-                    ax1.set_ylabel("y [pixels]")
-                    ax1.set_xlabel("x [pixels]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [pixels]")
-                    ax2.set_title("Stokes U")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
-                elif stokes == "IV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(data, cmap="Greys_r", origin="lower")
-                    ax1.set_ylabel("y [pixels]")
-                    ax1.set_xlabel("x [pixels]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [pixels]")
-                    ax2.set_title("Stokes V")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="V [DNs]")
-                elif stokes == "QU":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(
-                        self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax1.set_ylabel("y [pixels]")
-                    ax1.set_xlabel("x [pixels]")
-                    ax1.set_title("Stokes Q")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
-
-                    ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [pixels]")
-                    ax2.set_title("Stokes U")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
-                elif stokes == "QV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(
-                        self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax1.set_ylabel("y [pixels]")
-                    ax1.set_xlabel("x [pixels]")
-                    ax1.set_title("Stokes Q")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
-
-                    ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [pixels]")
-                    ax2.set_title("Stokes V")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="V [DNs]")
-                elif stokes == "UV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(
-                        self.data[0], cmap="Greys_r", vmin=-10, vmax=10, origin="lower"
-                    )
-                    ax1.set_ylabel("y [pixels]")
-                    ax1.set_xlabel("x [pixels]")
-                    ax1.set_title("Stokes U")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
-
-                    ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [pixels]")
-                    ax2.set_title("Stokes V ")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="V [DNs]")
-        elif (frame == "arcsec") or (frame is None and self.rotate):
+        extent = None
+        if frame == "arcsec":
             try:
                 xmax = self.header["CDELT1"] * self.shape[-1]
                 ymax = self.header["CDELT2"] * self.shape[-2]
             except KeyError:
                 xmax = self.header["pixel_scale"] * self.shape[-1]
                 ymax = self.header["pixel_scale"] * self.shape[-2]
-            if self.data.ndim == 2:
-                fig = plt.figure()
-                ax1 = fig.add_subplot(1, 1, 1)
-                if stokes == "I":
-                    data = self.data
-                    data[data < 0] = np.nan
-                    im1 = ax1.imshow(
-                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
-                    )
-                    ax1.set_title("Stokes I " + title)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-                elif stokes == "Q":
-                    im1 = ax1.imshow(
-                        self.data,
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax1.set_title("Stokes Q " + title)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
-                elif stokes == "U":
-                    im1 = ax1.imshow(
-                        self.data,
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax1.set_title("Stokes U " + title)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
-                elif stokes == "V":
-                    im1 = ax1.imshow(
-                        self.data,
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax1.set_title("Stokes V " + title)
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="V [DNs]")
-                else:
-                    raise ValueError("This is not a Stokes.")
-                ax1.set_ylabel("y [arcsec]")
-                ax1.set_xlabel("x [arcsec]")
-                fig.show()
-            elif self.data.ndim == 3:
-                if stokes == "all":
-                    fig = plt.figure(constrained_layout=True)
-                    fig.suptitle(title)
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(2, 2, 1)
-                    im1 = ax1.imshow(
-                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
-                    )
-                    ax1.set_ylabel("y [arcsec]")
-                    ax1.set_xticks([])
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
+            extent = [0.0, xmax, 0.0, ymax]
 
-                    ax2 = fig.add_subplot(2, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xticks([])
-                    ax2.set_title("Stokes Q")
-                    ax2.tick_params(direction="in")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
+        norms = {
+            "I": None,
+            "Q": matplotlib.colors.Normalize(vmin=-10, vmax=10),
+            "U": matplotlib.colors.Normalize(vmin=-10, vmax=10),
+            "V": matplotlib.colors.Normalize(vmin=-100, vmax=100),
+        }
 
-                    ax3 = fig.add_subplot(2, 2, 3)
-                    im3 = ax3.imshow(
-                        self.data[2],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax3.set_ylabel("y [arcsec]")
-                    ax3.set_xlabel("x [arcsed]")
-                    ax3.set_title("Stokes U")
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="U [DNs]")
+        def map_negative_nan(d: np.ndarray) -> np.ndarray:
+            d[d < 0.0] = np.nan
+            return d
 
-                    ax4 = fig.add_subplot(2, 2, 4)
-                    im4 = ax4.imshow(
-                        self.data[3],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax4.set_yticks([])
-                    ax4.set_xlabel("x [arcsed]")
-                    ax4.set_title("Stokes V")
-                    fig.colorbar(im4, ax=ax4, orientation="vertical", label="V [DNs]")
-                elif stokes == "IQU":
-                    fig = plt.figure()
-                    fig.suptitle(title)
+        map_datas = {"I": map_negative_nan, "Q": None, "U": None, "V": None}
 
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(
-                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
-                    )
-                    ax1.set_ylabel("y [arcsec]")
-                    ax1.set_xlabel("x [arcsec]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
+        if self.data.ndim == 2:
+            if not (len(stokes) == 1 and stokes in stokes_components):
+                raise ValueError(
+                    f"For 2D data can only plot one Stokes component (expected I, Q, U, V, got {stokes})."
+                )
 
-                    ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
+            title = f"Stokes {stokes} {title}"
+            plot_single_frame(
+                self,
+                frame,
+                title,
+                cb_label=f"{stokes} [DNs]",
+                extent=extent,
+                norm=norms[stokes],
+                map_data=map_datas[stokes],
+            )
+        elif self.data.ndim == 3:
+            if stokes == "all":
+                components = stokes_components
+            else:
+                components = [s for s in stokes]
+                if not all(s in stokes_components for s in components):
+                    raise ValueError(
+                        f"Not all Stokes components requested ({stokes}) are valid (combination of I, Q, U, V expected)."
                     )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [arcsec]")
-                    ax2.set_title("Stokes Q")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
-
-                    ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(
-                        self.data[2],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax3.set_yticks([])
-                    ax3.set_xlabel("x [arcsec]")
-                    ax3.set_title("Stokes U")
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="U [DNs]")
-                elif stokes == "QUV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(
-                        self.data[0],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax1.set_ylabel("y [arcsec]")
-                    ax1.set_xlabel("x [arcsec]")
-                    ax1.set_title("Stokes Q")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
-
-                    ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [arcsec]")
-                    ax2.set_title("Stokes U")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
-
-                    ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(
-                        self.data[2],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax3.set_yticks([])
-                    ax3.set_xlabel("x [arcsec]")
-                    ax3.set_title("Stokes V")
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="V [DNs]")
-                elif stokes == "IQV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(
-                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
-                    )
-                    ax1.set_ylabel("y [arcsec]")
-                    ax1.set_xlabel("x [arcsec]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [arcsec]")
-                    ax2.set_title("Stokes Q")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
-
-                    ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(
-                        self.data[2],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax3.set_yticks([])
-                    ax3.set_xlabel("x [arcsec]")
-                    ax3.set_title("Stokes V")
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="V [DNs]")
-                elif stokes == "IUV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 3, 1)
-                    im1 = ax1.imshow(
-                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
-                    )
-                    ax1.set_ylabel("y [arcsec]")
-                    ax1.set_xlabel("x [arcsec]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(1, 3, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [arcsec]")
-                    ax2.set_title("Stokes U")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
-
-                    ax3 = fig.add_subplot(1, 3, 3)
-                    im3 = ax3.imshow(
-                        self.data[2],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax3.set_yticks([])
-                    ax3.set_xlabel("x [arcsec]")
-                    ax3.set_title("Stokes V")
-                    fig.colorbar(im3, ax=ax3, orientation="vertical", label="V [DNs]")
-                elif stokes == "IQ":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(
-                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
-                    )
-                    ax1.set_ylabel("y [arcsec]")
-                    ax1.set_xlabel("x [arcsec]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [arcsec]")
-                    ax2.set_title("Stokes Q")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="Q [DNs]")
-                elif stokes == "IU":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(
-                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
-                    )
-                    ax1.set_ylabel("y [arcsec]")
-                    ax1.set_xlabel("x [arcsec]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [arcsec]")
-                    ax2.set_title("Stokes U")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
-                elif stokes == "IV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    data = self.data[0]
-                    data[data < 0] = np.nan
-                    ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(
-                        data, cmap="Greys_r", origin="lower", extent=[0, xmax, 0, ymax]
-                    )
-                    ax1.set_ylabel("y [arcsec]")
-                    ax1.set_xlabel("x [arcsec]")
-                    ax1.set_title("Stokes I")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
-
-                    ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [arcsec]")
-                    ax2.set_title("Stokes V")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="V [DNs]")
-                elif stokes == "QU":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(
-                        self.data[0],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax1.set_ylabel("y [arcsec]")
-                    ax1.set_xlabel("x [arcsec]")
-                    ax1.set_title("Stokes Q")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
-
-                    ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [arcsec]")
-                    ax2.set_title("Stokes U")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="U [DNs]")
-                elif stokes == "QV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(
-                        self.data[0],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax1.set_ylabel("y [arcsec]")
-                    ax1.set_xlabel("x [arcsec]")
-                    ax1.set_title("Stokes Q")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="Q [DNs]")
-
-                    ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [arcsec]")
-                    ax2.set_title("Stokes V")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="V [DNs]")
-                elif stokes == "UV":
-                    fig = plt.figure()
-                    fig.suptitle(title)
-
-                    ax1 = fig.add_subplot(1, 2, 1)
-                    im1 = ax1.imshow(
-                        self.data[0],
-                        cmap="Greys_r",
-                        vmin=-10,
-                        vmax=10,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax1.set_ylabel("y [arcsec]")
-                    ax1.set_xlabel("x [arcsec]")
-                    ax1.set_title("Stokes U")
-                    fig.colorbar(im1, ax=ax1, orientation="vertical", label="U [DNs]")
-
-                    ax2 = fig.add_subplot(1, 2, 2)
-                    im2 = ax2.imshow(
-                        self.data[1],
-                        cmap="Greys_r",
-                        vmin=-100,
-                        vmax=100,
-                        origin="lower",
-                        extent=[0, xmax, 0, ymax],
-                    )
-                    ax2.set_yticks([])
-                    ax2.set_xlabel("x [arcsec]")
-                    ax2.set_title("Stokes V ")
-                    fig.colorbar(im2, ax=ax2, orientation="vertical", label="V [DNs]")
-
-        fig.show()
+            plot_multi_frame(self, components, frame, norms, map_datas, extent)
 
     def wave(self, idx: Union[int, Sequence[int]]) -> np.ndarray:
         """
@@ -1965,7 +597,7 @@ class CRISP(CRISPSlicingMixin):
             return self.wcs.array_index_to_world(idx) << u.Angstrom
         else:
             raise NotImplementedError(
-                "This is way too many dimensions for me to handle."
+                "This is way too many dimensions for me to handle. I am but a three-dimensional being."
             )
 
     def to_lonlat(
@@ -2000,15 +632,21 @@ class CRISP(CRISPSlicingMixin):
         if coord:
             if len(self.wcs.low_level_wcs.array_shape) == 4:
                 if hasattr(self, "ind"):
-                    if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                    if isinstance(self.ind[-2], slice) and isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, self.ind[-2], self.ind[-1]
                         ].array_index_to_world(y, x)
-                    elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
+                    elif isinstance(self.ind[-2], slice) and not isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, self.ind[-2]
                         ].array_index_to_world(y, x)
-                    elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                    elif not isinstance(self.ind[-2], slice) and isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, :, self.ind[-1]
                         ].array_index_to_world(y, x)
@@ -2020,15 +658,21 @@ class CRISP(CRISPSlicingMixin):
                     return self.wcs[0, 0].array_index_to_world(y, x)
             elif len(self.wcs.low_level_wcs.array_shape) == 3:
                 if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                    if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                    if isinstance(self.ind[-2], slice) and isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, self.ind[-2], self.ind[-1]
                         ].array_index_to_world(y, x)
-                    elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
+                    elif isinstance(self.ind[-2], slice) and not isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, self.ind[-2]
                         ].array_index_to_world(y, x)
-                    elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                    elif not isinstance(self.ind[-2], slice) and isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, :, self.ind[-1]
                         ].array_index_to_world(y, x)
@@ -2038,18 +682,20 @@ class CRISP(CRISPSlicingMixin):
                         )
                 else:
                     if hasattr(self, "ind"):
-                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                        if isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
+                        ):
                             return self.wcs.low_level_wcs._wcs[
                                 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
-                        elif (
-                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
+                        elif isinstance(self.ind[-2], slice) and not isinstance(
+                            self.ind[-1], slice
                         ):
                             return self.wcs.low_level_wcs._wcs[
                                 0, self.ind[-2]
                             ].array_index_to_world(y, x)
-                        elif (
-                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
+                        elif not isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
                         ):
                             return self.wcs.low_level_wcs._wcs[
                                 0, :, self.ind[-1]
@@ -2068,20 +714,22 @@ class CRISP(CRISPSlicingMixin):
             if unit:
                 if len(self.wcs.low_level_wcs.array_shape) == 4:
                     if hasattr(self, "ind"):
-                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                        if isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
+                        ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
-                        elif (
-                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
+                        elif isinstance(self.ind[-2], slice) and not isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
-                        elif (
-                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
+                        elif not isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, :, self.ind[-1]
@@ -2097,20 +745,22 @@ class CRISP(CRISPSlicingMixin):
                         return sc.Tx, sc.Ty
                 elif len(self.wcs.low_level_wcs.array_shape) == 3:
                     if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                        if isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
+                        ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
-                        elif (
-                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
+                        elif isinstance(self.ind[-2], slice) and not isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
-                        elif (
-                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
+                        elif not isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, :, self.ind[-1]
@@ -2123,25 +773,22 @@ class CRISP(CRISPSlicingMixin):
                             return sc.Tx, sc.Ty
                     else:
                         if hasattr(self, "ind"):
-                            if (
-                                isinstance(self.ind[-2], slice)
-                                and isinstance(self.ind[-1], slice)
+                            if isinstance(self.ind[-2], slice) and isinstance(
+                                self.ind[-1], slice
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, self.ind[-2], self.ind[-1]
                                 ].array_index_to_world(y, x)
                                 return sc.Tx, sc.Ty
-                            elif (
-                                isinstance(self.ind[-2], slice)
-                                and not isinstance(self.ind[-1], slice)
+                            elif isinstance(self.ind[-2], slice) and not isinstance(
+                                self.ind[-1], slice
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, self.ind[-2]
                                 ].array_index_to_world(y, x)
                                 return sc.Tx, sc.Ty
-                            elif (
-                                not isinstance(self.ind[-2], slice)
-                                and isinstance(self.ind[-1], slice)
+                            elif not isinstance(self.ind[-2], slice) and isinstance(
+                                self.ind[-1], slice
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, :, self.ind[-1]
@@ -2163,20 +810,22 @@ class CRISP(CRISPSlicingMixin):
             else:
                 if len(self.wcs.low_level_wcs.array_shape) == 4:
                     if hasattr(self, "ind"):
-                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                        if isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
+                        ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
-                        elif (
-                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
+                        elif isinstance(self.ind[-2], slice) and not isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
-                        elif (
-                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
+                        elif not isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, :, self.ind[-1]
@@ -2192,20 +841,22 @@ class CRISP(CRISPSlicingMixin):
                         return sc.Tx.value, sc.Ty.value
                 elif len(self.wcs.low_level_wcs.array_shape) == 3:
                     if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                        if isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
+                        ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
-                        elif (
-                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
+                        elif isinstance(self.ind[-2], slice) and not isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
-                        elif (
-                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
+                        elif not isinstance(self.ind[-2], slice) and isinstance(
+                            self.ind[-1], slice
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, :, self.ind[-1]
@@ -2218,25 +869,22 @@ class CRISP(CRISPSlicingMixin):
                             return sc.Tx.value, sc.Ty.value
                     else:
                         if hasattr(self, "ind"):
-                            if (
-                                isinstance(self.ind[-2], slice)
-                                and isinstance(self.ind[-1], slice)
+                            if isinstance(self.ind[-2], slice) and isinstance(
+                                self.ind[-1], slice
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, self.ind[-2], self.ind[-1]
                                 ].array_index_to_world(y, x)
                                 return sc.Tx.value, sc.Ty.value
-                            elif (
-                                isinstance(self.ind[-2], slice)
-                                and not isinstance(self.ind[-1], slice)
+                            elif isinstance(self.ind[-2], slice) and not isinstance(
+                                self.ind[-1], slice
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, self.ind[-2]
                                 ].array_index_to_world(y, x)
                                 return sc.Tx.value, sc.Ty.value
-                            elif (
-                                not isinstance(self.ind[-2], slice)
-                                and isinstance(self.ind[-1], slice)
+                            elif not isinstance(self.ind[-2], slice) and isinstance(
+                                self.ind[-1], slice
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, :, self.ind[-1]
@@ -2286,11 +934,15 @@ class CRISP(CRISPSlicingMixin):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, self.ind[-2], self.ind[-1]
                     ].world_to_array_index(sc)
-                elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
+                elif isinstance(self.ind[-2], slice) and not isinstance(
+                    self.ind[-1], slice
+                ):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, self.ind[-2]
                     ].world_to_array_index(sc)
-                elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                elif not isinstance(self.ind[-2], slice) and isinstance(
+                    self.ind[-1], slice
+                ):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, :, self.ind[-1]
                     ].world_to_array_index(sc)
@@ -2304,11 +956,15 @@ class CRISP(CRISPSlicingMixin):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, self.ind[-2], self.ind[-1]
                     ].world_to_array_index(sc)
-                elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
+                elif isinstance(self.ind[-2], slice) and not isinstance(
+                    self.ind[-1], slice
+                ):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, self.ind[-2]
                     ].world_to_array_index(sc)
-                elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                elif not isinstance(self.ind[-2], slice) and isinstance(
+                    self.ind[-1], slice
+                ):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, :, self.ind[-1]
                     ].world_to_array_index(sc)
@@ -2316,15 +972,21 @@ class CRISP(CRISPSlicingMixin):
                     return self.wcs.low_level_wcs._wcs[0, 0].world_to_array_index(sc)
             else:
                 if hasattr(self, "ind"):
-                    if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                    if isinstance(self.ind[-2], slice) and isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, self.ind[-2], self.ind[-1]
                         ].world_to_array_index(sc)
-                    elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
+                    elif isinstance(self.ind[-2], slice) and not isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, self.ind[-2]
                         ].world_to_array_index(sc)
-                    elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
+                    elif not isinstance(self.ind[-2], slice) and isinstance(
+                        self.ind[-1], slice
+                    ):
                         return self.wcs.low_level_wcs._wcs[
                             0, :, self.ind[-1]
                         ].world_to_array_index(sc)
@@ -2463,11 +1125,11 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         """
         if diff_t:
             if sep:
-                return [f.rotate_crop() for f in self.list] # type: ignore
+                return [f.rotate_crop() for f in self.list]  # type: ignore
 
             self.full_frame = [*self.data]
             for f in self.list:
-                crop, crop_dict = f.rotate_crop(sep=True) # type: ignore
+                crop, crop_dict = f.rotate_crop(sep=True)  # type: ignore
                 f.file.data = crop
                 for k, v in crop_dict.items():
                     f.file.header[k] = v
@@ -2502,7 +1164,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             respective ``CRISP`` instances' ``rot_data`` attribute.
         """
         if sep:
-            return [f.reconstruct_full_frame(sep=True) for f in self.list] # type: ignore
+            return [f.reconstruct_full_frame(sep=True) for f in self.list]  # type: ignore
 
         for f in self.list:
             f.reconstruct_full_frame(sep=False)
@@ -2545,7 +1207,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             for f in self.list:
                 f.plot_spectrum(unit=unit, air=air, d=d)
         else:
-            raise ValueError(f"Unexpected index `{idx}`, expected int or \"all\"")
+            raise ValueError(f'Unexpected index `{idx}`, expected int or "all"')
 
     @plt.rc_context(rc_context_dict)
     def plot_stokes(
@@ -2589,7 +1251,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             for f in self.list:
                 f.plot_stokes(stokes, unit=unit, air=air, d=d)
         else:
-            raise ValueError(f"Unexpected index `{idx}`, expected int or \"all\"")
+            raise ValueError(f'Unexpected index `{idx}`, expected int or "all"')
 
     @plt.rc_context(rc_context_dict)
     def intensity_map(
@@ -2620,7 +1282,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             for f in self.list:
                 f.intensity_map(frame=frame, norm=norm)
         else:
-            raise ValueError(f"Unexpected index `{idx}`, expected int or \"all\"")
+            raise ValueError(f'Unexpected index `{idx}`, expected int or "all"')
 
     @plt.rc_context(rc_context_dict)
     def stokes_map(
@@ -2650,7 +1312,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             for f in self.list:
                 f.stokes_map(stokes, frame=frame)
         else:
-            raise ValueError(f"Unexpected index `{idx}`, expected int or \"all\"")
+            raise ValueError(f'Unexpected index `{idx}`, expected int or "all"')
 
     def from_lonlat(self, lon: float, lat: float) -> Tuple[float, float]:
         """
@@ -2810,9 +1472,7 @@ class CRISPWideband(CRISP):
             )
             ax1.set_ylabel("y [arcsec]")
             ax1.set_xlabel("x [arcsec]")
-            ax1.set_title(
-                f"{datetime} (wideband)"
-            )
+            ax1.set_title(f"{datetime} (wideband)")
             fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
             fig.show()
 
@@ -2972,7 +1632,7 @@ class CRISPNonU(CRISP):
             )
 
         wavelength = self.wvls
-        if unit != None:
+        if unit is not None:
             wavelength <<= unit
 
         if air:
@@ -3043,7 +1703,7 @@ class CRISPNonU(CRISP):
         if self.data.ndim == 1:
             wavelength = self.wvls
 
-            if unit != None:
+            if unit is not None:
                 wavelength <<= unit
 
             if air:
@@ -3081,7 +1741,7 @@ class CRISPNonU(CRISP):
         elif self.data.ndim == 2:
             wavelength = self.wvls
 
-            if unit != None:
+            if unit is not None:
                 wavelength <<= unit
 
             if air:
