@@ -73,14 +73,14 @@ class CRISP(CRISPSlicingMixin):
         mask: Optional[np.ndarray] = None,
         nonu: bool = False,
     ) -> None:
-        if type(filename) == str and ".fits" in filename:
+        if isinstance(filename, str) and ".fits" in filename:
             self.file = fits.open(filename)[0]
-        elif type(filename) == str and ".zarr" in filename:
+        elif isinstance(filename, str) and ".zarr" in filename:
             f = zarr.open(filename, mode="r")
             self.file = ObjDict({})
             self.file["data"] = f["data"]
             self.file["header"] = f["data"].attrs
-        elif type(filename) == ObjDict:
+        elif isinstance(filename, ObjDict):
             self.file = filename
         else:
             raise NotImplementedError("m8 y?")
@@ -617,7 +617,7 @@ class CRISP(CRISPSlicingMixin):
             The normalisation to use in the colourmap.
         """
 
-        if type(self.ind) == int:
+        if isinstance(self.ind, int):
             idx = self.ind
         elif self.wcs.low_level_wcs._wcs.naxis == 4:
             idx = self.ind[1]
@@ -1905,14 +1905,14 @@ class CRISP(CRISPSlicingMixin):
             to the function.
         """
         if len(self.wcs.low_level_wcs.array_shape) == 4:
-            if hasattr(self, "ind") and type(self.ind[1]) == slice:
+            if hasattr(self, "ind") and isinstance(self.ind[1], slice):
                 return (
                     self.wcs.low_level_wcs._wcs[
                         0, self.ind[1], 0, 0
                     ].array_index_to_world(idx)
                     << u.Angstrom
                 )
-            elif hasattr(self, "ind") and type(self.ind[1]) != slice:
+            elif hasattr(self, "ind") and not isinstance(self.ind[1], slice):
                 return (
                     self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(idx)
                     << u.Angstrom
@@ -1921,7 +1921,7 @@ class CRISP(CRISPSlicingMixin):
                 return self.wcs[0, :, 0, 0].array_index_to_world(idx) << u.Angstrom
         elif len(self.wcs.low_level_wcs.array_shape) == 3:
             if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                if type(self.ind[1]) == slice:
+                if isinstance(self.ind[1], slice):
                     return (
                         self.wcs.low_level_wcs._wcs[
                             0, self.ind[1], 0, 0
@@ -1936,14 +1936,14 @@ class CRISP(CRISPSlicingMixin):
                         << u.Angstrom
                     )
             else:
-                if hasattr(self, "ind") and type(self.ind[0]) == slice:
+                if hasattr(self, "ind") and isinstance(self.ind[0], slice):
                     return (
                         self.wcs.low_level_wcs._wcs[
                             self.ind[0], 0, 0
                         ].array_index_to_world(idx)
                         << u.Angstrom
                     )
-                elif hasattr(self, "ind") and type(self.ind[0]) != slice:
+                elif hasattr(self, "ind") and not isinstance(self.ind[0], slice):
                     return (
                         self.wcs.low_level_wcs._wcs[:, 0, 0].array_index_to_world(idx)
                         << u.Angstrom
@@ -2007,15 +2007,15 @@ class CRISP(CRISPSlicingMixin):
         if coord:
             if len(self.wcs.low_level_wcs.array_shape) == 4:
                 if hasattr(self, "ind"):
-                    if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                    if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, self.ind[-2], self.ind[-1]
                         ].array_index_to_world(y, x)
-                    elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                    elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, self.ind[-2]
                         ].array_index_to_world(y, x)
-                    elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                    elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, :, self.ind[-1]
                         ].array_index_to_world(y, x)
@@ -2027,15 +2027,15 @@ class CRISP(CRISPSlicingMixin):
                     return self.wcs[0, 0].array_index_to_world(y, x)
             elif len(self.wcs.low_level_wcs.array_shape) == 3:
                 if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                    if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                    if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, self.ind[-2], self.ind[-1]
                         ].array_index_to_world(y, x)
-                    elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                    elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, self.ind[-2]
                         ].array_index_to_world(y, x)
-                    elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                    elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                         return self.wcs.low_level_wcs._wcs[
                             0, 0, :, self.ind[-1]
                         ].array_index_to_world(y, x)
@@ -2045,18 +2045,18 @@ class CRISP(CRISPSlicingMixin):
                         )
                 else:
                     if hasattr(self, "ind"):
-                        if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                             return self.wcs.low_level_wcs._wcs[
                                 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                         elif (
-                            type(self.ind[-2]) == slice and type(self.ind[-1]) != slice
+                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
                         ):
                             return self.wcs.low_level_wcs._wcs[
                                 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                         elif (
-                            type(self.ind[-2]) != slice and type(self.ind[-1]) == slice
+                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
                         ):
                             return self.wcs.low_level_wcs._wcs[
                                 0, :, self.ind[-1]
@@ -2075,20 +2075,20 @@ class CRISP(CRISPSlicingMixin):
             if unit:
                 if len(self.wcs.low_level_wcs.array_shape) == 4:
                     if hasattr(self, "ind"):
-                        if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
                         elif (
-                            type(self.ind[-2]) == slice and type(self.ind[-1]) != slice
+                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
                         elif (
-                            type(self.ind[-2]) != slice and type(self.ind[-1]) == slice
+                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, :, self.ind[-1]
@@ -2104,20 +2104,20 @@ class CRISP(CRISPSlicingMixin):
                         return sc.Tx, sc.Ty
                 elif len(self.wcs.low_level_wcs.array_shape) == 3:
                     if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                        if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
                         elif (
-                            type(self.ind[-2]) == slice and type(self.ind[-1]) != slice
+                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                             return sc.Tx, sc.Ty
                         elif (
-                            type(self.ind[-2]) != slice and type(self.ind[-1]) == slice
+                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, :, self.ind[-1]
@@ -2131,24 +2131,24 @@ class CRISP(CRISPSlicingMixin):
                     else:
                         if hasattr(self, "ind"):
                             if (
-                                type(self.ind[-2]) == slice
-                                and type(self.ind[-1]) == slice
+                                isinstance(self.ind[-2], slice)
+                                and isinstance(self.ind[-1], slice)
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, self.ind[-2], self.ind[-1]
                                 ].array_index_to_world(y, x)
                                 return sc.Tx, sc.Ty
                             elif (
-                                type(self.ind[-2]) == slice
-                                and type(self.ind[-1]) != slice
+                                isinstance(self.ind[-2], slice)
+                                and not isinstance(self.ind[-1], slice)
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, self.ind[-2]
                                 ].array_index_to_world(y, x)
                                 return sc.Tx, sc.Ty
                             elif (
-                                type(self.ind[-2]) != slice
-                                and type(self.ind[-1]) == slice
+                                not isinstance(self.ind[-2], slice)
+                                and isinstance(self.ind[-1], slice)
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, :, self.ind[-1]
@@ -2170,20 +2170,20 @@ class CRISP(CRISPSlicingMixin):
             else:
                 if len(self.wcs.low_level_wcs.array_shape) == 4:
                     if hasattr(self, "ind"):
-                        if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
                         elif (
-                            type(self.ind[-2]) == slice and type(self.ind[-1]) != slice
+                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
                         elif (
-                            type(self.ind[-2]) != slice and type(self.ind[-1]) == slice
+                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, :, self.ind[-1]
@@ -2199,20 +2199,20 @@ class CRISP(CRISPSlicingMixin):
                         return sc.Tx.value, sc.Ty.value
                 elif len(self.wcs.low_level_wcs.array_shape) == 3:
                     if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                        if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                        if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2], self.ind[-1]
                             ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
                         elif (
-                            type(self.ind[-2]) == slice and type(self.ind[-1]) != slice
+                            isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice)
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, self.ind[-2]
                             ].array_index_to_world(y, x)
                             return sc.Tx.value, sc.Ty.value
                         elif (
-                            type(self.ind[-2]) != slice and type(self.ind[-1]) == slice
+                            not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice)
                         ):
                             sc = self.wcs.low_level_wcs._wcs[
                                 0, 0, :, self.ind[-1]
@@ -2226,24 +2226,24 @@ class CRISP(CRISPSlicingMixin):
                     else:
                         if hasattr(self, "ind"):
                             if (
-                                type(self.ind[-2]) == slice
-                                and type(self.ind[-1]) == slice
+                                isinstance(self.ind[-2], slice)
+                                and isinstance(self.ind[-1], slice)
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, self.ind[-2], self.ind[-1]
                                 ].array_index_to_world(y, x)
                                 return sc.Tx.value, sc.Ty.value
                             elif (
-                                type(self.ind[-2]) == slice
-                                and type(self.ind[-1]) != slice
+                                isinstance(self.ind[-2], slice)
+                                and not isinstance(self.ind[-1], slice)
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, self.ind[-2]
                                 ].array_index_to_world(y, x)
                                 return sc.Tx.value, sc.Ty.value
                             elif (
-                                type(self.ind[-2]) != slice
-                                and type(self.ind[-1]) == slice
+                                not isinstance(self.ind[-2], slice)
+                                and isinstance(self.ind[-1], slice)
                             ):
                                 sc = self.wcs.low_level_wcs._wcs[
                                     0, :, self.ind[-1]
@@ -2289,15 +2289,15 @@ class CRISP(CRISPSlicingMixin):
         sc = SkyCoord(lon, lat, frame=Helioprojective)
         if len(self.wcs.low_level_wcs.array_shape) == 4:
             if hasattr(self, "ind"):
-                if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, self.ind[-2], self.ind[-1]
                     ].world_to_array_index(sc)
-                elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, self.ind[-2]
                     ].world_to_array_index(sc)
-                elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, :, self.ind[-1]
                     ].world_to_array_index(sc)
@@ -2307,15 +2307,15 @@ class CRISP(CRISPSlicingMixin):
                 return self.wcs[0, 0].world_to_array_index(sc)
         elif len(self.wcs.low_level_wcs.array_shape) == 3:
             if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, self.ind[-2], self.ind[-1]
                     ].world_to_array_index(sc)
-                elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, self.ind[-2]
                     ].world_to_array_index(sc)
-                elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                     return self.wcs.low_level_wcs._wcs[
                         0, 0, :, self.ind[-1]
                     ].world_to_array_index(sc)
@@ -2323,15 +2323,15 @@ class CRISP(CRISPSlicingMixin):
                     return self.wcs.low_level_wcs._wcs[0, 0].world_to_array_index(sc)
             else:
                 if hasattr(self, "ind"):
-                    if type(self.ind[-2]) == slice and type(self.ind[-1]) == slice:
+                    if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                         return self.wcs.low_level_wcs._wcs[
                             0, self.ind[-2], self.ind[-1]
                         ].world_to_array_index(sc)
-                    elif type(self.ind[-2]) == slice and type(self.ind[-1]) != slice:
+                    elif isinstance(self.ind[-2], slice) and not isinstance(self.ind[-1], slice):
                         return self.wcs.low_level_wcs._wcs[
                             0, self.ind[-2]
                         ].world_to_array_index(sc)
-                    elif type(self.ind[-2]) != slice and type(self.ind[-1]) == slice:
+                    elif not isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
                         return self.wcs.low_level_wcs._wcs[
                             0, :, self.ind[-1]
                         ].world_to_array_index(sc)
@@ -3292,7 +3292,7 @@ class CRISPNonU(CRISP):
             The normalisation to use in the colourmap.
         """
 
-        if type(self.ind) == int:
+        if isinstance(self.ind, int):
             idx = self.ind
         elif self.wcs.low_level_wcs._wcs.naxis == 4:
             idx = self.ind[1]

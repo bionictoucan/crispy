@@ -70,7 +70,7 @@ class SpectralViewer:
             options=["point", "box"], value="point", description="Shape: "
         )
         if not nonu:
-            if type(data) == str:
+            if isinstance(data, str):
                 self.cube = CRISP(
                     filename=data, wcs=wcs, uncertainty=uncertainty, mask=mask
                 )
@@ -82,7 +82,7 @@ class SpectralViewer:
                     self.wvls = (
                         self.cube.wave(np.arange(self.cube.shape[1])) << u.Angstrom
                     )
-            elif type(data) == list:
+            elif isinstance(data, list):
                 data = CRISP_sequence_constructor(
                     data, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu
                 )
@@ -107,7 +107,7 @@ class SpectralViewer:
                         self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
                         << u.Angstrom
                     )
-            elif type(data) == CRISP:
+            elif isinstance(data, CRISP):
                 self.cube = data
                 if self.cube.file.data.ndim == 3:
                     self.wvls = (
@@ -117,7 +117,7 @@ class SpectralViewer:
                     self.wvls = (
                         self.cube.wave(np.arange(self.cube.shape[1])) << u.Angstrom
                     )
-            elif type(data) == CRISPSequence:
+            elif isinstance(data, CRISPSequence):
                 self.cube = data
                 if self.cube.list[0].file.data.ndim == 3:
                     self.wvls1 = (
@@ -140,7 +140,7 @@ class SpectralViewer:
                         << u.Angstrom
                     )
         else:
-            if type(data) == str:
+            if isinstance(data, str):
                 self.cube = CRISPNonU(
                     filename=data, wcs=wcs, uncertainty=uncertainty, mask=mask
                 )
@@ -152,7 +152,7 @@ class SpectralViewer:
                     self.wvls = (
                         self.cube.wave(np.arange(self.cube.shape[1])) << u.Angstrom
                     )
-            elif type(data) == list:
+            elif isinstance(data, list):
                 data = CRISP_sequence_constructor(
                     data, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu
                 )
@@ -177,7 +177,7 @@ class SpectralViewer:
                         self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
                         << u.Angstrom
                     )
-            elif type(data) == CRISPNonU:
+            elif isinstance(data, CRISPNonU):
                 self.cube = data
                 if self.cube.file.data.ndim == 3:
                     self.wvls = (
@@ -187,7 +187,7 @@ class SpectralViewer:
                     self.wvls = (
                         self.cube.wave(np.arange(self.cube.shape[1])) << u.Angstrom
                     )
-            elif type(data) == CRISPNonUSequence:
+            elif isinstance(data, CRISPNonUSequence):
                 self.cube = data
                 if self.cube.list[0].file.data.ndim == 3:
                     self.wvls1 = (
@@ -210,7 +210,7 @@ class SpectralViewer:
                         << u.Angstrom
                     )
 
-        if type(self.cube) == CRISP or type(self.cube) == CRISPNonU:
+        if isinstance(self.cube, CRISP) or isinstance(self.cube, CRISPNonU):
             self.fig = plt.figure(figsize=(8, 10))
             try:
                 self.ax1 = self.fig.add_subplot(
@@ -245,7 +245,7 @@ class SpectralViewer:
 
             display(widgets.HBox([ll, shape]))
 
-        elif type(self.cube) == CRISPSequence or type(self.cube) == CRISPNonUSequence:
+        elif isinstance(self.cube, CRISPSequence) or isinstance(self.cube, CRISPNonUSequence):
             self.fig = plt.figure(figsize=(8, 10))
             try:
                 self.ax1 = self.fig.add_subplot(
@@ -368,7 +368,7 @@ class SpectralViewer:
         if self.fig.canvas.manager.toolbar.mode != "":
             return
 
-        if type(self.cube) == CRISP or type(self.cube) == CRISPNonU:
+        if isinstance(self.cube, CRISP) or isinstance(self.cube, CRISPNonU):
             if self.shape == "point":
                 if self.colour_idx > len(pt_bright_cycler) - 1:
                     self.colour_idx = 0
@@ -508,7 +508,7 @@ class SpectralViewer:
                 self.ax2.legend()
                 self.colour_idx += 1
                 self.fig.canvas.draw()
-        elif type(self.cube) == CRISPSequence or type(self.cube) == CRISPNonUSequence:
+        elif isinstance(self.cube, CRISPSequence) or isinstance(self.cube, CRISPNonUSequence):
             if self.shape == "point":
                 if self.colour_idx > len(pt_bright_cycler) - 1:
                     self.colour_idx = 0
@@ -772,7 +772,7 @@ class SpectralViewer:
         self.box_coords = []
         self.colour_idx = 0
         self.n = 0
-        if type(self.cube) == CRISP:
+        if isinstance(self.cube, CRISP):
             while len(self.ax1.patches) > 0:
                 for p in self.ax1.patches:
                     p.remove()
@@ -928,14 +928,14 @@ class WidebandViewer:
         shape = widgets.Dropdown(
             options=["point", "box"], value="point", description="Shape: "
         )
-        if type(files) == CRISPWidebandSequence:
+        if isinstance(files, CRISPWidebandSequence):
             self.cube = files
-        elif type(files) == list and type(files[0]) == dict:
+        elif isinstance(files, list) and isinstance(files[0], dict):
             self.cube = CRISPWidebandSequence(files)
-        elif type(files) == list and type(files[0]) == str:
+        elif isinstance(files, list) and isinstance(files[0], str):
             files = [{"filename": f} for f in files]
             self.cube = CRISPWidebandSequence(files)
-        elif type(files) == list and type(files[0]) == CRISPWidebandSequence:
+        elif isinstance(files, list) and isinstance(files[0], CRISPWidebandSequence):
             self.cube = files
         if type(self.cube) is not list:
             try:
@@ -1087,7 +1087,7 @@ class WidebandViewer:
         if self.fig.canvas.manager.toolbar.mode != "":
             return
 
-        if type(self.cube) == CRISPWidebandSequence:
+        if isinstance(self.cube, CRISPWidebandSequence):
             if self.shape == "point":
                 if self.colour_idx > len(pt_bright_cycler) - 1:
                     self.colour_idx = 0
@@ -1214,7 +1214,7 @@ class WidebandViewer:
                 self.ax2.legend()
                 self.colour_idx += 1
                 self.fig.canvas.draw()
-        elif type(self.cube) == list:
+        elif isinstance(self.cube, list):
             if self.shape == "point":
                 if self.colour_idx > len(pt_bright_cycler) - 1:
                     self.colour_idx = 0
@@ -1433,7 +1433,7 @@ class WidebandViewer:
         self.box_coords = []
         self.colour_idx = 0
         self.n = 0
-        if type(self.cube) == CRISPWidebandSequence:
+        if isinstance(self.cube, CRISPWidebandSequence):
             while len(self.ax1.patches) > 0:
                 for p in self.ax1.patches:
                     p.remove()
@@ -1547,11 +1547,11 @@ class AtmosViewer:
         shape = widgets.Dropdown(
             options=["point", "box"], value="point", description="Shape: "
         )
-        if type(filename) == str:
+        if isinstance(filename, str):
             assert z is not None
             assert header is not None
             self.inv = Inversion(filename=filename, wcs=wcs, z=z, header=header)
-        elif type(filename) == Inversion:
+        elif isinstance(filename, Inversion):
             self.inv = filename
 
         self.coords = []
@@ -2105,7 +2105,7 @@ class ImageViewer:
         self.a = html.unescape("&alpha;")
         self.D = html.unescape("&Delta;")
         if not nonu:
-            if type(data) == str:
+            if isinstance(data, str):
                 self.cube = CRISP(
                     filename=data, wcs=wcs, uncertainty=uncertainty, mask=mask
                 )
@@ -2117,7 +2117,7 @@ class ImageViewer:
                     self.wvls = (
                         self.cube.wave(np.arange(self.cube.shape[1])) << u.Angstrom
                     )
-            elif type(data) == list:
+            elif isinstance(data, list):
                 data = CRISP_sequence_constructor(
                     data, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu
                 )
@@ -2142,7 +2142,7 @@ class ImageViewer:
                         self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
                         << u.Angstrom
                     )
-            elif type(data) == CRISP:
+            elif isinstance(data, CRISP):
                 self.cube = data
                 if self.cube.file.data.ndim == 3:
                     self.wvls = (
@@ -2152,7 +2152,7 @@ class ImageViewer:
                     self.wvls = (
                         self.cube.wave(np.arange(self.cube.shape[1])) << u.Angstrom
                     )
-            elif type(data) == CRISPSequence:
+            elif isinstance(data, CRISPSequence):
                 self.cube = data
                 if self.cube.list[0].file.data.ndim == 3:
                     self.wvls1 = (
@@ -2175,7 +2175,7 @@ class ImageViewer:
                         << u.Angstrom
                     )
         else:
-            if type(data) == str:
+            if isinstance(data, str):
                 self.cube = CRISPNonU(
                     filename=data, wcs=wcs, uncertainty=uncertainty, mask=mask
                 )
@@ -2187,7 +2187,7 @@ class ImageViewer:
                     self.wvls = (
                         self.cube.wave(np.arange(self.cube.shape[1])) << u.Angstrom
                     )
-            elif type(data) == list:
+            elif isinstance(data, list):
                 data = CRISP_sequence_constructor(
                     data, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu
                 )
@@ -2212,7 +2212,7 @@ class ImageViewer:
                         self.cube.list[1].wave(np.arange(self.cube.list[1].shape[1]))
                         << u.Angstrom
                     )
-            elif type(data) == CRISPNonU:
+            elif isinstance(data, CRISPNonU):
                 self.cube = data
                 if self.cube.file.data.ndim == 3:
                     self.wvls = (
@@ -2222,7 +2222,7 @@ class ImageViewer:
                     self.wvls = (
                         self.cube.wave(np.arange(self.cube.shape[1])) << u.Angstrom
                     )
-            elif type(data) == CRISPNonUSequence:
+            elif isinstance(data, CRISPNonUSequence):
                 self.cube = data
                 if self.cube.list[0].file.data.ndim == 3:
                     self.wvls1 = (
@@ -2245,7 +2245,7 @@ class ImageViewer:
                         << u.Angstrom
                     )
 
-        if type(self.cube) == CRISP or type(self.cube) == CRISPNonU:
+        if isinstance(self.cube, CRISP) or isinstance(self.cube, CRISPNonU):
             self.fig = plt.figure(figsize=(8, 10))
             try:
                 self.ax1 = self.fig.add_subplot(
@@ -2273,7 +2273,7 @@ class ImageViewer:
 
             display(widgets.HBox([ll]))
 
-        elif type(self.cube) == CRISPSequence or type(self.cube) == CRISPNonUSequence:
+        elif isinstance(self.cube, CRISPSequence) or isinstance(self.cube, CRISPNonUSequence):
             self.fig = plt.figure(figsize=(8, 10))
             try:
                 self.ax1 = self.fig.add_subplot(
@@ -2492,7 +2492,7 @@ class SpectralTimeViewer:
             options=["point", "box"], value="point", description="Shape: "
         )
         if not nonu:
-            if type(data1) == list:
+            if isinstance(data1, list):
                 data1 = CRISP_sequence_constructor(
                     data1, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu
                 )
@@ -2507,7 +2507,7 @@ class SpectralTimeViewer:
                         self.cube1.list[0].wave(np.arange(self.cube1.list[0].shape[1]))
                         << u.Angstrom
                     )
-            elif type(data1) == CRISPSequence:
+            elif isinstance(data1, CRISPSequence):
                 self.cube1 = data1
                 if self.cube1.list[0].file.data.ndim == 3:
                     self.wvls1 = self.cube1.list[0].wave(
@@ -2519,7 +2519,7 @@ class SpectralTimeViewer:
                     )
             if data2 is None:
                 pass
-            elif type(data2) == list:
+            elif isinstance(data2, list):
                 data2 = CRISP_sequence_constructor(
                     data2, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu
                 )
@@ -2532,7 +2532,7 @@ class SpectralTimeViewer:
                     self.wvls2 = self.cube2.list[0].wave(
                         np.arange(self.cube2.list[0].shape[1])
                     )
-            elif type(data2) == CRISPSequence:
+            elif isinstance(data2, CRISPSequence):
                 self.cube2 = data2
                 if self.cube2.list[0].file.data.ndim == 3:
                     self.wvls2 = self.cube2.list[0].wave(
@@ -2543,7 +2543,7 @@ class SpectralTimeViewer:
                         np.arange(self.cube2.list[0].shape[1])
                     )
         else:
-            if type(data1) == list:
+            if isinstance(data1, list):
                 data1 = CRISP_sequence_constructor(
                     data1, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu
                 )
@@ -2558,7 +2558,7 @@ class SpectralTimeViewer:
                         self.cube1.list[0].wave(np.arange(self.cube1.list[0].shape[1]))
                         << u.Angstrom
                     )
-            elif type(data1) == CRISPNonUSequence:
+            elif isinstance(data1, CRISPNonUSequence):
                 self.cube1 = data
                 if self.cube1.list[0].file.data.ndim == 3:
                     self.wvls1 = (
@@ -2572,7 +2572,7 @@ class SpectralTimeViewer:
                     )
             if data2 is None:
                 pass
-            elif type(data2) == list:
+            elif isinstance(data2, list):
                 data2 = CRISP_sequence_constructor(
                     data2, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu
                 )
@@ -2585,7 +2585,7 @@ class SpectralTimeViewer:
                     self.wvls2 = self.cube2.list[0].wave(
                         np.arange(self.cube2.list[0].shape[1])
                     )
-            elif type(data2) == CRISPNonUSequence:
+            elif isinstance(data2, CRISPNonUSequence):
                 self.cube2 = data2
                 if self.cube2.list[0].file.data.ndim == 3:
                     self.wvls2 = self.cube2.list[0].wave(
@@ -3660,21 +3660,21 @@ class PolarimetricViewer:
             options=["point", "box"], value="point", description="Shape: "
         )
         if not nonu:
-            if type(data) == str:
+            if isinstance(data, str):
                 self.cube = CRISP(
                     filename=data, wcs=wcs, uncertainty=uncertainty, mask=mask
                 )
                 self.wvls = self.cube.wave(np.arange(self.cube.shape[1])) << u.Angstrom
-            elif type(data) == CRISP:
+            elif isinstance(data, CRISP):
                 self.cube = data
                 self.wvls = self.cube.wave(np.arange(self.cube.shape[1])) << u.Angstrom
         else:
-            if type(data) == str:
+            if isinstance(data, str):
                 self.cube = CRISPNonU(
                     filename=data, wcs=wcs, uncertainty=uncertainty, mask=mask
                 )
                 self.wvls = self.cube.wave(np.arange(self.cube.shape[1])) << u.Angstrom
-            elif type(data) == CRISPNonU:
+            elif isinstance(data, CRISPNonU):
                 self.cube = data
                 self.wvls = self.cube.wave(np.arange(self.cube.shape[1])) << u.Angstrom
 
@@ -4073,7 +4073,7 @@ class PolarimetricTimeViewer:
             options=["point", "box"], value="point", description="Shape: "
         )
         if not nonu:
-            if type(data) == list:
+            if isinstance(data, list):
                 data = CRISP_sequence_constructor(
                     data, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu
                 )
@@ -4082,14 +4082,14 @@ class PolarimetricTimeViewer:
                     self.cube.list[0].wave(np.arange(self.cube.list[0].shape[1]))
                     << u.Angstrom
                 )
-            elif type(data) == CRISPSequence:
+            elif isinstance(data, CRISPSequence):
                 self.cube = data
                 self.wvls = (
                     self.cube.list[0].wave(np.arange(self.cube.list[0].shape[1]))
                     << u.Angstrom
                 )
         else:
-            if type(data) == list:
+            if isinstance(data, list):
                 data = CRISP_sequence_constructor(
                     data, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu
                 )
@@ -4098,7 +4098,7 @@ class PolarimetricTimeViewer:
                     self.cube.list[0].wave(np.arange(self.cube.list[0].shape[1]))
                     << u.Angstrom
                 )
-            elif type(data) == CRISPNonUSequence:
+            elif isinstance(data, CRISPNonUSequence):
                 self.cube = data
                 self.wvls = (
                     self.cube.list[0].wave(np.arange(self.cube.list[0].shape[1]))

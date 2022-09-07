@@ -28,12 +28,12 @@ def integrated_intensity(intensity_vector, wavelengths, idx_range="all", axis=-1
         The axis to integrate over. Allows for vectorised integration over multi-d arrays. Default is -1, the last axis.
     """
 
-    if type(intensity_vector) != np.ndarray:
+    if not isinstance(intensity_vector, np.ndarray):
         intensity_vector = intensity_vector.data
 
     if idx_range == "all":
         return simps(intensity_vector, wavelengths, axis=axis)
-    elif type(idx_range) == range:
+    elif isinstance(idx_range, range):
         return simps(intensity_vector[idx_range], wavelengths[idx_range], axis=axis)
     else:
         int_i = np.zeros((intensity_vector.shape[-2:]))
@@ -100,7 +100,7 @@ def bar_lambda(intensity_vector, wavelengths, axis=-1):
         multi-d arrays. Default is -1, the last axis.
     """
 
-    if type(intensity_vector) != np.ndarray:
+    if not isinstance(intensity_vector, np.ndarray):
         intensity_vector = intensity_vector.data
 
     if intensity_vector.ndim == 3:
@@ -136,7 +136,7 @@ def variance(intensity_vector, wavelengths, bar_l=None, axis=-1):
         multi-d arrays. Default is -1, the last axis.
     """
 
-    if type(intensity_vector) != np.ndarray:
+    if not isinstance(intensity_vector, np.ndarray):
         intensity_vector = intensity_vector.data
 
     if bar_l is None:
@@ -180,15 +180,15 @@ def wing_idxs(intensity_vector, wavelengths, var=None, bar_l=None, axis=-1):
         multi-d arrays. Default is -1, the last axis.
     """
 
-    if type(intensity_vector) != np.ndarray:
+    if not isinstance(intensity_vector, np.ndarray):
         intensity_vector = intensity_vector.data
 
-    if type(bar_l) == np.ndarray:
+    if isinstance(bar_l, np.ndarray):
         pass
     else:
         bar_l = bar_lambda(intensity_vector, wavelengths, axis=axis)
 
-    if type(var) == np.ndarray:
+    if isinstance(var, np.ndarray):
         pass
     else:
         var = variance(intensity_vector, wavelengths, bar_l=bar_l, axis=axis)
