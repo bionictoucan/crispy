@@ -171,7 +171,7 @@ class CRISP(CRISPSlicingMixin):
         """
         Information about the observation.
         """
-        return print(self.__str__())
+        return self.__str__()
 
     @property
     def time(self) -> str:
@@ -221,17 +221,18 @@ class CRISP(CRISPSlicingMixin):
 
         if sep:
             return rotate_crop_data(self.data)
-        else:
-            self.full_frame = self.data
-            crop, crop_dict = rotate_crop_data(self.data)
-            self.file.header["frame_dims"] = crop_dict["frameDims"]
-            self.file.header["x_min"] = crop_dict["xMin"]
-            self.file.header["x_max"] = crop_dict["xMax"]
-            self.file.header["y_min"] = crop_dict["yMin"]
-            self.file.header["y_max"] = crop_dict["yMax"]
-            self.file.header["angle"] = crop_dict["angle"]
-            self.file.data = crop
-            self.rotate = True
+
+        self.full_frame = self.data
+        crop, crop_dict = rotate_crop_data(self.data)
+        self.file.header["frame_dims"] = crop_dict["frameDims"]
+        self.file.header["x_min"] = crop_dict["xMin"]
+        self.file.header["x_max"] = crop_dict["xMax"]
+        self.file.header["y_min"] = crop_dict["yMin"]
+        self.file.header["y_max"] = crop_dict["yMax"]
+        self.file.header["angle"] = crop_dict["angle"]
+        self.file.data = crop
+        self.rotate = True
+        return None
 
     def reconstruct_full_frame(self, sep: bool = False) -> Optional[np.ndarray]:
         """
@@ -265,10 +266,11 @@ class CRISP(CRISPSlicingMixin):
 
         if sep:
             return reconstruct_full_frame(crop_dict, self.data)
-        else:
-            self.rot_data = self.data
-            self.file.data = reconstruct_full_frame(crop_dict, self.data)
-            self.rotate = False
+
+        self.rot_data = self.data
+        self.file.data = reconstruct_full_frame(crop_dict, self.data)
+        self.rotate = False
+        return None
 
     @plt.rc_context(rc_context_dict)
     def plot_spectrum(
@@ -1888,7 +1890,7 @@ class CRISP(CRISPSlicingMixin):
 
         fig.show()
 
-    def wave(self, idx: Union[int, Sequence[int]]) -> Union[float, Sequence[float]]:
+    def wave(self, idx: Union[int, Sequence[int]]) -> np.ndarray:
         """
         This function will take an index number or range and return the wavelength in Angstroms.
 
@@ -2434,7 +2436,7 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         """
         Returns information about the observations.
         """
-        return print(self.__str__())
+        return self.__str__()
 
     @property
     def time(self) -> List[str]:
@@ -2470,43 +2472,44 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         """
         if diff_t:
             if sep:
-                return [f.rotate_crop() for f in self.list]
-            else:
-                self.full_frame = [*self.data]
-                for f in self.list:
-                    crop, crop_dict = f.rotate_crop(sep=True)
-                    f.file.data = crop
-                    f.file.header["frame_dims"] = crop_dict["frameDims"]
-                    f.file.header["x_min"] = crop_dict["xMin"]
-                    f.file.header["x_max"] = crop_dict["xMax"]
-                    f.file.header["y_min"] = crop_dict["yMin"]
-                    f.file.header["y_max"] = crop_dict["yMax"]
-                    f.file.header["angle"] = crop_dict["angle"]
-                    f.rotate = True
+                return [f.rotate_crop() for f in self.list] # type: ignore
+
+            self.full_frame = [*self.data]
+            for f in self.list:
+                crop, crop_dict = f.rotate_crop(sep=True) # type: ignore
+                f.file.data = crop
+                f.file.header["frame_dims"] = crop_dict["frameDims"]
+                f.file.header["x_min"] = crop_dict["xMin"]
+                f.file.header["x_max"] = crop_dict["xMax"]
+                f.file.header["y_min"] = crop_dict["yMin"]
+                f.file.header["y_max"] = crop_dict["yMax"]
+                f.file.header["angle"] = crop_dict["angle"]
+                f.rotate = True
         else:
             if sep:
                 return rotate_crop_aligned_data(self.list[0].data, self.list[1].data)
-            else:
-                self.full_frame = [self.list[0].data, self.list[1].data]
-                crop_a, crop_b, crop_dict = rotate_crop_aligned_data(
-                    self.list[0].data, self.list[1].data
-                )
-                self.list[0].file.data = crop_a
-                self.list[1].file.data = crop_b
-                self.list[0].file.header["frame_dims"] = crop_dict["frameDims"]
-                self.list[0].file.header["x_min"] = crop_dict["xMin"]
-                self.list[0].file.header["x_max"] = crop_dict["xMax"]
-                self.list[0].file.header["y_min"] = crop_dict["yMin"]
-                self.list[0].file.header["y_max"] = crop_dict["yMax"]
-                self.list[0].file.header["angle"] = crop_dict["angle"]
-                self.list[1].file.header["frame_dims"] = crop_dict["frameDims"]
-                self.list[1].file.header["x_min"] = crop_dict["xMin"]
-                self.list[1].file.header["x_max"] = crop_dict["xMax"]
-                self.list[1].file.header["y_min"] = crop_dict["yMin"]
-                self.list[1].file.header["y_max"] = crop_dict["yMax"]
-                self.list[1].file.header["angle"] = crop_dict["angle"]
-                for f in self.list:
-                    f.rotate = True
+
+            self.full_frame = [self.list[0].data, self.list[1].data]
+            crop_a, crop_b, crop_dict = rotate_crop_aligned_data(
+                self.list[0].data, self.list[1].data
+            )
+            self.list[0].file.data = crop_a
+            self.list[1].file.data = crop_b
+            self.list[0].file.header["frame_dims"] = crop_dict["frameDims"]
+            self.list[0].file.header["x_min"] = crop_dict["xMin"]
+            self.list[0].file.header["x_max"] = crop_dict["xMax"]
+            self.list[0].file.header["y_min"] = crop_dict["yMin"]
+            self.list[0].file.header["y_max"] = crop_dict["yMax"]
+            self.list[0].file.header["angle"] = crop_dict["angle"]
+            self.list[1].file.header["frame_dims"] = crop_dict["frameDims"]
+            self.list[1].file.header["x_min"] = crop_dict["xMin"]
+            self.list[1].file.header["x_max"] = crop_dict["xMax"]
+            self.list[1].file.header["y_min"] = crop_dict["yMin"]
+            self.list[1].file.header["y_max"] = crop_dict["yMax"]
+            self.list[1].file.header["angle"] = crop_dict["angle"]
+            for f in self.list:
+                f.rotate = True
+        return None
 
     def reconstruct_full_frame(self, sep: bool = False) -> Optional[List[np.ndarray]]:
         """
@@ -2521,11 +2524,12 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             respective ``CRISP`` instances' ``rot_data`` attribute.
         """
         if sep:
-            return [f.reconstruct_full_frame(sep=True) for f in self.list]
-        else:
-            for f in self.list:
-                f.reconstruct_full_frame(sep=False)
-                f.rotate = False
+            return [f.reconstruct_full_frame(sep=True) for f in self.list] # type: ignore
+
+        for f in self.list:
+            f.reconstruct_full_frame(sep=False)
+            f.rotate = False
+        return None
 
     @plt.rc_context(rc_context_dict)
     def plot_spectrum(
@@ -2557,11 +2561,13 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         d : bool, optional
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
-        if idx != "all":
+        if not isinstance(idx, str):
             self.list[idx].plot_spectrum(unit=unit, air=air, d=d)
-        else:
+        elif idx == "all":
             for f in self.list:
                 f.plot_spectrum(unit=unit, air=air, d=d)
+        else:
+            raise ValueError(f"Unexpected index `{idx}`, expected int or \"all\"")
 
     @plt.rc_context(rc_context_dict)
     def plot_stokes(
@@ -2599,11 +2605,13 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         d : bool, optional
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
-        if idx != "all":
+        if not isinstance(idx, str):
             self.list[idx].plot_stokes(stokes, unit=unit, air=air, d=d)
-        else:
+        elif idx == "all":
             for f in self.list:
                 f.plot_stokes(stokes, unit=unit, air=air, d=d)
+        else:
+            raise ValueError(f"Unexpected index `{idx}`, expected int or \"all\"")
 
     @plt.rc_context(rc_context_dict)
     def intensity_map(
@@ -2628,11 +2636,13 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         norm : matplotlib.colors.Normalize or None, optional
             The normalisation to use in the colourmap.
         """
-        if idx != "all":
+        if not isinstance(idx, str):
             self.list[idx].intensity_map(frame=frame, norm=norm)
-        else:
+        elif idx == "all":
             for f in self.list:
                 f.intensity_map(frame=frame, norm=norm)
+        else:
+            raise ValueError(f"Unexpected index `{idx}`, expected int or \"all\"")
 
     @plt.rc_context(rc_context_dict)
     def stokes_map(
@@ -2656,11 +2666,13 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             The units to use on the axes. Default is None so the WCS is used.
             Other option is "pix" for pixel frame.
         """
-        if idx != "all":
+        if not isinstance(idx, str):
             self.list[idx].stokes_map(stokes, frame=frame)
-        else:
+        elif idx == "all":
             for f in self.list:
                 f.stokes_map(stokes, frame=frame)
+        else:
+            raise ValueError(f"Unexpected index `{idx}`, expected int or \"all\"")
 
     def from_lonlat(self, lon: float, lat: float) -> Tuple[float, float]:
         """
@@ -2775,7 +2787,7 @@ class CRISPWideband(CRISP):
 
         if frame is None:
             fig = plt.figure()
-            data = self.data[...].astype(np.float)
+            data = self.data[...].astype(np.float32)
             data[data < 0] = np.nan
             ax1 = fig.add_subplot(1, 1, 1, projection=self.wcs)
             im1 = ax1.imshow(data, cmap="Greys_r", norm=norm)
@@ -2786,7 +2798,7 @@ class CRISPWideband(CRISP):
             fig.show()
         elif frame == "pix":
             fig = plt.figure()
-            data = self.data[...].astype(np.float)
+            data = self.data[...].astype(np.float32)
             data[data < 0] = np.nan
             ax1 = fig.add_subplot(1, 1, 1)
             im1 = ax1.imshow(data, cmap="Greys_r", origin="lower", norm=norm)
@@ -2802,6 +2814,12 @@ class CRISPWideband(CRISP):
             except KeyError:
                 xmax = self.header["pixel_scale"] * self.shape[-1]
                 ymax = self.header["pixel_scale"] * self.shape[-2]
+
+            if self.data.min() < 0:
+                vmin = 0
+            else:
+                vmin = self.data.min()
+
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1)
             im1 = ax1.imshow(
@@ -2815,7 +2833,7 @@ class CRISPWideband(CRISP):
             ax1.set_ylabel("y [arcsec]")
             ax1.set_xlabel("x [arcsec]")
             ax1.set_title(
-                f"{datetime} {self.l}={wvl}{self.aa} ({self.D}{self.l} = {del_wvl}{self.aa})"
+                f"{datetime} (wideband)"
             )
             fig.colorbar(im1, ax=ax1, orientation="vertical", label="I [DNs]")
             fig.show()
@@ -3344,6 +3362,12 @@ class CRISPNonU(CRISP):
             except KeyError:
                 xmax = self.header["pixel_scale"] * self.shape[-1]
                 ymax = self.header["pixel_scale"] * self.shape[-2]
+
+            if self.data.min() < 0:
+                vmin = 0
+            else:
+                vmin = self.data.min()
+
             fig = plt.figure()
             ax1 = fig.add_subplot(1, 1, 1)
             im1 = ax1.imshow(
@@ -4554,7 +4578,7 @@ class CRISPNonU(CRISP):
 
         fig.show()
 
-    def wave(self, idx: Union[int, Sequence[int]]) -> Union[float, Sequence[float]]:
+    def wave(self, idx: Union[int, Sequence[int]]) -> np.ndarray:
         """
         Class method for returning the wavelength sampled at a given index.
 

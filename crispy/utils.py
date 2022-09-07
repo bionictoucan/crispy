@@ -137,6 +137,9 @@ def parameter_docstring(cls: object):
     """
 
     doc = cls.__doc__
+    if doc is None:
+        return ""
+
     parameters = doc.split("Parameters")[-1]
     return "\n    Parameters" + parameters
 

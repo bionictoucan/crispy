@@ -1496,8 +1496,8 @@ class WidebandViewer:
         elif self.ax2.images[-1].colorbar is not None:
             self.ax2.images[-1].colorbar.remove()
 
-        im1 = self.ax1.imshow(self.cube[0].list[t].file.data, cmap="Greys_r")
-        im2 = self.ax2.imshow(self.cube[1].list[t].file.data, cmap="Greys_r")
+        im1 = self.ax1.imshow(self.cube[0].list[t1].file.data, cmap="Greys_r")
+        im2 = self.ax2.imshow(self.cube[1].list[t2].file.data, cmap="Greys_r")
         self.fig.colorbar(im1, ax=self.ax1, orientation="horizontal", label="I [DNs]")
         self.fig.colorbar(im2, ax=self.ax2, orientation="horizontal", label="I [DNs]")
 
@@ -2559,7 +2559,7 @@ class SpectralTimeViewer:
                         << u.Angstrom
                     )
             elif isinstance(data1, CRISPNonUSequence):
-                self.cube1 = data
+                self.cube1 = data1
                 if self.cube1.list[0].file.data.ndim == 3:
                     self.wvls1 = (
                         self.cube1.list[0].wave(np.arange(self.cube1.list[0].shape[0]))
@@ -4466,7 +4466,7 @@ class PolarimetricTimeViewer:
                 np.mean(
                     f.file.data[
                         0,
-                        ll_idx2,
+                        ll_idx,
                         box_anchor[0] : box_anchor[0] + self.boxy,
                         box_anchor[1] : box_anchor[1] + self.boxx,
                     ]
@@ -4477,7 +4477,7 @@ class PolarimetricTimeViewer:
                 np.mean(
                     f.file.data[
                         1,
-                        ll_idx2,
+                        ll_idx,
                         box_anchor[0] : box_anchor[0] + self.boxy,
                         box_anchor[1] : box_anchor[1] + self.boxx,
                     ]
@@ -4488,7 +4488,7 @@ class PolarimetricTimeViewer:
                 np.mean(
                     f.file.data[
                         2,
-                        ll_idx2,
+                        ll_idx,
                         box_anchor[0] : box_anchor[0] + self.boxy,
                         box_anchor[1] : box_anchor[1] + self.boxx,
                     ]
@@ -4499,7 +4499,7 @@ class PolarimetricTimeViewer:
                 np.mean(
                     f.file.data[
                         3,
-                        ll_idx2,
+                        ll_idx,
                         box_anchor[0] : box_anchor[0] + self.boxy,
                         box_anchor[1] : box_anchor[1] + self.boxx,
                     ]
