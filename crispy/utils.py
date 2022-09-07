@@ -144,7 +144,7 @@ def parameter_docstring(cls: object):
     return "\n    Parameters" + parameters
 
 
-@njit
+@njit(cache=True)
 def scanline_search_corners(im, size=10):
     """
     Finds the corners of the embedded image by scanning through lines
@@ -480,19 +480,19 @@ def rotate_crop_aligned_data(imA, imB):
         )
 
     cropData = {
-        "frameDims": (imA.shape[-2], imA.shape[-1]),
-        "xMin": int(bRot[0]),
-        "xMax": int(rRot[0]),
-        "yMin": int(lRot[1]),
-        "yMax": int(bRot[1]),
+        "frame_dims": (imA.shape[-2], imA.shape[-1]),
+        "x_min": int(bRot[0]),
+        "x_max": int(rRot[0]),
+        "y_min": int(lRot[1]),
+        "y_max": int(bRot[1]),
         "angle": angle,
     }
 
     aCrop = imARot[
-        :, cropData["yMin"] : cropData["yMax"], cropData["xMin"] : cropData["xMax"]
+        :, cropData["y_min"] : cropData["y_max"], cropData["x_min"] : cropData["x_max"]
     ]
     bCrop = imBRot[
-        :, cropData["yMin"] : cropData["yMax"], cropData["xMin"] : cropData["xMax"]
+        :, cropData["y_min"] : cropData["y_max"], cropData["x_min"] : cropData["x_max"]
     ]
     if stokes:
         aCrop = aCrop.reshape(4, -1, aCrop.shape[-2:])
@@ -570,16 +570,16 @@ def rotate_crop_data(im):
         )
 
     cropData = {
-        "frameDims": (im.shape[-2], im.shape[-1]),
-        "xMin": int(bRot[0]),
-        "xMax": int(rRot[0]),
-        "yMin": int(lRot[1]),
-        "yMax": int(bRot[1]),
+        "frame_dims": (im.shape[-2], im.shape[-1]),
+        "x_min": int(bRot[0]),
+        "x_max": int(rRot[0]),
+        "y_min": int(lRot[1]),
+        "y_max": int(bRot[1]),
         "angle": angle,
     }
 
     crop = imRot[
-        :, cropData["yMin"] : cropData["yMax"], cropData["xMin"] : cropData["xMax"]
+        :, cropData["y_min"] : cropData["y_max"], cropData["x_min"] : cropData["x_max"]
     ]
     if stokes:
         crop = crop.reshape(4, -1, crop.shape[-2:])
@@ -609,9 +609,9 @@ def reconstruct_full_frame(cropData, im):
         im = im.reshape(-1, *im.shape[-2:])
     wvls = im.shape[0]
 
-    imFullFrame = np.zeros((wvls, *cropData["frameDims"]), np.float32)
+    imFullFrame = np.zeros((wvls, *cropData["frame_dims"]), np.float32)
     imFullFrame[
-        :, cropData["yMin"] : cropData["yMax"], cropData["xMin"] : cropData["xMax"]
+        :, cropData["y_min"] : cropData["y_max"], cropData["x_min"] : cropData["x_max"]
     ] = im
 
     imFFRot = np.empty_like(imFullFrame)

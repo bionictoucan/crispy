@@ -224,12 +224,8 @@ class CRISP(CRISPSlicingMixin):
 
         self.full_frame = self.data
         crop, crop_dict = rotate_crop_data(self.data)
-        self.file.header["frame_dims"] = crop_dict["frameDims"]
-        self.file.header["x_min"] = crop_dict["xMin"]
-        self.file.header["x_max"] = crop_dict["xMax"]
-        self.file.header["y_min"] = crop_dict["yMin"]
-        self.file.header["y_max"] = crop_dict["yMax"]
-        self.file.header["angle"] = crop_dict["angle"]
+        for k, v in crop_dict.items():
+            self.file.header[k] = v
         self.file.data = crop
         self.rotate = True
         return None
@@ -256,12 +252,7 @@ class CRISP(CRISPSlicingMixin):
 
         assert "frame_dims" in self.header
         crop_dict = {
-            "frameDims": self.header["frame_dims"],
-            "xMin": self.header["x_min"],
-            "xMax": self.header["x_max"],
-            "yMin": self.header["y_min"],
-            "yMax": self.header["y_max"],
-            "angle": self.header["angle"],
+            k: self.header[k] for k in ["frame_dims", "x_min", "x_max", "y_min", "y_max", "angle"]
         }
 
         if sep:
@@ -2478,12 +2469,8 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             for f in self.list:
                 crop, crop_dict = f.rotate_crop(sep=True) # type: ignore
                 f.file.data = crop
-                f.file.header["frame_dims"] = crop_dict["frameDims"]
-                f.file.header["x_min"] = crop_dict["xMin"]
-                f.file.header["x_max"] = crop_dict["xMax"]
-                f.file.header["y_min"] = crop_dict["yMin"]
-                f.file.header["y_max"] = crop_dict["yMax"]
-                f.file.header["angle"] = crop_dict["angle"]
+                for k, v in crop_dict.items():
+                    f.file.header[k] = v
                 f.rotate = True
         else:
             if sep:
@@ -2495,18 +2482,9 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             )
             self.list[0].file.data = crop_a
             self.list[1].file.data = crop_b
-            self.list[0].file.header["frame_dims"] = crop_dict["frameDims"]
-            self.list[0].file.header["x_min"] = crop_dict["xMin"]
-            self.list[0].file.header["x_max"] = crop_dict["xMax"]
-            self.list[0].file.header["y_min"] = crop_dict["yMin"]
-            self.list[0].file.header["y_max"] = crop_dict["yMax"]
-            self.list[0].file.header["angle"] = crop_dict["angle"]
-            self.list[1].file.header["frame_dims"] = crop_dict["frameDims"]
-            self.list[1].file.header["x_min"] = crop_dict["xMin"]
-            self.list[1].file.header["x_max"] = crop_dict["xMax"]
-            self.list[1].file.header["y_min"] = crop_dict["yMin"]
-            self.list[1].file.header["y_max"] = crop_dict["yMax"]
-            self.list[1].file.header["angle"] = crop_dict["angle"]
+            for l in self.list[:2]:
+                for k, v in crop_dict.items():
+                    l.file.header[k] = v
             for f in self.list:
                 f.rotate = True
         return None
