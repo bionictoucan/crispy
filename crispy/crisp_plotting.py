@@ -1,12 +1,13 @@
-import wave
+import html
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional
+
+import matplotlib
 import matplotlib.pyplot as plt
-from .utils import pt_bright
+import numpy as np
 from astropy import units as u
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
-import numpy as np
-import html
-from typing import Callable, Dict, List, Optional, TYPE_CHECKING
-import matplotlib
+
+from .utils import pt_bright
 
 if TYPE_CHECKING:
     from .crisp import CRISP
@@ -19,13 +20,10 @@ unicode_runes = {
 }
 
 rc_context_dict = {
-    # "figure.constrained_layout.use" : True,
-    # "figure.autolayout" : True,
     "savefig.bbox": "tight",
     "font.family": "serif",
     "image.origin": "lower",
     "figure.figsize": (10, 6),
-    # "image.aspect" : "auto"
     "font.size": 11,
     "font.serif": "New Century Schoolbook",
 }

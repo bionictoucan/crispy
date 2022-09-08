@@ -1,32 +1,22 @@
+import html
+from typing import Dict, List, Optional, Sequence, Tuple, Union
+
+import astropy.units as u
+import matplotlib
 import numpy as np
-import matplotlib.pyplot as plt
-import html, zarr
+import zarr
+from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.wcs import WCS
-from astropy.wcs.wcsapi import SlicedLowLevelWCS
-import astropy.units as u
-from astropy.coordinates import SkyCoord
 from specutils.utils.wcs_utils import vac_to_air
 from sunpy.coordinates import Helioprojective
-import matplotlib
-from typing import Union, Sequence, List, Dict, Optional, Tuple
-from .mixin import CRISPSlicingMixin, CRISPSequenceSlicingMixin
-from .utils import (
-    ObjDict,
-    pt_bright,
-    rotate_crop_data,
-    rotate_crop_aligned_data,
-    reconstruct_full_frame,
-    parameter_docstring,
-)
+
+from .crisp_plotting import (plot_multi_component_spectrum, plot_multi_frame,
+                             plot_single_frame, plot_single_spectrum)
 from .io import zarr_header_to_wcs
-from .crisp_plotting import (
-    plot_multi_component_spectrum,
-    plot_multi_frame,
-    plot_single_frame,
-    plot_single_spectrum,
-    rc_context_dict,
-)
+from .mixin import CRISPSequenceSlicingMixin, CRISPSlicingMixin
+from .utils import (ObjDict, parameter_docstring, reconstruct_full_frame,
+                    rotate_crop_aligned_data, rotate_crop_data)
 
 
 class CRISP(CRISPSlicingMixin):
@@ -399,7 +389,6 @@ class CRISP(CRISPSlicingMixin):
                 )
             plot_multi_component_spectrum(components, wavelength, self.data, title, d=d)
 
-    @plt.rc_context(rc_context_dict)
     def intensity_map(
         self,
         frame: Optional[str] = None,
@@ -1206,7 +1195,6 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
             f.rotate = False
         return None
 
-    @plt.rc_context(rc_context_dict)
     def plot_spectrum(
         self,
         idx: Union[str, int],
@@ -1244,7 +1232,6 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         else:
             raise ValueError(f'Unexpected index `{idx}`, expected int or "all"')
 
-    @plt.rc_context(rc_context_dict)
     def plot_stokes(
         self,
         idx: Union[str, int],
@@ -1288,7 +1275,6 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         else:
             raise ValueError(f'Unexpected index `{idx}`, expected int or "all"')
 
-    @plt.rc_context(rc_context_dict)
     def intensity_map(
         self,
         idx: Union[str, int],
@@ -1319,7 +1305,6 @@ class CRISPSequence(CRISPSequenceSlicingMixin):
         else:
             raise ValueError(f'Unexpected index `{idx}`, expected int or "all"')
 
-    @plt.rc_context(rc_context_dict)
     def stokes_map(
         self, idx: Union[str, int], stokes: str, frame: Optional[str] = None
     ) -> None:
@@ -1437,7 +1422,6 @@ class CRISPWideband(CRISP):
         Pointing: ({pointing_x}, {pointing_y})
         Shape: {shape}"""
 
-    @plt.rc_context(rc_context_dict)
     def intensity_map(
         self, frame: Optional[str] = None, norm: Optional[str] = None
     ) -> None:
