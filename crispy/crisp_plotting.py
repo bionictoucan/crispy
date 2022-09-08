@@ -67,6 +67,8 @@ def plot_spectrum_panel_ax(
     ax.set_ylabel(y_label)
     if set_xlabel:
         ax.set_xlabel(x_label)
+        if not d:
+            ax.set_xticklabels(ax.get_xticks(), rotation=20)
 
 
 @plt.rc_context(rc_context_dict)
