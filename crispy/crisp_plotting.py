@@ -149,7 +149,7 @@ def plot_multi_component_spectrum(
 
     fig.suptitle(title)
     for c, component in enumerate(components):
-        set_xlabel = num_components != 4 or c > 2
+        set_xlabel = num_components != 4 or c >= 2
         plot_spectrum_panel_ax(
             ax[c],
             wavelength,
@@ -357,7 +357,7 @@ def plot_multi_frame(
         map_datas = {s: None for s in stokes_components}
 
     if fig is None:
-        fig = plt.figure(constrained_layout=True)
+        fig = plt.figure(figsize=(10, 8), constrained_layout=False)
 
     subplot_shape = (2, 2) if num_components == 4 else (1, num_components)
     for c, component in enumerate(components):
@@ -366,7 +366,7 @@ def plot_multi_frame(
             c + 1,
             projection=projections[component],
         )
-        set_xlabel = num_components != 4 or c > 2
+        set_xlabel = num_components != 4 or c >= 2
         set_ylabel = True
         if num_components == 4:
             if c == 1 or c == 3:
