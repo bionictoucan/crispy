@@ -231,10 +231,10 @@ def plot_single_frame_ax(
 
     if cb_label is None:
         cb_label = "I [DNs]"
+
     if norm is not None:
         vmin = None
-
-    if im.data.min() < 0:
+    elif im.data.min() < 0:
         vmin = 0
     else:
         vmin = im.data.min()
@@ -365,7 +365,7 @@ def plot_multi_frame(
     for c, component in enumerate(components):
         ax = fig.add_subplot(
             *subplot_shape,
-            c,
+            c + 1,
             projection=projections[component],
         )
         set_xlabel = num_components != 4 or c > 2
@@ -396,9 +396,9 @@ def plot_multi_frame(
         if num_components == 4:
             if c < 2:
                 ax.xaxis.tick_top()
-                ax.tickparams(axis="x", labelbottom=False)
+                ax.tick_params(axis="x", labelbottom=False)
             if c == 1 or c == 3:
                 ax.yaxis.tick_right()
-                ax.tickparams(axis="y", labelleft=False)
+                ax.tick_params(axis="y", labelleft=False)
 
     fig.show()
