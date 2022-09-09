@@ -12,6 +12,7 @@ Examples Using the Main Data Wrappers from crispy
 
 from crispy import CRISP, CRISPWideband, CRISPNonU
 import warnings
+
 warnings.filterwarnings("ignore")
 
 # %%
@@ -50,7 +51,7 @@ crisp[7].intensity_map()
 # point :math:`(-720'', -310'')` in the Helioprojective plane:
 
 # %%
-# .. note:: 
+# .. note::
 #   There are complimentary instance methods ``from_lonlat`` and
 #   ``to_lonlat`` which convert coordinates to/from the Helioprojective frame.
 #   The format of the Helioprojective coordinates are **always** given in the
@@ -60,12 +61,12 @@ crisp[7].intensity_map()
 #   other physical coordinate systems) convention of (longitude, latitude).
 
 y, x = crisp.from_lonlat(-720, -310)
-print(y,x)
+print(y, x)
 
 # %%
-# 
+#
 
-crisp[:,y,x].plot_spectrum()
+crisp[:, y, x].plot_spectrum()
 
 # %%
 # CRISPNonU
@@ -86,7 +87,7 @@ print(crispnonu)
 # methods (which also exist in the ``CRISP`` class). Firstly is ``stokes_map``
 # for the line core:
 
-crispnonu[:,5].stokes_map(stokes="all")
+crispnonu[:, 5].stokes_map(stokes="all")
 
 # %%
 # The polarimetric plotting methods take a keyword argument ``stokes`` which is
@@ -102,12 +103,12 @@ crispnonu[:,5].stokes_map(stokes="all")
 # the ``plot_stokes`` instance method:
 
 y, x = crispnonu.from_lonlat(510, -260)
-print(y,x)
+print(y, x)
 
 # %%
 #
 
-crispnonu[:,:,38,257].plot_stokes(stokes="all")
+crispnonu[:, :, 38, 257].plot_stokes(stokes="all")
 
 # %%
 # CRISPWideband
