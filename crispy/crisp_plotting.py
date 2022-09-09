@@ -36,6 +36,7 @@ def plot_spectrum_panel_ax(
     y_label: str,
     d: bool = False,
     set_xlabel: bool = True,
+    rotate_xlabel: bool = False,
 ):
     """
     Plot a single one dimensional spectrum panel into ax. Called by `plot_single_spectrum`.
@@ -54,21 +55,24 @@ def plot_spectrum_panel_ax(
         Whether to plot in :math:`\\Delta \\lambda` space. Default: False.
     set_xlabel : bool, optional
         Whether to apply the label to the x_axis (e.g. for multi-panel plots). Default: True.
+    rotate_xlabel : bool, optional
+        Whether to rotate the x_label (and `d` is not true) for better
+        legibility on small panels.
     """
     x_axis = wavelength
-    x_label = f"{unicode_runes['lambda']} [{unicode_runes['AA']}]"
+    x_label = f"{unicode_runes['lambda']} [{wavelength.unit.to_string('unicode')}]"
     if d:
         x_axis = wavelength - np.median(wavelength)
         x_label = (
-            f"{unicode_runes['Delta']}{unicode_runes['lambda']} [{unicode_runes['AA']}]"
+            f"{unicode_runes['Delta']}{unicode_runes['lambda']} [{wavelength.unit.to_string('unicode')}]"
         )
 
     ax.plot(x_axis, spectrum, c=pt_bright["blue"], marker="o")
     ax.set_ylabel(y_label)
     if set_xlabel:
         ax.set_xlabel(x_label)
-        if not d:
-            ax.set_xticklabels(ax.get_xticks(), rotation=20)
+        if not d and rotate_xlabel:
+            ax.tick_params(axis='x', labelrotation=20)
 
 
 @plt.rc_context(rc_context_dict)
@@ -159,6 +163,7 @@ def plot_multi_component_spectrum(
             f"{component} [DNs]",
             d=d,
             set_xlabel=set_xlabel,
+            rotate_xlabel=True,
         )
 
     if num_components == 4:

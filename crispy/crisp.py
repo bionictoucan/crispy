@@ -537,7 +537,7 @@ class CRISP(CRISPSlicingMixin):
                     )
             plot_multi_frame(self, components, frame, norms, map_datas, extent)
 
-    def wave(self, idx: Union[int, Sequence[int]]) -> np.ndarray:
+    def wave(self, idx: Union[int, Sequence[int]]) -> u.Quantity:
         """
         This function will take an index number or range and return the wavelength in Angstroms.
 
@@ -549,7 +549,7 @@ class CRISP(CRISPSlicingMixin):
 
         Returns
         -------
-        float or numpy.ndarray of floats
+        astropy.Quantity
             The wavelength or wavelengths indicated by the index/indices passed
             to the function.
         """
@@ -1593,11 +1593,11 @@ class CRISPNonU(CRISP):
         Wavelengths sampled: {sampled_wvls}"""
 
     @property
-    def wvls(self) -> np.ndarray:
+    def wvls(self) -> u.Quantity:
         """
         The wavelengths sampled in the observation.
         """
-        return self.wvl
+        return self.wvl << u.Angstrom
 
     def plot_spectrum(
         self, unit: Optional[u.Unit] = None, air: bool = False, d: bool = False
@@ -1657,7 +1657,7 @@ class CRISPNonU(CRISP):
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
 
-        wavelength = self.wvls
+        wavelength = np.round(self.wvls, decimals=2)
         self._plot_stokes(stokes, wavelength, unit=unit, air=air, d=d)
 
     def wave(self, idx: Union[int, Sequence[int]]) -> np.ndarray:
