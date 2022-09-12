@@ -185,6 +185,12 @@ def zarr_header_to_wcs(zarr_header, nonu=False):
         wcs_dict["CDELT1"] = zarr_header["pixel_scale"]
         wcs_dict["CDELT2"] = zarr_header["pixel_scale"]
 
+    try:
+        for key in ["PC1_1", "PC1_2", "PC2_1", "PC2_2"]:
+            wcs_dict[key] = zarr_header[key]
+    except KeyError:
+        pass
+
     return WCS(wcs_dict)
 
 

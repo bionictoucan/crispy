@@ -262,6 +262,23 @@ class CRISP(CRISPSlicingMixin):
         crop, crop_dict = rotate_crop_data(self.data)
         for k, v in crop_dict.items():
             self.file.header[k] = v
+        if not isinstance(self.file.header["frame_dims"], list):
+            self.file.header["frame_dims"] = repr(crop_dict["frame_dims"])
+        a = -crop_dict["angle"]
+        c = np.cos(a)
+        s = np.sin(a)
+        self.file.header["PC1_1"] = c
+        self.file.header["PC1_2"] = -s
+        self.file.header["PC2_1"] = s
+        self.file.header["PC2_2"] = c
+        self.file.header["CRPIX1"] -= crop_dict["x_min"]
+        self.file.header["CRPIX2"] -= crop_dict["y_min"]
+        # NOTE(cmo): WCS Seems to complain about the formatting of comment sometimes, so just squash it
+        self.file.header.pop("COMMENT", None)
+        try:
+            self.wcs = WCS(self.file.header)
+        except ValueError:
+            self.wcs = zarr_header_to_wcs(self.file.header)
         self.file.data = crop
         self.rotate = True
         return None
@@ -288,15 +305,29 @@ class CRISP(CRISPSlicingMixin):
 
         assert "frame_dims" in self.header
         crop_dict = {
-            k: self.header[k]
+            k: self.file.header[k]
             for k in ["frame_dims", "x_min", "x_max", "y_min", "y_max", "angle"]
         }
+        if isinstance(crop_dict["frame_dims"], str):
+            crop_dict["frame_dims"] = [int(x) for x in crop_dict["frame_dims"][1:-1].split(',')]
 
         if sep:
             return reconstruct_full_frame(crop_dict, self.data)
 
         self.rot_data = self.data
         self.file.data = reconstruct_full_frame(crop_dict, self.data)
+        self.file.header.pop("PC1_1", None)
+        self.file.header.pop("PC1_2", None)
+        self.file.header.pop("PC2_1", None)
+        self.file.header.pop("PC2_2", None)
+        self.file.header["CRPIX1"] += crop_dict["x_min"]
+        self.file.header["CRPIX2"] += crop_dict["y_min"]
+        # NOTE(cmo): WCS Seems to complain about the formatting of comment sometimes, so just squash it
+        self.file.header.pop("COMMENT", None)
+        try:
+            self.wcs = WCS(self.file.header)
+        except ValueError:
+            self.wcs = zarr_header_to_wcs(self.file.header)
         self.rotate = False
         return None
 

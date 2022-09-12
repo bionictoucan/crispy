@@ -528,7 +528,7 @@ def rotate_crop_data(im):
     if len(im.shape) == 4:
         stokes = True
         midWvl = im.shape[1] // 2
-        imCore = np.copy(im[midWvl])
+        imCore = np.copy(im[0, midWvl])
         im = im.reshape(-1, *im.shape[-2:])
     elif len(im.shape) == 3:
         midWvl = im.shape[0] // 2
@@ -582,7 +582,7 @@ def rotate_crop_data(im):
         :, cropData["y_min"] : cropData["y_max"], cropData["x_min"] : cropData["x_max"]
     ]
     if stokes:
-        crop = crop.reshape(4, -1, crop.shape[-2:])
+        crop = crop.reshape(4, -1, *crop.shape[-2:])
     return crop, cropData
 
 
