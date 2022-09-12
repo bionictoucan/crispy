@@ -49,11 +49,11 @@ class CRISPSlicingMixin(NDSlicingMixin):
         kwargs["filename"]["header"] = self.header
         kwargs["nonu"] = self.nonu
         try:
-            wave_idx = self.wcs.naxis - self.wcs.axis_type_names.index('WAVE') - 1
+            wave_idx = len(self.wcs.array_shape) - self.wcs.world_axis_physical_types.index('em.wl') - 1
             kwargs["wvl"] = self._slice_wvl(item, wave_idx)
-            kwargs["orig_wvl"] = self.orig_wvl
         except ValueError:
-            pass
+            kwargs["wvl"] = self.wvl
+        kwargs["orig_wvl"] = self.orig_wvl
 
         return kwargs
 
