@@ -1,5 +1,7 @@
+from copy import copy
 import html
 from typing import Dict, List, Optional, Sequence, Tuple, Union
+import warnings
 
 import astropy.units as u
 import matplotlib
@@ -46,8 +48,13 @@ class CRISP(CRISPSlicingMixin):
         The mask to be applied to the data. Default is None.
     nonu : bool, optional
         Whether or not the :math:`\\Delta \\lambda` on the wavelength axis is
-        uniform. This is helpful when constructing the WCS but if True, then the
-        ``CRISPNonU`` class should be used. Default is False.
+        uniform. Default is False.
+    wvl : astropy.Quantity, optional
+        The wavelength grid for the data. Will be inferred if not provided. Only
+        needed to transfer information due to slicing.
+    orig_wvl : astropy.Quantity, optional
+        The original (unsliced) wavelength grid for the data. Only needed to transfer
+        information due to slicing.
     """
 
     def __init__(
@@ -57,6 +64,8 @@ class CRISP(CRISPSlicingMixin):
         uncertainty: Optional[np.ndarray] = None,
         mask: Optional[np.ndarray] = None,
         nonu: bool = False,
+        wvl: Optional[u.Quantity] = None,
+        orig_wvl: Optional[u.Quantity] = None,
     ) -> None:
         if isinstance(filename, str) and ".fits" in filename:
             self.file = fits.open(filename)[0]
@@ -90,6 +99,47 @@ class CRISP(CRISPSlicingMixin):
         else:
             self.rotate = False
 
+        if wvl is None:
+            try:
+                if ".fits" in filename:
+                    wvl = fits.open(filename)[
+                        1
+                    ].data  << u.Angstrom # This assumes that the true wavelength points are stored in the first HDU of the FITS file as a numpy array
+                else:
+                    wvl = self.header["wavels"] << u.Angstrom
+            except (AttributeError, KeyError):
+                wcs_ndim = len(self.wcs.low_level_wcs.array_shape)
+                if wcs_ndim <= 2 or wcs_ndim > 4:
+                    raise ValueError("Either too few (check spectral axis), or too many axes.")
+                indexing : List[Union[int, slice]] = [0 for _ in range(wcs_ndim)]
+                if hasattr(self, "ind"):
+                    if isinstance(self.ind, Sequence):
+                        if wcs_ndim == 4:
+                            entry = self.ind[1]
+                        elif wcs_ndim == 3:
+                            entry = self.ind[0]
+                    else:
+                        entry = None
+                    if not isinstance(entry, slice):
+                        entry = slice(None, None)
+
+                    indexing[-3] = entry
+                    w = self.wcs.low_level_wcs._wcs.__getitem__(indexing)
+                else:
+                    if wcs_ndim == 4:
+                        indexing[1] = slice(None, None)
+                    elif wcs_ndim == 3:
+                        indexing[0] = slice(None, None)
+                    w = self.wcs.__getitem__(indexing)
+                wvl = w.array_index_to_world(np.arange(self.data.shape[-3])) << u.Angstrom
+
+            orig_wvl = wvl
+        elif orig_wvl is None:
+            raise ValueError("`wvl` set, but not `orig_wvl`")
+
+        self.wvl = wvl
+        self.orig_wvl = orig_wvl
+
     def __str__(self) -> str:
         try:
             time = self.header["DATE-AVG"][-12:]
@@ -111,6 +161,7 @@ class CRISP(CRISPSlicingMixin):
             el = self.header["element"]
             pointing_x = str(self.header["crval"][-1])
             pointing_y = str(self.header["crval"][-2])
+        sampled_wvls = str(self.wvls)
 
         return f"""
         CRISP Observation
@@ -119,7 +170,7 @@ class CRISP(CRISPSlicingMixin):
 
         Observed: {el}
         Centre wavelength [{self.aa}]: {cl}
-        Wavelengths sampled: {wwidth}
+        Wavelengths sampled: {wwidth} ({sampled_wvls})
         Pointing [arcsec] (HPLN, HPLT): ({pointing_x}, {pointing_y})
         Shape: {shape}"""
 
@@ -149,7 +200,7 @@ class CRISP(CRISPSlicingMixin):
         """
         The wavelengths sampled in the observation.
         """
-        return self.wave(np.arange(self.shape[-3]))
+        return self.wvl
 
     @property
     def info(self) -> str:
@@ -306,7 +357,7 @@ class CRISP(CRISPSlicingMixin):
             Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
         """
 
-        wavelength = self.wave(np.arange(self.data.shape[0]))
+        wavelength = self.wvl
         self._plot_stokes(stokes, wavelength, unit=unit, air=air, d=d)
 
     def _plot_stokes(
@@ -359,7 +410,7 @@ class CRISP(CRISPSlicingMixin):
         }
 
         if unit is not None:
-            wavelength <<= unit
+            wavelength << unit
 
         if air:
             wavelength = vac_to_air(wavelength)
@@ -406,20 +457,8 @@ class CRISP(CRISPSlicingMixin):
             The normalisation to use in the colourmap.
         """
 
-        if isinstance(self.ind, int):
-            idx = self.ind
-        elif self.wcs.low_level_wcs._wcs.naxis == 4:
-            idx = self.ind[1]
-        else:
-            idx = self.ind[0]
-        wvl = np.round(self.wave(idx) << u.Angstrom, decimals=2).value
-        del_wvl = np.round(
-            wvl
-            - (
-                self.wave(self.wcs.low_level_wcs._wcs.array_shape[0] // 2) << u.Angstrom
-            ).value,
-            decimals=2,
-        )
+        wvl = np.round(self.wvls << u.Angstrom, decimals=2).value
+        del_wvl = np.round(wvl - np.median(self.orig_wvl.value), decimals=2)
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
@@ -460,21 +499,8 @@ class CRISP(CRISPSlicingMixin):
 
         stokes_components = ["I", "Q", "U", "V"]
 
-        wvl = np.round(
-            self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(self.ind[1])
-            << u.Angstrom,
-            decimals=2,
-        ).value
-        del_wvl = np.round(
-            wvl
-            - (
-                self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(
-                    self.wcs.low_level_wcs._wcs.array_shape[1] // 2
-                )
-                << u.Angstrom
-            ).value,
-            decimals=2,
-        )
+        wvl = np.round(self.wvls << u.Angstrom, decimals=2).value
+        del_wvl = np.round(wvl - np.median(wvl), decimals=2)
         try:
             datetime = self.header["DATE-AVG"]
         except KeyError:
@@ -553,76 +579,7 @@ class CRISP(CRISPSlicingMixin):
             The wavelength or wavelengths indicated by the index/indices passed
             to the function.
         """
-        if len(self.wcs.low_level_wcs.array_shape) == 4:
-            if hasattr(self, "ind") and isinstance(self.ind[1], slice):
-                return (
-                    self.wcs.low_level_wcs._wcs[
-                        0, self.ind[1], 0, 0
-                    ].array_index_to_world(idx)
-                    << u.Angstrom
-                )
-            elif hasattr(self, "ind") and not isinstance(self.ind[1], slice):
-                return (
-                    self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(idx)
-                    << u.Angstrom
-                )
-            else:
-                return self.wcs[0, :, 0, 0].array_index_to_world(idx) << u.Angstrom
-        elif len(self.wcs.low_level_wcs.array_shape) == 3:
-            if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                if isinstance(self.ind[1], slice):
-                    return (
-                        self.wcs.low_level_wcs._wcs[
-                            0, self.ind[1], 0, 0
-                        ].array_index_to_world(idx)
-                        << u.Angstrom
-                    )
-                else:
-                    return (
-                        self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(
-                            idx
-                        )
-                        << u.Angstrom
-                    )
-            else:
-                if hasattr(self, "ind") and isinstance(self.ind[0], slice):
-                    return (
-                        self.wcs.low_level_wcs._wcs[
-                            self.ind[0], 0, 0
-                        ].array_index_to_world(idx)
-                        << u.Angstrom
-                    )
-                elif hasattr(self, "ind") and not isinstance(self.ind[0], slice):
-                    return (
-                        self.wcs.low_level_wcs._wcs[:, 0, 0].array_index_to_world(idx)
-                        << u.Angstrom
-                    )
-                else:
-                    return self.wcs.array_index_to_world(idx, 0, 0)[1] << u.Angstrom
-        elif len(self.wcs.low_level_wcs.array_shape) == 2:
-            if hasattr(self, "ind"):
-                if self.wcs.low_level_wcs._wcs.naxis == 4:
-                    return (
-                        self.wcs.low_level_wcs._wcs[0, :, 0, 0].array_index_to_world(
-                            idx
-                        )
-                        << u.Angstrom
-                    )
-                elif self.wcs.low_level_wcs._wcs.naxis == 3:
-                    return (
-                        self.wcs.low_level_wcs._wcs[:, 0, 0].array_index_to_world(idx)
-                        << u.Angstrom
-                    )
-                else:
-                    raise IndexError("There is no spectral component to your data.")
-            else:
-                raise IndexError("There is no spectral component to your data.")
-        elif len(self.wcs.low_level_wcs.array_shape) == 1:
-            return self.wcs.array_index_to_world(idx) << u.Angstrom
-        else:
-            raise NotImplementedError(
-                "This is way too many dimensions for me to handle. I am but a three-dimensional being."
-            )
+        return self.orig_wvl[idx]
 
     def to_lonlat(
         self, y: int, x: int, coord: bool = False, unit: bool = False
@@ -653,282 +610,33 @@ class CRISP(CRISPSlicingMixin):
             A tuple containing the Helioprojective Longitude and Helioprojective
             Latitude of the indexed point.
         """
-        if coord:
-            if len(self.wcs.low_level_wcs.array_shape) == 4:
-                if hasattr(self, "ind"):
-                    if isinstance(self.ind[-2], slice) and isinstance(
-                        self.ind[-1], slice
-                    ):
-                        return self.wcs.low_level_wcs._wcs[
-                            0, 0, self.ind[-2], self.ind[-1]
-                        ].array_index_to_world(y, x)
-                    elif isinstance(self.ind[-2], slice) and not isinstance(
-                        self.ind[-1], slice
-                    ):
-                        return self.wcs.low_level_wcs._wcs[
-                            0, 0, self.ind[-2]
-                        ].array_index_to_world(y, x)
-                    elif not isinstance(self.ind[-2], slice) and isinstance(
-                        self.ind[-1], slice
-                    ):
-                        return self.wcs.low_level_wcs._wcs[
-                            0, 0, :, self.ind[-1]
-                        ].array_index_to_world(y, x)
-                    else:
-                        return self.wcs.low_level_wcs._wcs[0, 0].array_index_to_world(
-                            y, x
-                        )
-                else:
-                    return self.wcs[0, 0].array_index_to_world(y, x)
-            elif len(self.wcs.low_level_wcs.array_shape) == 3:
-                if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                    if isinstance(self.ind[-2], slice) and isinstance(
-                        self.ind[-1], slice
-                    ):
-                        return self.wcs.low_level_wcs._wcs[
-                            0, 0, self.ind[-2], self.ind[-1]
-                        ].array_index_to_world(y, x)
-                    elif isinstance(self.ind[-2], slice) and not isinstance(
-                        self.ind[-1], slice
-                    ):
-                        return self.wcs.low_level_wcs._wcs[
-                            0, 0, self.ind[-2]
-                        ].array_index_to_world(y, x)
-                    elif not isinstance(self.ind[-2], slice) and isinstance(
-                        self.ind[-1], slice
-                    ):
-                        return self.wcs.low_level_wcs._wcs[
-                            0, 0, :, self.ind[-1]
-                        ].array_index_to_world(y, x)
-                    else:
-                        return self.wcs.low_level_wcs._wcs[0, 0].array_index_to_world(
-                            y, x
-                        )
-                else:
-                    if hasattr(self, "ind"):
-                        if isinstance(self.ind[-2], slice) and isinstance(
-                            self.ind[-1], slice
-                        ):
-                            return self.wcs.low_level_wcs._wcs[
-                                0, self.ind[-2], self.ind[-1]
-                            ].array_index_to_world(y, x)
-                        elif isinstance(self.ind[-2], slice) and not isinstance(
-                            self.ind[-1], slice
-                        ):
-                            return self.wcs.low_level_wcs._wcs[
-                                0, self.ind[-2]
-                            ].array_index_to_world(y, x)
-                        elif not isinstance(self.ind[-2], slice) and isinstance(
-                            self.ind[-1], slice
-                        ):
-                            return self.wcs.low_level_wcs._wcs[
-                                0, :, self.ind[-1]
-                            ].array_index_to_world(y, x)
-                        else:
-                            return self.wcs.low_level_wcs._wcs[0].array_index_to_world(
-                                y, x
-                            )
-                    else:
-                        return self.wcs[0].array_index_to_world(y, x)
-            elif len(self.wcs.low_level_wcs.array_shape) == 2:
-                return self.wcs.array_index_to_world(y, x)
-            else:
-                raise NotImplementedError("Too many or too little dimensions.")
+        wcs_ndim = len(self.wcs.low_level_wcs.array_shape)
+        if wcs_ndim == 2:
+            result = self.wcs.array_index_to_world(y, x)
         else:
-            if unit:
-                if len(self.wcs.low_level_wcs.array_shape) == 4:
-                    if hasattr(self, "ind"):
-                        if isinstance(self.ind[-2], slice) and isinstance(
-                            self.ind[-1], slice
-                        ):
-                            sc = self.wcs.low_level_wcs._wcs[
-                                0, 0, self.ind[-2], self.ind[-1]
-                            ].array_index_to_world(y, x)
-                            return sc.Tx, sc.Ty
-                        elif isinstance(self.ind[-2], slice) and not isinstance(
-                            self.ind[-1], slice
-                        ):
-                            sc = self.wcs.low_level_wcs._wcs[
-                                0, 0, self.ind[-2]
-                            ].array_index_to_world(y, x)
-                            return sc.Tx, sc.Ty
-                        elif not isinstance(self.ind[-2], slice) and isinstance(
-                            self.ind[-1], slice
-                        ):
-                            sc = self.wcs.low_level_wcs._wcs[
-                                0, 0, :, self.ind[-1]
-                            ].array_index_to_world(y, x)
-                            return sc.Tx, sc.Ty
-                        else:
-                            sc = self.wcs.low_level_wcs._wcs[0, 0].array_index_to_world(
-                                y, x
-                            )
-                            return sc.Tx, sc.Ty
-                    else:
-                        sc = self.wcs[0, 0].array_index_to_world(y, x)
-                        return sc.Tx, sc.Ty
-                elif len(self.wcs.low_level_wcs.array_shape) == 3:
-                    if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                        if isinstance(self.ind[-2], slice) and isinstance(
-                            self.ind[-1], slice
-                        ):
-                            sc = self.wcs.low_level_wcs._wcs[
-                                0, 0, self.ind[-2], self.ind[-1]
-                            ].array_index_to_world(y, x)
-                            return sc.Tx, sc.Ty
-                        elif isinstance(self.ind[-2], slice) and not isinstance(
-                            self.ind[-1], slice
-                        ):
-                            sc = self.wcs.low_level_wcs._wcs[
-                                0, 0, self.ind[-2]
-                            ].array_index_to_world(y, x)
-                            return sc.Tx, sc.Ty
-                        elif not isinstance(self.ind[-2], slice) and isinstance(
-                            self.ind[-1], slice
-                        ):
-                            sc = self.wcs.low_level_wcs._wcs[
-                                0, 0, :, self.ind[-1]
-                            ].array_index_to_world(y, x)
-                            return sc.Tx, sc.Ty
-                        else:
-                            sc = self.wcs.low_level_wcs._wcs[0, 0].array_index_to_world(
-                                y, x
-                            )
-                            return sc.Tx, sc.Ty
-                    else:
-                        if hasattr(self, "ind"):
-                            if isinstance(self.ind[-2], slice) and isinstance(
-                                self.ind[-1], slice
-                            ):
-                                sc = self.wcs.low_level_wcs._wcs[
-                                    0, self.ind[-2], self.ind[-1]
-                                ].array_index_to_world(y, x)
-                                return sc.Tx, sc.Ty
-                            elif isinstance(self.ind[-2], slice) and not isinstance(
-                                self.ind[-1], slice
-                            ):
-                                sc = self.wcs.low_level_wcs._wcs[
-                                    0, self.ind[-2]
-                                ].array_index_to_world(y, x)
-                                return sc.Tx, sc.Ty
-                            elif not isinstance(self.ind[-2], slice) and isinstance(
-                                self.ind[-1], slice
-                            ):
-                                sc = self.wcs.low_level_wcs._wcs[
-                                    0, :, self.ind[-1]
-                                ].array_index_to_world(y, x)
-                                return sc.Tx, sc.Ty
-                            else:
-                                sc = self.wcs.low_level_wcs._wcs[
-                                    0
-                                ].array_index_to_world(y, x)
-                                return sc.Tx, sc.Ty
-                        else:
-                            sc = self.wcs[0].array_index_to_world(y, x)
-                            return sc.Tx, sc.Ty
-                elif len(self.wcs.low_level_wcs.array_shape) == 2:
-                    sc = self.wcs.array_index_to_world(y, x)
-                    return sc.Tx, sc.Ty
-                else:
-                    raise NotImplementedError("Too many or too little dimensions.")
-            else:
-                if len(self.wcs.low_level_wcs.array_shape) == 4:
-                    if hasattr(self, "ind"):
-                        if isinstance(self.ind[-2], slice) and isinstance(
-                            self.ind[-1], slice
-                        ):
-                            sc = self.wcs.low_level_wcs._wcs[
-                                0, 0, self.ind[-2], self.ind[-1]
-                            ].array_index_to_world(y, x)
-                            return sc.Tx.value, sc.Ty.value
-                        elif isinstance(self.ind[-2], slice) and not isinstance(
-                            self.ind[-1], slice
-                        ):
-                            sc = self.wcs.low_level_wcs._wcs[
-                                0, 0, self.ind[-2]
-                            ].array_index_to_world(y, x)
-                            return sc.Tx.value, sc.Ty.value
-                        elif not isinstance(self.ind[-2], slice) and isinstance(
-                            self.ind[-1], slice
-                        ):
-                            sc = self.wcs.low_level_wcs._wcs[
-                                0, 0, :, self.ind[-1]
-                            ].array_index_to_world(y, x)
-                            return sc.Tx.value, sc.Ty.value
-                        else:
-                            sc = self.wcs.low_level_wcs._wcs[0, 0].array_index_to_world(
-                                y, x
-                            )
-                            return sc.Tx.value, sc.Ty.value
-                    else:
-                        sc = self.wcs[0, 0].array_index_to_world(y, x)
-                        return sc.Tx.value, sc.Ty.value
-                elif len(self.wcs.low_level_wcs.array_shape) == 3:
-                    if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                        if isinstance(self.ind[-2], slice) and isinstance(
-                            self.ind[-1], slice
-                        ):
-                            sc = self.wcs.low_level_wcs._wcs[
-                                0, 0, self.ind[-2], self.ind[-1]
-                            ].array_index_to_world(y, x)
-                            return sc.Tx.value, sc.Ty.value
-                        elif isinstance(self.ind[-2], slice) and not isinstance(
-                            self.ind[-1], slice
-                        ):
-                            sc = self.wcs.low_level_wcs._wcs[
-                                0, 0, self.ind[-2]
-                            ].array_index_to_world(y, x)
-                            return sc.Tx.value, sc.Ty.value
-                        elif not isinstance(self.ind[-2], slice) and isinstance(
-                            self.ind[-1], slice
-                        ):
-                            sc = self.wcs.low_level_wcs._wcs[
-                                0, 0, :, self.ind[-1]
-                            ].array_index_to_world(y, x)
-                            return sc.Tx.value, sc.Ty.value
-                        else:
-                            sc = self.wcs.low_level_wcs._wcs[0, 0].array_index_to_world(
-                                y, x
-                            )
-                            return sc.Tx.value, sc.Ty.value
-                    else:
-                        if hasattr(self, "ind"):
-                            if isinstance(self.ind[-2], slice) and isinstance(
-                                self.ind[-1], slice
-                            ):
-                                sc = self.wcs.low_level_wcs._wcs[
-                                    0, self.ind[-2], self.ind[-1]
-                                ].array_index_to_world(y, x)
-                                return sc.Tx.value, sc.Ty.value
-                            elif isinstance(self.ind[-2], slice) and not isinstance(
-                                self.ind[-1], slice
-                            ):
-                                sc = self.wcs.low_level_wcs._wcs[
-                                    0, self.ind[-2]
-                                ].array_index_to_world(y, x)
-                                return sc.Tx.value, sc.Ty.value
-                            elif not isinstance(self.ind[-2], slice) and isinstance(
-                                self.ind[-1], slice
-                            ):
-                                sc = self.wcs.low_level_wcs._wcs[
-                                    0, :, self.ind[-1]
-                                ].array_index_to_world(y, x)
-                                return sc.Tx.value, sc.Ty.value
-                            else:
-                                sc = self.wcs.low_level_wcs._wcs[
-                                    0
-                                ].array_index_to_world(y, x)
-                                return sc.Tx.value, sc.Ty.value
-                        else:
-                            sc = self.wcs[0].array_index_to_world(y, x)
-                            return sc.Tx.value, sc.Ty.value
-                elif len(self.wcs.low_level_wcs.array_shape) == 2:
-                    sc = self.wcs.array_index_to_world(y, x)
-                    return sc.Tx.value, sc.Ty.value
-                else:
-                    raise NotImplementedError("Too many or too little dimensions.")
+            if wcs_ndim <= 2 or wcs_ndim > 4:
+                raise ValueError("Either two few (check spectral axis), or too many axes.")
+            if hasattr(self, "ind"):
+                wcs_ndim = self.wcs.low_level_wcs._wcs.naxis
+                indexing : List[Union[int, slice]] = [0 for _ in range(wcs_ndim)]
+                indexing[-2:] = self.ind[-2:]
 
-    def from_lonlat(self, lon: float, lat: float) -> Tuple[float, float]:
+                result = self.wcs.low_level_wcs._wcs.__getitem__(indexing).array_index_to_world(y, x)
+            else:
+                indexing = [0 for _ in range(wcs_ndim-2)]
+                if len(indexing) > 0:
+                    result = self.wcs.__getitem__(indexing).array_index_to_world(y, x)
+                else:
+                    result = self.wcs.array_index_to_world(y, x)
+
+
+        if not coord:
+            if not unit:
+                return result.Tx.value, result.Ty.value
+            return result.Tx, result.Ty
+        return result
+
+    def from_lonlat(self, lon: float, lat: float) -> Tuple[int, int]:
         """
         This function takes a Helioprojective Longitude, Helioprojective
         Latitude pair and converts them to the y, x indices to index the object
@@ -946,83 +654,27 @@ class CRISP(CRISPSlicingMixin):
 
         Returns
         -------
-        tuple[float]
+        tuple[int]
             A tuple of the index needed to retrieve the point for a specific
             Helioprojective Longitude and Helioprojective Latitude.
         """
         lon, lat = lon << u.arcsec, lat << u.arcsec
         sc = SkyCoord(lon, lat, frame=Helioprojective)
-        if len(self.wcs.low_level_wcs.array_shape) == 4:
-            if hasattr(self, "ind"):
-                if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
-                    return self.wcs.low_level_wcs._wcs[
-                        0, 0, self.ind[-2], self.ind[-1]
-                    ].world_to_array_index(sc)
-                elif isinstance(self.ind[-2], slice) and not isinstance(
-                    self.ind[-1], slice
-                ):
-                    return self.wcs.low_level_wcs._wcs[
-                        0, 0, self.ind[-2]
-                    ].world_to_array_index(sc)
-                elif not isinstance(self.ind[-2], slice) and isinstance(
-                    self.ind[-1], slice
-                ):
-                    return self.wcs.low_level_wcs._wcs[
-                        0, 0, :, self.ind[-1]
-                    ].world_to_array_index(sc)
-                else:
-                    return self.wcs.low_level_wcs._wcs[0, 0].world_to_array_index(sc)
-            else:
-                return self.wcs[0, 0].world_to_array_index(sc)
-        elif len(self.wcs.low_level_wcs.array_shape) == 3:
-            if hasattr(self, "ind") and self.wcs.low_level_wcs._wcs.naxis == 4:
-                if isinstance(self.ind[-2], slice) and isinstance(self.ind[-1], slice):
-                    return self.wcs.low_level_wcs._wcs[
-                        0, 0, self.ind[-2], self.ind[-1]
-                    ].world_to_array_index(sc)
-                elif isinstance(self.ind[-2], slice) and not isinstance(
-                    self.ind[-1], slice
-                ):
-                    return self.wcs.low_level_wcs._wcs[
-                        0, 0, self.ind[-2]
-                    ].world_to_array_index(sc)
-                elif not isinstance(self.ind[-2], slice) and isinstance(
-                    self.ind[-1], slice
-                ):
-                    return self.wcs.low_level_wcs._wcs[
-                        0, 0, :, self.ind[-1]
-                    ].world_to_array_index(sc)
-                else:
-                    return self.wcs.low_level_wcs._wcs[0, 0].world_to_array_index(sc)
-            else:
-                if hasattr(self, "ind"):
-                    if isinstance(self.ind[-2], slice) and isinstance(
-                        self.ind[-1], slice
-                    ):
-                        return self.wcs.low_level_wcs._wcs[
-                            0, self.ind[-2], self.ind[-1]
-                        ].world_to_array_index(sc)
-                    elif isinstance(self.ind[-2], slice) and not isinstance(
-                        self.ind[-1], slice
-                    ):
-                        return self.wcs.low_level_wcs._wcs[
-                            0, self.ind[-2]
-                        ].world_to_array_index(sc)
-                    elif not isinstance(self.ind[-2], slice) and isinstance(
-                        self.ind[-1], slice
-                    ):
-                        return self.wcs.low_level_wcs._wcs[
-                            0, :, self.ind[-1]
-                        ].world_to_array_index(sc)
-                    else:
-                        return self.wcs.low_level_wcs._wcs[0].world_to_array_index(sc)
-                else:
-                    return self.wcs[0].world_to_array_index(sc)
-        elif len(self.wcs.low_level_wcs.array_shape) == 2:
-            return self.wcs.world_to_array_index(sc)
+        wcs_ndim = len(self.wcs.low_level_wcs.array_shape)
+        if hasattr(self, "ind"):
+            indexing  = copy(self.ind)
+            wcs_ndim = self.wcs.low_level_wcs._wcs.naxis
+            for i in range(wcs_ndim - 2):
+                indexing[i] = 0
+            w = self.wcs.low_level_wcs._wcs.__getitem__(indexing)
         else:
-            raise NotImplementedError("Too many or too little dimensions.")
-
+            indexing = [0 for _ in range(wcs_ndim - 2)]
+            if len(indexing) > 0:
+                w = self.wcs.__getitem__(indexing)
+            else:
+                w = self.wcs
+        result = w.world_to_array_index(sc)
+        return result
 
 class CRISPSequence(CRISPSequenceSlicingMixin):
     """
@@ -1393,6 +1045,10 @@ class CRISPWideband(CRISP):
     data to be two-dimensional.
     """
 
+    def __init__(self, filename: Union[str, ObjDict], wcs: Optional[WCS] = None, uncertainty: Optional[np.ndarray] = None, mask: Optional[np.ndarray] = None) -> None:
+        super().__init__(filename, wcs, uncertainty, mask, nonu=False, wvl=0.0 << u.Angstrom, orig_wvl=0.0 << u.Angstrom)
+
+
     __doc__ += parameter_docstring(CRISP)
 
     def __str__(self) -> str:
@@ -1522,209 +1178,12 @@ class CRISPWidebandSequence(CRISPSequence):
         Pointing: ({pointing_x}, {pointing_y})
         Shape: {shape}"""
 
-
 class CRISPNonU(CRISP):
-    """
-    This is a class for narrowband CRISP observations whose wavelength axis is
-    sampled non-uniformly. What this means is that each pair of sampled
-    wavelengths is not necessarily separated by the same :math:`\\Delta
-    \\lambda` and thus the ``CDELT3`` fits keyword becomes meaningless as this
-    can only comprehend constant changes in the third axis. This also means that
-    the WCS does not work for the wavelength axis but is still constructed as it
-    holds true in the y,x spatial plane. This class assumes that if the sampling
-    is non-uniform then the true wavelengths that are sampled are stored in the
-    first non-PrimaryHDU in the fits file.
-    """
-
-    __doc__ += parameter_docstring(CRISP)
-
-    def __init__(
-        self,
-        filename: str,
-        wcs: Optional[WCS] = None,
-        uncertainty: Optional[np.ndarray] = None,
-        mask: Optional[np.ndarray] = None,
-        nonu: bool = True,
-    ) -> None:
-        super().__init__(
-            filename=filename, wcs=wcs, uncertainty=uncertainty, mask=mask, nonu=nonu
-        )
-
-        if ".fits" in filename:
-            self.wvl = fits.open(filename)[
-                1
-            ].data  # This assumes that the true wavelength points are stored in the first HDU of the FITS file as a numpy array
-        else:
-            self.wvl = self.header["wavels"]
-
-    def __str__(self) -> str:
-        try:
-            time = self.header["DATE-AVG"][-12:]
-            date = self.header["DATE-AVG"][:-13]
-            cl = str(np.round(self.header["TWAVE1"], decimals=2))
-            wwidth = self.header["WWIDTH1"]
-            shape = str(
-                [self.header[f"NAXIS{j+1}"] for j in reversed(range(self.data.ndim))]
-            )
-            el = self.header["WDESC1"]
-            pointing_x = str(self.header["CRVAL1"])
-            pointing_y = str(self.header["CRVAL2"])
-        except KeyError:
-            time = self.header["time_obs"]
-            date = self.header["date_obs"]
-            cl = str(self.header["crval"][-3])
-            wwidth = self.header["dimensions"][-3]
-            shape = str(self.header["dimensions"])
-            el = self.header["element"]
-            pointing_x = str(self.header["crval"][-1])
-            pointing_y = str(self.header["crval"][-2])
-        sampled_wvls = str(self.wvls)
-
-        return f"""
-        CRISP Observation
-        ------------------
-        {date} {time}
-
-        Observed: {el}
-        Centre wavelength: {cl}
-        Wavelengths sampled: {wwidth}
-        Pointing: ({pointing_x}, {pointing_y})
-        Shape: {shape}
-        Wavelengths sampled: {sampled_wvls}"""
-
-    @property
-    def wvls(self) -> u.Quantity:
-        """
-        The wavelengths sampled in the observation.
-        """
-        return self.wvl << u.Angstrom
-
-    def plot_spectrum(
-        self, unit: Optional[u.Unit] = None, air: bool = False, d: bool = False
-    ) -> None:
-        """
-        Plots the intensity spectrum for a specified coordinate by slicing.
-
-        Parameters
-        ----------
-        unit : astropy.units.Unit or None, optional
-            The unit to have the wavelength axis in. Default is None which
-            changes the units to Angstrom.
-        air : bool, optional
-            Whether or not to convert the wavelength axis to air wavelength (if
-            it is not already been converted). e.g. for the Ca II 8542  spectral
-            line, 8542 is the rest wavelength of the spectral line measured in
-            air. It is possible that the header data (and by proxy the WCS) will
-            have the value of the rest wavelength in vacuum (which in this case
-            is 8544). Default is False.
-        d : bool, optional
-            Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
-        """
-        if self.data.ndim != 1:
-            raise IndexError(
-                "If you are using Stokes data please use the plot_stokes method."
-            )
-
-        self.plot_stokes(stokes="I", unit=unit, air=air, d=d)
-
-    def plot_stokes(
-        self,
-        stokes: str,
-        unit: Optional[u.Unit] = None,
-        air: bool = False,
-        d: bool = False,
-    ) -> None:
-        """
-        Plots the Stokes profiles for a given slice of the data.
-
-        Parameters
-        ----------
-        stokes : str
-            This is to ensure the plots are labelled correctly. Choose "all" to
-            plot the 4 Stokes profiles or a combination e.g. "IQU", "QV" or
-            single letter to plot just one of the Stokes parameters e.g. "U".
-        unit : astropy.units.Unit or None, optional
-            The unit to have the wavelength axis in. Default is None which
-            changes the units to Angstrom.
-        air : bool, optional
-            Whether or not to convert the wavelength axis to air wavelength (if
-            it is not already been converted). e.g. for the Ca II 8542  spectral
-            line, 8542 is the rest wavelength of the spectral line measured in
-            air. It is possible that the header data (and by proxy the WCS) will
-            have the value of the rest wavelength in vacuum (which in this case
-            is 8544). Default is False.
-        d : bool, optional
-            Converts the wavelength axis to :math:`\\Delta \\lambda`. Default is False.
-        """
-
-        wavelength = np.round(self.wvls, decimals=2)
-        self._plot_stokes(stokes, wavelength, unit=unit, air=air, d=d)
-
-    def wave(self, idx: Union[int, Sequence[int]]) -> np.ndarray:
-        """
-        Class method for returning the wavelength sampled at a given index.
-
-        Parameters
-        ----------
-        idx : int
-            The index along the wavelength axis to know the wavelength for.
-        """
-        return self.wvl[idx]
-
+    def __init__(self, filename: Union[str, ObjDict], wcs: Optional[WCS] = None, uncertainty: Optional[np.ndarray] = None, mask: Optional[np.ndarray] = None, nonu: bool = False, wvl: Optional[u.Quantity] = None, orig_wvl: Optional[u.Quantity] = None) -> None:
+        warnings.warn("CRISPNonU is deprecated. Just use CRISP.", DeprecationWarning)
+        super().__init__(filename, wcs, uncertainty, mask, nonu, wvl, orig_wvl)
 
 class CRISPNonUSequence(CRISPSequence):
-    """
-    This is a class for a sequence of ``CRISPNonU`` objects and operates
-    identically to ``CRISPSequence``.
-
-    Parameters
-    ----------
-    files : list[dict]
-        A list of dictionaries containing the parameters for individual
-        ``CRISPNonU`` instances. The function
-        ``crispy.utils.CRISP_sequence_generator`` can be used to generate this list.
-    """
-
     def __init__(self, files: List[Dict]) -> None:
-        self.list = [CRISPNonU(**f) for f in files]
-
-    def __str__(self) -> str:
-        try:
-            time = self.list[0].file.header["DATE-AVG"][-12:]
-            date = self.list[0].file.header["DATE-AVG"][:-13]
-            cl = [str(np.round(f.file.header["TWAVE1"], decimals=2)) for f in self.list]
-            wwidth = [f.file.header["WWIDTH1"] for f in self.list]
-            shape = [
-                str(
-                    [
-                        f.file.header[f"NAXIS{j+1}"]
-                        for j in reversed(range(f.file.data.ndim))
-                    ]
-                )
-                for f in self.list
-            ]
-            el = [f.file.header["WDESC1"] for f in self.list]
-            pointing_x = str(self.list[0].file.header["CRVAL1"])
-            pointing_y = str(self.list[0].file.header["CRVAL2"])
-        except KeyError:
-            time = self.list[0].file.header["time_obs"]
-            date = self.list[0].file.header["date_obs"]
-            cl = [str(f.file.header["crval"][-3]) for f in self.list]
-            wwidth = [str(f.file.header["dimensions"][-3]) for f in self.list]
-            shape = [str(f.file.header["dimensions"]) for f in self.list]
-            el = [f.file.header["element"] for f in self.list]
-            pointing_x = str(self.list[0].file.header["crval"][-1])
-            pointing_y = str(self.list[0].file.header["crval"][-2])
-        sampled_wvls = [f.wvls for f in self.list]
-
-        return f"""
-        CRISP Observation
-        ------------------
-        {date} {time}
-
-        Observed: {el}
-        Centre wavelength: {cl}
-        Wavelengths sampled: {wwidth}
-        Pointing: ({pointing_x}, {pointing_y})
-        Shape: {shape}
-        Sampled wavlengths: {sampled_wvls}"""
+        warnings.warn("CRISPNonUSequence is deprecated. Just use CRISPSequence.", DeprecationWarning)
+        super().__init__(files)

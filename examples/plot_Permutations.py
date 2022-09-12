@@ -7,7 +7,7 @@ catch likely bugs. It isn't a substitute for proper testing, but all I have time
 for now.
 """
 
-from crispy import CRISP, CRISPWideband, CRISPNonU
+from crispy import CRISP, CRISPWideband
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -48,7 +48,7 @@ crisp[7, 400:500, :].intensity_map()
 crisp[7, :, 400:500].intensity_map()
 
 #%%
-crisp = CRISPNonU("example_data/2014/ca_00025.zarr")
+crisp = CRISP("example_data/2014/ca_00025.zarr")
 y, x = crisp.from_lonlat(507, 264)
 crisp[0, 7].intensity_map()
 #%%
@@ -72,7 +72,7 @@ crisp[0, 7].intensity_map()
 # %%
 crisp[0, 7].intensity_map(frame="pix")
 # %%
-crisp[0, 7].intensity_map(frame="arcsec")
+crisp[0, 3].intensity_map(frame="arcsec")
 # %%
 crisp[0, 7, 200:250, :].intensity_map()
 # %%
@@ -80,7 +80,7 @@ crisp[0, 7, :, 400:500].intensity_map()
 
 
 # %%
-crispnonu = CRISPNonU("example_data/2017/ca_00001.zarr")
+crispnonu = CRISP("example_data/2017/ca_00001.zarr")
 y, x = crispnonu.from_lonlat(510, -265)
 crispnonu[0, :, y, x].plot_spectrum()
 # %%

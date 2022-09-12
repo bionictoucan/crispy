@@ -10,7 +10,7 @@ Examples Using the Main Data Wrappers from crispy
 # defined in ``crispy.crisp``. Specifically, these examples will cover the
 # ``CRISP``, ``CRISPNonU``, and ``CRISPWideband`` structures.
 
-from crispy import CRISP, CRISPWideband, CRISPNonU
+from crispy import CRISP, CRISPWideband
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -74,7 +74,7 @@ crisp[:, y, x].plot_spectrum()
 # For the CRISPNonU class, we choose an imaging spectropolarimetric Ca II 8542
 # observation of the X2.2 solar flare SOL20170906T09:10.
 
-crispnonu = CRISPNonU("example_data/2017/ca_00001.zarr")
+crispnonu = CRISP("example_data/2017/ca_00001.zarr")
 print(crispnonu)
 
 # %%

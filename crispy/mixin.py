@@ -12,8 +12,32 @@ class CRISPSlicingMixin(NDSlicingMixin):
     def __getitem__(self, item: Union[int, Sequence]):
         kwargs = self._slice(item)
         cl = self.__class__(**kwargs)
-        cl.ind = item
+        cl.ind = self._normalise_ind(item)
         return cl
+
+    def _slice_wvl(self, item, wave_idx):
+        if item is None:
+            return None
+
+        if isinstance(item, (int, slice)) and wave_idx == 0:
+            return self.wvl[item]
+        else:
+            try:
+                idx = item[wave_idx]
+            except IndexError:
+                return self.wvl
+
+            return self.wvl[idx]
+
+    def _normalise_ind(self, item):
+        """Make ind the same length as the data dimensionality by inserting empty slices.
+        """
+        ind = [slice(None, None) for _ in range(self.data.ndim)]
+        if isinstance(item, Sequence):
+            ind[:len(item)] = item
+        else:
+            ind[0] = item
+        return ind
 
     def _slice(self, item: Union[int, Sequence]):
         kwargs = {}
@@ -24,6 +48,12 @@ class CRISPSlicingMixin(NDSlicingMixin):
         kwargs["wcs"] = self._slice_wcs(item)
         kwargs["filename"]["header"] = self.header
         kwargs["nonu"] = self.nonu
+        try:
+            wave_idx = self.wcs.naxis - self.wcs.axis_type_names.index('WAVE') - 1
+            kwargs["wvl"] = self._slice_wvl(item, wave_idx)
+            kwargs["orig_wvl"] = self.orig_wvl
+        except ValueError:
+            pass
 
         return kwargs
 
