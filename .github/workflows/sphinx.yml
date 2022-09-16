@@ -17,10 +17,10 @@ jobs:
 
       - name: Build HTML
         run: |
+          apt-get update -y
+          apt-get install -y python3-dev build-essential
           cd docs
           make html
-        with:
-          pre-build-command: "apt-get update -y && apt-get install -y python3-dev build-essential"
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
