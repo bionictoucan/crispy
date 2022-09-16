@@ -750,13 +750,17 @@ def mosaic(segments, img_shape, n):
     elif N * n == img_shape[0] and M * n != img_shape[1]:
         segments = np.reshape(segments, newshape=(N, M + 1, *segments.shape[-2:]))
     else:
-        segments = np.reshape(segments, newshape=(N, M, segments.shape[-2:]))
+        segments = np.reshape(segments, newshape=(N, M, *segments.shape[-2:]))
 
     mosaic_img = np.zeros(img_shape, dtype=np.float32)
     y_range = range(segments.shape[0])
     x_range = range(segments.shape[1])
     y_overlap = img_shape[0] - N * n
     x_overlap = img_shape[1] - M * n
+    if x_overlap == 0:
+        x_overlap = n
+    if y_overlap == 0:
+        y_overlap = n
 
     for j in y_range:
         for i in x_range:
