@@ -17,8 +17,6 @@ jobs:
 
       - name: Build HTML
         run: |
-          apt-get update -y
-          apt-get install -y python3-dev build-essential
           cd docs
           make html
       - name: Upload artifacts
