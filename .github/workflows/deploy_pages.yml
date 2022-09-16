@@ -1,0 +1,16 @@
+name: Deploy Manual Pages
+
+on: 
+  workflow_dispatch:
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/html
