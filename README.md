@@ -1,6 +1,7 @@
 # crispy: A Python Package for Using Imaging Spectropolatimetric Data in Solar Physics
 
 Author: John A. Armstrong, *Univeristy of Glasgow*
+
 Maintained: Chris Osborne, *University of Glasgow*
 
 The following repository contains the source code for the `crispy` Python
