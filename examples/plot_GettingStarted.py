@@ -23,6 +23,7 @@ Quick Start Guide to crispy
 from crispy import CRISP
 import matplotlib.pyplot as plt
 import warnings
+
 warnings.filterwarnings("ignore")
 
 # %%
@@ -45,7 +46,7 @@ print(c_ex)
 # work with the imaging data from the fourth wavelength then we could create a
 # new object as such:
 
-c_sub = c_ex[3] # remember Python indexing starts at 0!
+c_sub = c_ex[3]  # remember Python indexing starts at 0!
 
 # %%
 # And this ``c_sub`` object will contain the data for only the fourth wavelength

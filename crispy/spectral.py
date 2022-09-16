@@ -8,7 +8,8 @@ from tqdm import tqdm
 from weno4 import weno4
 from .utils import pt_bright
 
-def integrated_intensity(intensity_vector,wavelengths, idx_range="all", axis=-1):
+
+def integrated_intensity(intensity_vector, wavelengths, idx_range="all", axis=-1):
     """
     A function to find the integrated intensity over a wavelength range of a spectral line.
 
@@ -27,26 +28,29 @@ def integrated_intensity(intensity_vector,wavelengths, idx_range="all", axis=-1)
         The axis to integrate over. Allows for vectorised integration over multi-d arrays. Default is -1, the last axis.
     """
 
-    if type(intensity_vector) != np.ndarray:
+    if not isinstance(intensity_vector, np.ndarray):
         intensity_vector = intensity_vector.data
 
     if idx_range == "all":
         return simps(intensity_vector, wavelengths, axis=axis)
-    elif type(idx_range) == range:
+    elif isinstance(idx_range, range):
         return simps(intensity_vector[idx_range], wavelengths[idx_range], axis=axis)
     else:
         int_i = np.zeros((intensity_vector.shape[-2:]))
         for j in range(idx_range.shape[-2]):
             for i in range(idx_range.shape[-1]):
                 id_range = range(int(idx_range[0, j, i]), int(idx_range[1, j, i]))
-                int_i[j, i] = simps(intensity_vector[id_range, j, i], wavelengths[id_range])
+                int_i[j, i] = simps(
+                    intensity_vector[id_range, j, i], wavelengths[id_range]
+                )
 
         return int_i
 
 
 def intensity_ratio(I_1, I_2):
     """
-    A function that calculates the intensity ratio of two previously integrated intensities.
+    A function that calculates the intensity ratio of two previously integrated
+    intensities.
 
     Parameters
     ----------
@@ -57,6 +61,7 @@ def intensity_ratio(I_1, I_2):
     """
 
     return I_1 / I_2
+
 
 def doppler_vel(l, del_l=None):
     """
@@ -70,10 +75,12 @@ def doppler_vel(l, del_l=None):
     l : float
         The rest wavelength of the transition.
     del_l : float, optional
-        The difference between the observed wavelength and the rest wavelength of the transition.
+        The difference between the observed wavelength and the rest wavelength
+        of the transition.
     """
 
     return (del_l / l) * 3e5
+
 
 def bar_lambda(intensity_vector, wavelengths, axis=-1):
     """
@@ -89,21 +96,23 @@ def bar_lambda(intensity_vector, wavelengths, axis=-1):
     wavelengths : numpy.ndarray
         The wavelengths to integrate over.
     axis : int, optional
-        The axis to integrate over. Allows for vectorisation for integral over multi-d arrays. Default is -1, the last axis.
+        The axis to integrate over. Allows for vectorisation for integral over
+        multi-d arrays. Default is -1, the last axis.
     """
 
-    if type(intensity_vector) != np.ndarray:
+    if not isinstance(intensity_vector, np.ndarray):
         intensity_vector = intensity_vector.data
 
     if intensity_vector.ndim == 3:
         waves = wavelengths[:, np.newaxis, np.newaxis]
-        num = simps(intensity_vector*waves, wavelengths, axis=axis)
+        num = simps(intensity_vector * waves, wavelengths, axis=axis)
         den = simps(intensity_vector, wavelengths, axis=axis)
     else:
-        num = simps(intensity_vector*wavelengths, wavelengths, axis=axis)
+        num = simps(intensity_vector * wavelengths, wavelengths, axis=axis)
         den = simps(intensity_vector, wavelengths, axis=axis)
 
     return num / den
+
 
 def variance(intensity_vector, wavelengths, bar_l=None, axis=-1):
     """
@@ -119,12 +128,15 @@ def variance(intensity_vector, wavelengths, bar_l=None, axis=-1):
     wavelengths : numpy.ndarray
         The wavelengths to integrate over.
     bar_l : float or None, optional
-        The intensity-averaged line core of the spectral line. Default is None will call ``crispy.spectral.bar_lambda`` function on the ``intensity_vector`` and ``wavelengths`` argument to calculate.
+        The intensity-averaged line core of the spectral line. Default is None
+        will call ``crispy.spectral.bar_lambda`` function on the
+        ``intensity_vector`` and ``wavelengths`` argument to calculate.
     axis : int, optional
-        The axis to integrate over. Allows for vectorisation for integral over multi-d arrays. Default is -1, the last axis.
+        The axis to integrate over. Allows for vectorisation for integral over
+        multi-d arrays. Default is -1, the last axis.
     """
 
-    if type(intensity_vector) != np.ndarray:
+    if not isinstance(intensity_vector, np.ndarray):
         intensity_vector = intensity_vector.data
 
     if bar_l is None:
@@ -132,17 +144,22 @@ def variance(intensity_vector, wavelengths, bar_l=None, axis=-1):
 
     if intensity_vector.ndim == 3:
         waves = wavelengths[:, np.newaxis, np.newaxis]
-        num = simps(intensity_vector*(waves-bar_l)**2, wavelengths, axis=axis)
+        num = simps(intensity_vector * (waves - bar_l) ** 2, wavelengths, axis=axis)
         den = simps(intensity_vector, wavelengths, axis=axis)
     else:
-        num = simps(intensity_vector*(wavelengths-bar_l)**2, wavelengths, axis=axis)
+        num = simps(
+            intensity_vector * (wavelengths - bar_l) ** 2, wavelengths, axis=axis
+        )
         den = simps(intensity_vector, wavelengths, axis=axis)
 
     return num / den
 
+
 def wing_idxs(intensity_vector, wavelengths, var=None, bar_l=None, axis=-1):
     """
-    A function to work out the index range for the wings of the spectral line. This is working on the definition of wings that says the wings are defined as being one standard deviation away from the intensity-averaged line core.
+    A function to work out the index range for the wings of the spectral line.
+    This is working on the definition of wings that says the wings are defined
+    as being one standard deviation away from the intensity-averaged line core.
 
     Parameters
     ----------
@@ -151,37 +168,48 @@ def wing_idxs(intensity_vector, wavelengths, var=None, bar_l=None, axis=-1):
     wavelengths : numpy.ndarray
         The wavelengths to integrate over.
     var : float or None, optional
-        The variance of the spectral line. Default is None will call ``crispy.spectral.variance`` function on the ``intensity_vector`` and ``wavelengths`` argument to calculate.
+        The variance of the spectral line. Default is None will call
+        ``crispy.spectral.variance`` function on the ``intensity_vector`` and
+        ``wavelengths`` argument to calculate.
     bar_l : float or None, optional
-        The intensity-averaged line core of the spectral line. Default is None will call ``crispy.spectral.bar_lambda`` function on the ``intensity_vector`` and ``wavelengths`` argument to calculate.
+        The intensity-averaged line core of the spectral line. Default is None
+        will call ``crispy.spectral.bar_lambda`` function on the
+        ``intensity_vector`` and ``wavelengths`` argument to calculate.
     axis : int, optional
-        The axis to integrate over. Allows for vectorisation for integral over multi-d arrays. Default is -1, the last axis.
+        The axis to integrate over. Allows for vectorisation for integral over
+        multi-d arrays. Default is -1, the last axis.
     """
 
-    if type(intensity_vector) != np.ndarray:
+    if not isinstance(intensity_vector, np.ndarray):
         intensity_vector = intensity_vector.data
 
-    if type(bar_l) == np.ndarray:
+    if isinstance(bar_l, np.ndarray):
         pass
     else:
         bar_l = bar_lambda(intensity_vector, wavelengths, axis=axis)
 
-    if type(var) == np.ndarray:
+    if isinstance(var, np.ndarray):
         pass
     else:
         var = variance(intensity_vector, wavelengths, bar_l=bar_l, axis=axis)
 
-    blue_wing_start = 0 #blue wing starts at shortest wavelength
-    red_wing_end = wavelengths.shape[0] - 1 #red wing ends at longest wavelength
+    blue_wing_start = 0  # blue wing starts at shortest wavelength
+    red_wing_end = wavelengths.shape[0] - 1  # red wing ends at longest wavelength
 
     blue_end_wvl = bar_l - np.sqrt(var)
     red_start_wvl = bar_l + np.sqrt(var)
 
     if intensity_vector.ndim == 3:
-        blue_wing_end = np.argmin(np.abs(wavelengths[:, np.newaxis, np.newaxis] - blue_end_wvl[np.newaxis]), axis=0)
-        red_wing_start = np.argmin(np.abs(wavelengths[:, np.newaxis, np.newaxis] - red_start_wvl[np.newaxis]), axis=0)
+        blue_wing_end = np.argmin(
+            np.abs(wavelengths[:, np.newaxis, np.newaxis] - blue_end_wvl[np.newaxis]),
+            axis=0,
+        )
+        red_wing_start = np.argmin(
+            np.abs(wavelengths[:, np.newaxis, np.newaxis] - red_start_wvl[np.newaxis]),
+            axis=0,
+        )
 
-        blue_ranges = np.zeros((2,*intensity_vector.shape[-2:]))
+        blue_ranges = np.zeros((2, *intensity_vector.shape[-2:]))
         blue_ranges[0] = blue_wing_start
         blue_ranges[1] = blue_wing_end
         red_ranges = np.zeros((2, *intensity_vector.shape[-2:]))
@@ -193,11 +221,17 @@ def wing_idxs(intensity_vector, wavelengths, var=None, bar_l=None, axis=-1):
         blue_wing_end = np.argmin(np.abs(wavelengths - blue_end_wvl))
         red_wing_start = np.argmin(np.abs(wavelengths - red_start_wvl))
 
-        return range(blue_wing_start, blue_wing_end+1), range(red_wing_start, red_wing_end+1)
+        return range(blue_wing_start, blue_wing_end + 1), range(
+            red_wing_start, red_wing_end + 1
+        )
+
 
 def delta_lambda(wing_idxs, wavelengths):
     """
-    Calculates the half-width in an intensity range i.e. there are N indices spanning a wing then the half-width is half of those indices multiplied by the change in wavelength between two entries. N.B. this is only the case when the space in the spectral axis is uniform.
+    Calculates the half-width in an intensity range i.e. there are N indices
+    spanning a wing then the half-width is half of those indices multiplied by
+    the change in wavelength between two entries. N.B. this is only the case
+    when the space in the spectral axis is uniform.
 
     .. math::
        \delta \lambda = \\frac{N}{2} \\times (\Delta \lambda)
@@ -213,6 +247,7 @@ def delta_lambda(wing_idxs, wavelengths):
     """
 
     return len(wing_idxs) * (wavelengths[1] - wavelengths[0]) / 2
+
 
 def lambda_0_wing(wing_idxs, wavelengths, d_lambda=None):
     """
@@ -230,7 +265,9 @@ def lambda_0_wing(wing_idxs, wavelengths, d_lambda=None):
     wavelengths : numpy.ndarray
         The wavelengths to integrate over.
     d_lambda : float, optional
-        The half-width of the wing of the spectral line. Default is None will call ``crispy.spectral.delta_lambda`` function on the ``wing_idxs`` and ``wavelengths`` arguments to calculate.
+        The half-width of the wing of the spectral line. Default is None will
+        call ``crispy.spectral.delta_lambda`` function on the ``wing_idxs`` and
+        ``wavelengths`` arguments to calculate.
     """
 
     if d_lambda is None:
@@ -238,14 +275,18 @@ def lambda_0_wing(wing_idxs, wavelengths, d_lambda=None):
 
     return wavelengths[wing_idxs[-1]] - d_lambda
 
+
 def interp_fine(wavels, intensity, pts=101):
     """
-    Interpolates the spectral line onto a finer grid for more accurate calculations for the wing properties.
+    Interpolates the spectral line onto a finer grid for more accurate
+    calculations for the wing properties.
 
     Parameters
     ----------
     spec_line : tuple [numpy.ndarray]
-        The spectral line to be interpolated onto a finer grid. This is a tuple of the intensities and the wavelengths in the order (wavelengths, intensities).
+        The spectral line to be interpolated onto a finer grid. This is a tuple
+        of the intensities and the wavelengths in the order (wavelengths,
+        intensities).
     """
 
     x, y = wavels, intensity
@@ -262,6 +303,7 @@ def interp_fine(wavels, intensity, pts=101):
 
     return x_new, y_new
 
+
 def power_spectrum(image, plot=True):
     """
     This function calculates the azimuthally-average power spectrum for an image.
@@ -277,33 +319,39 @@ def power_spectrum(image, plot=True):
     nu = html.unescape("&nu;")
     h, w = image.shape
 
-    #First calculate the Fourier transform of the image which represents the distribution of the image in frequency space
+    # First calculate the Fourier transform of the image which represents the distribution of the image in frequency space
     ft = fft2(image)
 
-    #Then the Fourier amplitudes for each pixel can be calculated
-    fa = np.abs(ft)**2
+    # Then the Fourier amplitudes for each pixel can be calculated
+    fa = np.abs(ft) ** 2
 
     if h == w:
         nu_freq = fftfreq(h) * h
-        nu_freq2D = np.meshgrid(nu_freq,nu_freq)
+        nu_freq2D = np.meshgrid(nu_freq, nu_freq)
 
-        nu_norm = np.sqrt(nu_freq2D[0]**2 + nu_freq2D[1]**2)
+        nu_norm = np.sqrt(nu_freq2D[0] ** 2 + nu_freq2D[1] ** 2)
 
         nu_norm = nu_norm.flatten()
         fa = fa.flatten()
 
-        nu_bins = np.arange(0.5, h//2, 1) #this is the limits of the spatial frequency bins
-        nu_vals = 0.5 * (nu_bins[1:] + nu_bins[:-1]) #this calculates the midpoints of each spatial frequency bin
+        nu_bins = np.arange(
+            0.5, h // 2, 1
+        )  # this is the limits of the spatial frequency bins
+        nu_vals = 0.5 * (
+            nu_bins[1:] + nu_bins[:-1]
+        )  # this calculates the midpoints of each spatial frequency bin
 
         Abins, _, _ = binned_statistic(nu_norm, fa, statistic="mean", bins=nu_bins)
 
-        Abins *= 4*np.pi/3 * (nu_bins[1:]**3-nu_bins[:-1]**3) #the power in each bin is the average power from all cases of the spatial frequency multiplied by the volume of the bin (which in our case is just 1?)
+        Abins *= (
+            4 * np.pi / 3 * (nu_bins[1:] ** 3 - nu_bins[:-1] ** 3)
+        )  # the power in each bin is the average power from all cases of the spatial frequency multiplied by the volume of the bin (which in our case is just 1?)
 
         if plot:
             plt.figure()
             plt.loglog(nu_vals, Abins, c=pt_bright["blue"])
             plt.ylabel(f"P({nu})")
-            plt.xlabel(fr"{nu} [px$^{-1}$]")
+            plt.xlabel(rf"{nu} [px$^{-1}$]")
             plt.title("Power Spectrum of the Image")
             plt.show()
 
@@ -311,28 +359,28 @@ def power_spectrum(image, plot=True):
     else:
         nu_freqx = fftfreq(w) * w
         nu_freqy = fftfreq(h) * h
-        nu_freq2D = np.meshgrid(nu_freqx,nu_freqy)
+        nu_freq2D = np.meshgrid(nu_freqx, nu_freqy)
 
-        nu_norm = np.sqrt(nu_freq2D[0]**2 + nu_freq2D[1]**2)
+        nu_norm = np.sqrt(nu_freq2D[0] ** 2 + nu_freq2D[1] ** 2)
 
         nu_norm = nu_norm.flatten()
         fa = fa.flatten()
 
         if w < h:
-            nu_bins = np.arange(0.5, w//2, 1)
+            nu_bins = np.arange(0.5, w // 2, 1)
         else:
-            nu_bins = np.arange(0.5, h//2, 1)
+            nu_bins = np.arange(0.5, h // 2, 1)
         nu_vals = 0.5 * (nu_bins[1:] + nu_bins[:-1])
 
         Abins, _, _ = binned_statistic(nu_norm, fa, statistic="mean", bins=nu_bins)
 
-        Abins *= 4*np.pi/3 * (nu_bins[1:]**3-nu_bins[:-1]**3)
+        Abins *= 4 * np.pi / 3 * (nu_bins[1:] ** 3 - nu_bins[:-1] ** 3)
 
         if plot:
             plt.figure()
             plt.loglog(nu_vals, Abins, c=pt_bright["blue"])
             plt.ylabel(f"P({nu})")
-            plt.xlabel(fr"{nu} [px$^{-1}$]")
+            plt.xlabel(rf"{nu} [px$^{-1}$]")
             plt.title("Power Spectrum of the Image")
             plt.show()
 

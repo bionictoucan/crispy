@@ -19,6 +19,9 @@ Often, CRISP observations are taken in more than one spectral line. As such, the
    :members:
    :show-inheritance:
 
+
+**N.B.:** The following is left for posterity and ``CRISPNonU`` is now deprecated as the original ``CRISP`` class automatically manages its wavelength array now, including necessary slicing operations previously done in ``CRISPNonU``.
+
 The spacing between the wavelength positions of CRISP's Fabry-Pérot interferometer is variable. This means that the line core can be more densely sampled than the line wings and vice versa. As a result, the wavelength axis cannot be represented by the world coordinate system (however, the spatial coordinates **are** described by the world coordinate system). To combat this, use the ``CRISPNonU`` class which will not assume that the wavelength axis in the header information is throwaway and look for specific wavelength positions elsewhere in the file (e.g. for a fits file, the code looks into the 1st non-PrimaryHDU for these wavelength positions, if this is not common conventions please let me know). This leads to an attribute containing these wavelengths known as ``wvls`` but the class method ``wave`` will still work perfectly fine.
 
 ``CRISPNonU`` works identically to the ``CRISP`` class in terms of class methods and interface with other parts of this package.

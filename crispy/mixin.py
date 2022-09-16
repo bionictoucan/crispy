@@ -2,16 +2,42 @@ from astropy.nddata.mixins.ndslicing import NDSlicingMixin
 from .utils import ObjDict
 from typing import Union, Sequence
 
+
 class CRISPSlicingMixin(NDSlicingMixin):
-    '''
-    This is the parent class that will allow the CRISP objects to be sliced without having to create new objects.
-    '''
+    """
+    This is the parent class that will allow the CRISP objects to be sliced
+    without having to create new objects.
+    """
 
     def __getitem__(self, item: Union[int, Sequence]):
         kwargs = self._slice(item)
         cl = self.__class__(**kwargs)
-        cl.ind = item
+        cl.ind = self._normalise_ind(item)
         return cl
+
+    def _slice_wvl(self, item, wave_idx):
+        if item is None:
+            return None
+
+        if isinstance(item, (int, slice)) and wave_idx == 0:
+            return self.wvl[item]
+        else:
+            try:
+                idx = item[wave_idx]
+            except IndexError:
+                return self.wvl
+
+            return self.wvl[idx]
+
+    def _normalise_ind(self, item):
+        """Make ind the same length as the data dimensionality by inserting empty slices.
+        """
+        ind = [slice(None, None) for _ in range(self.data.ndim)]
+        if isinstance(item, Sequence):
+            ind[:len(item)] = item
+        else:
+            ind[0] = item
+        return ind
 
     def _slice(self, item: Union[int, Sequence]):
         kwargs = {}
@@ -22,13 +48,21 @@ class CRISPSlicingMixin(NDSlicingMixin):
         kwargs["wcs"] = self._slice_wcs(item)
         kwargs["filename"]["header"] = self.header
         kwargs["nonu"] = self.nonu
+        try:
+            wave_idx = len(self.wcs.array_shape) - self.wcs.world_axis_physical_types.index('em.wl') - 1
+            kwargs["wvl"] = self._slice_wvl(item, wave_idx)
+        except ValueError:
+            kwargs["wvl"] = self.wvl
+        kwargs["orig_wvl"] = self.orig_wvl
 
         return kwargs
 
+
 class CRISPSequenceSlicingMixin(CRISPSlicingMixin):
-    '''
-    This is the parent class that will allow the CRISPSequence objects to be sliced without having to create new objects.
-    '''
+    """
+    This is the parent class that will allow the CRISPSequence objects to be
+    sliced without having to create new objects.
+    """
 
     def __getitem__(self, item: Union[int, Sequence]):
         args = self._slice(item)
@@ -38,9 +72,11 @@ class CRISPSequenceSlicingMixin(CRISPSlicingMixin):
         args = [f._slice(item) for f in self.list]
         return args
 
+
 class InversionSlicingMixin(NDSlicingMixin):
     """
-    This is the parent class that will allow the Inversion objects to be sliced without having to create new objects.
+    This is the parent class that will allow the Inversion objects to be sliced
+    without having to create new objects.
     """
 
     def __getitem__(self, item: Union[int, Sequence]):
