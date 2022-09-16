@@ -1,6 +1,10 @@
 name: Sphinx build
 
-on: push
+on: 
+  workflow_dispatch:
+  release:
+    types:
+      - published
 
 jobs:
   build:
