@@ -16,7 +16,7 @@ jobs:
           python-version: '3.8'
 
       - name: Build HTML
-        uses: |
+        run: |
           cd docs
           make html
         with:
