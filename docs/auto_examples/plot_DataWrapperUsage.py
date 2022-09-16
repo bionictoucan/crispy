@@ -10,8 +10,9 @@ Examples Using the Main Data Wrappers from crispy
 # defined in ``crispy.crisp``. Specifically, these examples will cover the
 # ``CRISP``, ``CRISPNonU``, and ``CRISPWideband`` structures.
 
-from crispy import CRISP, CRISPWideband, CRISPNonU
+from crispy import CRISP, CRISPWideband
 import warnings
+
 warnings.filterwarnings("ignore")
 
 # %%
@@ -50,7 +51,7 @@ crisp[7].intensity_map()
 # point :math:`(-720'', -310'')` in the Helioprojective plane:
 
 # %%
-# .. note:: 
+# .. note::
 #   There are complimentary instance methods ``from_lonlat`` and
 #   ``to_lonlat`` which convert coordinates to/from the Helioprojective frame.
 #   The format of the Helioprojective coordinates are **always** given in the
@@ -60,12 +61,12 @@ crisp[7].intensity_map()
 #   other physical coordinate systems) convention of (longitude, latitude).
 
 y, x = crisp.from_lonlat(-720, -310)
-print(y,x)
+print(y, x)
 
 # %%
-# 
+#
 
-crisp[:,y,x].plot_spectrum()
+crisp[:, y, x].plot_spectrum()
 
 # %%
 # CRISPNonU
@@ -73,7 +74,7 @@ crisp[:,y,x].plot_spectrum()
 # For the CRISPNonU class, we choose an imaging spectropolarimetric Ca II 8542
 # observation of the X2.2 solar flare SOL20170906T09:10.
 
-crispnonu = CRISPNonU("example_data/2017/ca_00001.zarr")
+crispnonu = CRISP("example_data/2017/ca_00001.zarr")
 print(crispnonu)
 
 # %%
@@ -86,7 +87,7 @@ print(crispnonu)
 # methods (which also exist in the ``CRISP`` class). Firstly is ``stokes_map``
 # for the line core:
 
-crispnonu[:,5].stokes_map(stokes="all")
+crispnonu[:, 5].stokes_map(stokes="all")
 
 # %%
 # The polarimetric plotting methods take a keyword argument ``stokes`` which is
@@ -102,12 +103,12 @@ crispnonu[:,5].stokes_map(stokes="all")
 # the ``plot_stokes`` instance method:
 
 y, x = crispnonu.from_lonlat(510, -260)
-print(y,x)
+print(y, x)
 
 # %%
 #
 
-crispnonu[:,:,38,257].plot_stokes(stokes="all")
+crispnonu[:, :, 38, 257].plot_stokes(stokes="all")
 
 # %%
 # CRISPWideband

@@ -88,7 +88,18 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="crispy.io.memmap_crisp_cube">
 <span class="sig-prename descclassname"><span class="pre">crispy.io.</span></span><span class="sig-name descname"><span class="pre">memmap_crisp_cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/io.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.io.memmap_crisp_cube" title="Permalink to this definition"></a></dt>
-<dd><p>This function memory maps a legacy La Palma data cube pulling metainformation from appropriate files. The function first looks for an <code class="docutils literal notranslate"><span class="pre">assoc.pro</span></code> file which contains important information about the first dimension. If this does not exist then the user will have to untangle the first dimension themselves. The first dimension is a multiplicative combination of time and wavelength (and Stokes) with the <code class="docutils literal notranslate"><span class="pre">assoc.pro</span></code> providing the necessary information to split these into distinct axes. When unable to access this information, the first dimension will be the multiplicative combination of time and wavelength (and Stokes) with the ordering of one time for all wavelengths sampled. N.B. when Stokes is present, the first axis takes the form of one time for wavelengths sampled of Stokes I, wavelengths sampled of Stokes Q etc.</p>
+<dd><p>This function memory maps a legacy La Palma data cube pulling
+metainformation from appropriate files. The function first looks for an
+<code class="docutils literal notranslate"><span class="pre">assoc.pro</span></code> file which contains important information about the first
+dimension. If this does not exist then the user will have to untangle the
+first dimension themselves. The first dimension is a multiplicative
+combination of time and wavelength (and Stokes) with the <code class="docutils literal notranslate"><span class="pre">assoc.pro</span></code>
+providing the necessary information to split these into distinct axes. When
+unable to access this information, the first dimension will be the
+multiplicative combination of time and wavelength (and Stokes) with the
+ordering of one time for all wavelengths sampled. N.B. when Stokes is
+present, the first axis takes the form of one time for wavelengths sampled
+of Stokes I, wavelengths sampled of Stokes Q etc.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – The path to the legacy La Palma cube.</p>
@@ -104,7 +115,8 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cube_path</strong> (<em>str</em>) – The path to the legacy La Palma data cube.</p></li>
-<li><p><strong>tseries_path</strong> (<em>str</em>) – The path to the <code class="docutils literal notranslate"><span class="pre">tseries</span></code> file containing the information on the times of the observations.</p></li>
+<li><p><strong>tseries_path</strong> (<em>str</em>) – The path to the <code class="docutils literal notranslate"><span class="pre">tseries</span></code> file containing the information on the times
+of the observations.</p></li>
 <li><p><strong>spectfile</strong> (<em>str</em>) – The path to the file containing the spectral positions sampled.</p></li>
 <li><p><strong>data_obs</strong> (<em>str</em>) – The observation date.</p></li>
 <li><p><strong>telescope</strong> (<em>str</em>) – The telescope used.</p></li>

@@ -29,13 +29,14 @@ Here, we provide a brief introduction on how to use the main data structures
 defined in ``crispy.crisp``. Specifically, these examples will cover the
 ``CRISP``, ``CRISPNonU``, and ``CRISPWideband`` structures.
 
-.. GENERATED FROM PYTHON SOURCE LINES 12-17
+.. GENERATED FROM PYTHON SOURCE LINES 12-18
 
 .. code-block:: default
 
 
-    from crispy import CRISP, CRISPWideband, CRISPNonU
+    from crispy import CRISP, CRISPWideband
     import warnings
+
     warnings.filterwarnings("ignore")
 
 
@@ -45,7 +46,7 @@ defined in ``crispy.crisp``. Specifically, these examples will cover the
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 18-26
+.. GENERATED FROM PYTHON SOURCE LINES 19-27
 
 CRISP
 -----
@@ -56,7 +57,7 @@ F-CHROMA project `here
 <https://star.pst.qub.ac.uk/wiki/doku.php/public/solarflares/start>`_. Below
 we show the data for H :math:`\alpha`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 26-30
+.. GENERATED FROM PYTHON SOURCE LINES 27-31
 
 .. code-block:: default
 
@@ -81,21 +82,23 @@ we show the data for H :math:`\alpha`.
 
             Observed: H I 6563
             Centre wavelength [Å]: 6564.58
-            Wavelengths sampled: 15
+            Wavelengths sampled: 15 ([6563.18399967 6563.38399971 6563.58399976 6563.78399981 6563.98399986
+     6564.1839999  6564.38399995 6564.584      6564.78400005 6564.9840001
+     6565.18400014 6565.38400019 6565.58400024 6565.78400029 6565.98400033] Angstrom)
             Pointing [arcsec] (HPLN, HPLT): (-730.032, -313.398)
             Shape: [15, 1398, 1473]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 31-35
+.. GENERATED FROM PYTHON SOURCE LINES 32-36
 
 The data structures use slicing derived from astropy's `NDData
 <https://docs.astropy.org/en/stable/nddata/>`_ meaning the objects can be
 directly sliced to produce new objects of just the slice e.g. for only looking
 at the far blue wing data in our observation
 
-.. GENERATED FROM PYTHON SOURCE LINES 35-38
+.. GENERATED FROM PYTHON SOURCE LINES 36-39
 
 .. code-block:: default
 
@@ -119,21 +122,21 @@ at the far blue wing data in our observation
 
             Observed: H I 6563
             Centre wavelength [Å]: 6564.58
-            Wavelengths sampled: 15
+            Wavelengths sampled: 15 (6563.183999666214 Angstrom)
             Pointing [arcsec] (HPLN, HPLT): (-730.032, -313.398)
             Shape: [1398, 1473]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 39-43
+.. GENERATED FROM PYTHON SOURCE LINES 40-44
 
 This is also the easiest way to use the plotting methods. For this
 observation, to view an image at a specific wavelength we would use the
 ``intensity_map`` instance method as shown below for the line core of the
 H :math:`\alpha` observation
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-46
+.. GENERATED FROM PYTHON SOURCE LINES 44-47
 
 .. code-block:: default
 
@@ -152,16 +155,16 @@ H :math:`\alpha` observation
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-51
+.. GENERATED FROM PYTHON SOURCE LINES 48-52
 
 We can then use slicing and the ``plot_spectrum`` instance method to plot the
 spectrum at a certain spatial point. Firstly though to identify the slice we
 need we use the ``from_lonlat`` instance method, in this example we take the
 point :math:`(-720'', -310'')` in the Helioprojective plane:
 
-.. GENERATED FROM PYTHON SOURCE LINES 53-61
+.. GENERATED FROM PYTHON SOURCE LINES 54-62
 
-.. note:: 
+.. note::
   There are complimentary instance methods ``from_lonlat`` and
   ``to_lonlat`` which convert coordinates to/from the Helioprojective frame.
   The format of the Helioprojective coordinates are **always** given in the
@@ -170,13 +173,13 @@ point :math:`(-720'', -310'')` in the Helioprojective plane:
   via the image plane corrdinates while maintaining the Helioprojective (and
   other physical coordinate systems) convention of (longitude, latitude).
 
-.. GENERATED FROM PYTHON SOURCE LINES 61-65
+.. GENERATED FROM PYTHON SOURCE LINES 62-66
 
 .. code-block:: default
 
 
     y, x = crisp.from_lonlat(-720, -310)
-    print(y,x)
+    print(y, x)
 
 
 
@@ -193,18 +196,18 @@ point :math:`(-720'', -310'')` in the Helioprojective plane:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 67-70
+.. GENERATED FROM PYTHON SOURCE LINES 68-71
 
 .. code-block:: default
 
 
-    crisp[:,y,x].plot_spectrum()
+    crisp[:, y, x].plot_spectrum()
 
 
 
 
 .. image-sg:: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_002.png
-   :alt: 2014-09-06T16:53:39.174 H I 6563Å
+   :alt: 2014-09-06T16:53:39.174 H I 6563 Å Stokes I [DNs]
    :srcset: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_002.png
    :class: sphx-glr-single-img
 
@@ -212,19 +215,19 @@ point :math:`(-720'', -310'')` in the Helioprojective plane:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 71-75
+.. GENERATED FROM PYTHON SOURCE LINES 72-76
 
 CRISPNonU
 ---------
 For the CRISPNonU class, we choose an imaging spectropolarimetric Ca II 8542
 observation of the X2.2 solar flare SOL20170906T09:10.
 
-.. GENERATED FROM PYTHON SOURCE LINES 75-79
+.. GENERATED FROM PYTHON SOURCE LINES 76-80
 
 .. code-block:: default
 
 
-    crispnonu = CRISPNonU("example_data/2017/ca_00001.zarr")
+    crispnonu = CRISP("example_data/2017/ca_00001.zarr")
     print(crispnonu)
 
 
@@ -243,16 +246,16 @@ observation of the X2.2 solar flare SOL20170906T09:10.
             2017-09-06 09:04:45.591
 
             Observed: Ca II 8542
-            Centre wavelength: 8544.44
-            Wavelengths sampled: 11
-            Pointing: (523.598, -233.293)
+            Centre wavelength [Å]: 8544.44
+            Wavelengths sampled: 11 ([8541.3 8541.5 8541.7 8541.8 8541.9 8542.  8542.1 8542.2 8542.3 8542.5
+     8542.7] Angstrom)
+            Pointing [arcsec] (HPLN, HPLT): (523.598, -233.293)
             Shape: [4, 11, 977, 985]
-            Wavelengths sampled: [8541.3, 8541.5, 8541.7, 8541.8, 8541.9, 8542.0, 8542.1, 8542.2, 8542.3, 8542.5, 8542.7]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 80-88
+.. GENERATED FROM PYTHON SOURCE LINES 81-89
 
 The ``intensity_map`` and ``plot_spectrum`` methods will also work here with
 the correct slicing -- that is, the object will need to be sliced twice for
@@ -263,18 +266,18 @@ the class deals with this for us. Here, we will show the polarimetric instance
 methods (which also exist in the ``CRISP`` class). Firstly is ``stokes_map``
 for the line core:
 
-.. GENERATED FROM PYTHON SOURCE LINES 88-91
+.. GENERATED FROM PYTHON SOURCE LINES 89-92
 
 .. code-block:: default
 
 
-    crispnonu[:,5].stokes_map(stokes="all")
+    crispnonu[:, 5].stokes_map(stokes="all")
 
 
 
 
 .. image-sg:: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_003.png
-   :alt: 2017-09-06T09:04:45.591 λ=8544.54Å (Δλ=0.0Å), Stokes I , Stokes Q , Stokes U , Stokes V 
+   :alt: Stokes I, Stokes Q, Stokes U, Stokes V
    :srcset: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_003.png
    :class: sphx-glr-single-img
 
@@ -282,7 +285,7 @@ for the line core:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 92-98
+.. GENERATED FROM PYTHON SOURCE LINES 93-99
 
 The polarimetric plotting methods take a keyword argument ``stokes`` which is
 a string specifying which of the Stokes parameters the user would like to
@@ -291,19 +294,19 @@ Stokes parameters at line centre. However, if the user would like to only
 display Stokes I, Q and V this can be accomplished by setting ``stokes =
 "IQV"``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 100-103
+.. GENERATED FROM PYTHON SOURCE LINES 101-104
 
 We can then identify a point to view the Stokes profiles using the
 ``from_lonlat`` instance method as before and plot the Stokes profiles using
 the ``plot_stokes`` instance method:
 
-.. GENERATED FROM PYTHON SOURCE LINES 103-107
+.. GENERATED FROM PYTHON SOURCE LINES 104-108
 
 .. code-block:: default
 
 
     y, x = crispnonu.from_lonlat(510, -260)
-    print(y,x)
+    print(y, x)
 
 
 
@@ -320,18 +323,18 @@ the ``plot_stokes`` instance method:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 109-112
+.. GENERATED FROM PYTHON SOURCE LINES 110-113
 
 .. code-block:: default
 
 
-    crispnonu[:,:,38,257].plot_stokes(stokes="all")
+    crispnonu[:, :, 38, 257].plot_stokes(stokes="all")
 
 
 
 
 .. image-sg:: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_004.png
-   :alt: 2017-09-06T09:04:45.591 Ca II 8542 Å All Stokes
+   :alt: 2017-09-06T09:04:45.591 Ca II 8542 Å All  Stokes
    :srcset: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_004.png
    :class: sphx-glr-single-img
 
@@ -339,14 +342,14 @@ the ``plot_stokes`` instance method:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 113-117
+.. GENERATED FROM PYTHON SOURCE LINES 114-118
 
 CRISPWideband
 -------------
 For the CRISPWideband class, we use the complimentary wideband Ca II 8542 for
 the observation shown as an example for the CRISPNonU class, above.
 
-.. GENERATED FROM PYTHON SOURCE LINES 117-121
+.. GENERATED FROM PYTHON SOURCE LINES 118-122
 
 .. code-block:: default
 
@@ -376,12 +379,12 @@ the observation shown as an example for the CRISPNonU class, above.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 122-124
+.. GENERATED FROM PYTHON SOURCE LINES 123-125
 
 The CRISPWideband class has one useful plotting instance method, that is
 ``intensity_map``:
 
-.. GENERATED FROM PYTHON SOURCE LINES 124-127
+.. GENERATED FROM PYTHON SOURCE LINES 125-128
 
 .. code-block:: default
 
@@ -392,7 +395,7 @@ The CRISPWideband class has one useful plotting instance method, that is
 
 
 .. image-sg:: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_005.png
-   :alt: 2017-09-06T09:04:45.591 Ca II 8542 Å
+   :alt: 2017-09-06T09:04:45.591 Ca II 8542 Å (wideband)
    :srcset: /auto_examples/images/sphx_glr_plot_DataWrapperUsage_005.png
    :class: sphx-glr-single-img
 
@@ -400,7 +403,7 @@ The CRISPWideband class has one useful plotting instance method, that is
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 128-129
+.. GENERATED FROM PYTHON SOURCE LINES 129-131
 
 CRISPWideband can also utilise the ``from_lonlat`` and ``to_lonlat`` instance
 methods.
@@ -408,7 +411,7 @@ methods.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.165 seconds)
+   **Total running time of the script:** ( 0 minutes  2.862 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_DataWrapperUsage.py:

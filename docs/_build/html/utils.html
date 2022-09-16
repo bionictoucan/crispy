@@ -92,12 +92,14 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="crispy.utils.CRISP_sequence_constructor">
 <span class="sig-prename descclassname"><span class="pre">crispy.utils.</span></span><span class="sig-name descname"><span class="pre">CRISP_sequence_constructor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.utils.CRISP_sequence_constructor" title="Permalink to this definition"></a></dt>
-<dd><p>This is a helper function for constructing the kind of dictionary needed to make a CRISPSequence or CRISPWidebandSequence or CRISPNonUSequence object.</p>
+<dd><p>This is a helper function for constructing the kind of dictionary needed to
+make a CRISPSequence or CRISPWidebandSequence or CRISPNonUSequence object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>files</strong> (<em>list</em>) – A list of paths to the files.</p></li>
-<li><p><strong>wcs</strong> (<em>list</em><em> [</em><em>astropy.wcs.WCS</em><em>] or </em><em>None</em><em>, </em><em>optional</em>) – A list of WCS of each of the files. Default is None, the data classes will work out the WCS for the observations.</p></li>
+<li><p><strong>wcs</strong> (<em>list</em><em> [</em><em>astropy.wcs.WCS</em><em>] or </em><em>None</em><em>, </em><em>optional</em>) – A list of WCS of each of the files. Default is None, the data classes
+will work out the WCS for the observations.</p></li>
 <li><p><strong>uncertainty</strong> (<em>list</em><em> [</em><em>float</em><em>] or </em><em>None</em><em>, </em><em>optional</em>) – A list of the uncertainty associated with each observation. Default is None.</p></li>
 <li><p><strong>mask</strong> (<em>list</em><em> [</em><em>numpy.ndarray</em><em>] or </em><em>None</em><em>, </em><em>optional</em>) – A list of the mask to use for each observation. Default is None.</p></li>
 <li><p><strong>nonu</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not the spectral axis is sampled non-uniformly. Default is False.</p></li>
@@ -284,17 +286,20 @@ cube using the metadata.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="crispy.utils.segmentation">
 <span class="sig-prename descclassname"><span class="pre">crispy.utils.</span></span><span class="sig-name descname"><span class="pre">segmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.utils.segmentation" title="Permalink to this definition"></a></dt>
-<dd><p>This is a preprocessing function that will segment the images into segments with dimensions n x n.
-:param img: The image to be segmented.
-:type img: numpy.ndarray
-:param n: The dimension of the segments.
-:type n: int</p>
+<dd><p>This is a preprocessing function that will segment the images into segments
+with dimensions n x n.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>segments</strong> – A numpy array of the segments of the image.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>numpy.ndarray</em>) – The image to be segmented.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – The dimension of the segments.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>segments</strong> – A numpy array of the segments of the image.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -302,17 +307,19 @@ cube using the metadata.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="crispy.utils.segment_cube">
 <span class="sig-prename descclassname"><span class="pre">crispy.utils.</span></span><span class="sig-name descname"><span class="pre">segment_cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_cube</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.utils.segment_cube" title="Permalink to this definition"></a></dt>
-<dd><p>A function to segment a three-dimensional datacube.
-:param img_cube: The image cube to be segmented.
-:type img_cube: numpy.ndarray
-:param n: The dimension of the segments.
-:type n: int</p>
+<dd><p>A function to segment a three-dimensional datacube.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>segments</strong> – A numpy array of the segments of the image cube.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img_cube</strong> (<em>numpy.ndarray</em>) – The image cube to be segmented.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – The dimension of the segments.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>segments</strong> – A numpy array of the segments of the image cube.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -320,19 +327,20 @@ cube using the metadata.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="crispy.utils.mosaic">
 <span class="sig-prename descclassname"><span class="pre">crispy.utils.</span></span><span class="sig-name descname"><span class="pre">mosaic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">segments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.utils.mosaic" title="Permalink to this definition"></a></dt>
-<dd><p>A processing function to mosaic the segments back together.
-:param segments: A numpy array of the segments of the image.
-:type segments: numpy.ndarray
-:param img_shape: The shape of the original image.
-:type img_shape: tuple
-:param n: The dimension of the segments.
-:type n: int</p>
+<dd><p>A processing function to mosaic the segments back together.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>mosaic_img</strong> – The reconstructed image.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>segments</strong> (<em>numpy.ndarray</em>) – A numpy array of the segments of the image.</p></li>
+<li><p><strong>img_shape</strong> (<em>tuple</em>) – The shape of the original image.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – The dimension of the segments.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>mosaic_img</strong> – The reconstructed image.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -340,19 +348,20 @@ cube using the metadata.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="crispy.utils.mosaic_cube">
 <span class="sig-prename descclassname"><span class="pre">crispy.utils.</span></span><span class="sig-name descname"><span class="pre">mosaic_cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">segments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.utils.mosaic_cube" title="Permalink to this definition"></a></dt>
-<dd><p>A function to mosaic a segment list into an image cube.
-:param segments: The segments to be mosaiced back into images.
-:type segments: numpy.ndarray
-:param img_shape: The dimensions of the images.
-:type img_shape: tuple
-:param n: The dimensions of the segments. Default is 64 e.g. 64 x 64.
-:type n: int</p>
+<dd><p>A function to mosaic a segment list into an image cube.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>m_cube</strong> – The cube of mosaiced images.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>segments</strong> (<em>numpy.ndarray</em>) – The segments to be mosaiced back into images.</p></li>
+<li><p><strong>img_shape</strong> (<em>tuple</em>) – The dimensions of the images.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – The dimensions of the segments. Default is 64 e.g. 64 x 64.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>m_cube</strong> – The cube of mosaiced images.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>

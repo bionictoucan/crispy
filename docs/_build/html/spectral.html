@@ -122,7 +122,8 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>intensity_vector</strong> (<em>numpy.ndarray</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISP" title="crispy.crisp.CRISP"><em>crispy.crisp.CRISP</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonU" title="crispy.crisp.CRISPNonU"><em>crispy.crisp.CRISPNonU</em></a>) – The vector of spectral line intensities.</p></li>
 <li><p><strong>wavelengths</strong> (<em>numpy.ndarray</em>) – The wavelengths to integrate over.</p></li>
-<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – The axis to integrate over. Allows for vectorisation for integral over multi-d arrays. Default is -1, the last axis.</p></li>
+<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – The axis to integrate over. Allows for vectorisation for integral over
+multi-d arrays. Default is -1, the last axis.</p></li>
 </ul>
 </dd>
 </dl>
@@ -139,8 +140,11 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>intensity_vector</strong> (<em>numpy.ndarray</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISP" title="crispy.crisp.CRISP"><em>crispy.crisp.CRISP</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonU" title="crispy.crisp.CRISPNonU"><em>crispy.crisp.CRISPNonU</em></a>) – The vector of spectral line intensities.</p></li>
 <li><p><strong>wavelengths</strong> (<em>numpy.ndarray</em>) – The wavelengths to integrate over.</p></li>
-<li><p><strong>bar_l</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The intensity-averaged line core of the spectral line. Default is None will call <code class="docutils literal notranslate"><span class="pre">crispy.spectral.bar_lambda</span></code> function on the <code class="docutils literal notranslate"><span class="pre">intensity_vector</span></code> and <code class="docutils literal notranslate"><span class="pre">wavelengths</span></code> argument to calculate.</p></li>
-<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – The axis to integrate over. Allows for vectorisation for integral over multi-d arrays. Default is -1, the last axis.</p></li>
+<li><p><strong>bar_l</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The intensity-averaged line core of the spectral line. Default is None
+will call <code class="docutils literal notranslate"><span class="pre">crispy.spectral.bar_lambda</span></code> function on the
+<code class="docutils literal notranslate"><span class="pre">intensity_vector</span></code> and <code class="docutils literal notranslate"><span class="pre">wavelengths</span></code> argument to calculate.</p></li>
+<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – The axis to integrate over. Allows for vectorisation for integral over
+multi-d arrays. Default is -1, the last axis.</p></li>
 </ul>
 </dd>
 </dl>
@@ -153,15 +157,22 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="crispy.spectral.wing_idxs">
 <span class="sig-prename descclassname"><span class="pre">crispy.spectral.</span></span><span class="sig-name descname"><span class="pre">wing_idxs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity_vector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelengths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bar_l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/spectral.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.spectral.wing_idxs" title="Permalink to this definition"></a></dt>
-<dd><p>A function to work out the index range for the wings of the spectral line. This is working on the definition of wings that says the wings are defined as being one standard deviation away from the intensity-averaged line core.</p>
+<dd><p>A function to work out the index range for the wings of the spectral line.
+This is working on the definition of wings that says the wings are defined
+as being one standard deviation away from the intensity-averaged line core.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>intensity_vector</strong> (<em>numpy.ndarray</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISP" title="crispy.crisp.CRISP"><em>crispy.crisp.CRISP</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonU" title="crispy.crisp.CRISPNonU"><em>crispy.crisp.CRISPNonU</em></a>) – The vector of spectral line intensities.</p></li>
 <li><p><strong>wavelengths</strong> (<em>numpy.ndarray</em>) – The wavelengths to integrate over.</p></li>
-<li><p><strong>var</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The variance of the spectral line. Default is None will call <code class="docutils literal notranslate"><span class="pre">crispy.spectral.variance</span></code> function on the <code class="docutils literal notranslate"><span class="pre">intensity_vector</span></code> and <code class="docutils literal notranslate"><span class="pre">wavelengths</span></code> argument to calculate.</p></li>
-<li><p><strong>bar_l</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The intensity-averaged line core of the spectral line. Default is None will call <code class="docutils literal notranslate"><span class="pre">crispy.spectral.bar_lambda</span></code> function on the <code class="docutils literal notranslate"><span class="pre">intensity_vector</span></code> and <code class="docutils literal notranslate"><span class="pre">wavelengths</span></code> argument to calculate.</p></li>
-<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – The axis to integrate over. Allows for vectorisation for integral over multi-d arrays. Default is -1, the last axis.</p></li>
+<li><p><strong>var</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The variance of the spectral line. Default is None will call
+<code class="docutils literal notranslate"><span class="pre">crispy.spectral.variance</span></code> function on the <code class="docutils literal notranslate"><span class="pre">intensity_vector</span></code> and
+<code class="docutils literal notranslate"><span class="pre">wavelengths</span></code> argument to calculate.</p></li>
+<li><p><strong>bar_l</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The intensity-averaged line core of the spectral line. Default is None
+will call <code class="docutils literal notranslate"><span class="pre">crispy.spectral.bar_lambda</span></code> function on the
+<code class="docutils literal notranslate"><span class="pre">intensity_vector</span></code> and <code class="docutils literal notranslate"><span class="pre">wavelengths</span></code> argument to calculate.</p></li>
+<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – The axis to integrate over. Allows for vectorisation for integral over
+multi-d arrays. Default is -1, the last axis.</p></li>
 </ul>
 </dd>
 </dl>
@@ -170,7 +181,10 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="crispy.spectral.delta_lambda">
 <span class="sig-prename descclassname"><span class="pre">crispy.spectral.</span></span><span class="sig-name descname"><span class="pre">delta_lambda</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wing_idxs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/spectral.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.spectral.delta_lambda" title="Permalink to this definition"></a></dt>
-<dd><p>Calculates the half-width in an intensity range i.e. there are N indices spanning a wing then the half-width is half of those indices multiplied by the change in wavelength between two entries. N.B. this is only the case when the space in the spectral axis is uniform.</p>
+<dd><p>Calculates the half-width in an intensity range i.e. there are N indices
+spanning a wing then the half-width is half of those indices multiplied by
+the change in wavelength between two entries. N.B. this is only the case
+when the space in the spectral axis is uniform.</p>
 <div class="math notranslate nohighlight">
 \[\delta \lambda = \frac{N}{2} \times (\Delta \lambda)\]</div>
 <p>where <span class="math notranslate nohighlight">\(\Delta \lambda\)</span> is the difference in wavelength of two spectral points.</p>
@@ -196,7 +210,9 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>wing_idxs</strong> (<em>range</em>) – The indices of the spectral line corresponding to the wing of interest.</p></li>
 <li><p><strong>wavelengths</strong> (<em>numpy.ndarray</em>) – The wavelengths to integrate over.</p></li>
-<li><p><strong>d_lambda</strong> (<em>float</em><em>, </em><em>optional</em>) – The half-width of the wing of the spectral line. Default is None will call <code class="docutils literal notranslate"><span class="pre">crispy.spectral.delta_lambda</span></code> function on the <code class="docutils literal notranslate"><span class="pre">wing_idxs</span></code> and <code class="docutils literal notranslate"><span class="pre">wavelengths</span></code> arguments to calculate.</p></li>
+<li><p><strong>d_lambda</strong> (<em>float</em><em>, </em><em>optional</em>) – The half-width of the wing of the spectral line. Default is None will
+call <code class="docutils literal notranslate"><span class="pre">crispy.spectral.delta_lambda</span></code> function on the <code class="docutils literal notranslate"><span class="pre">wing_idxs</span></code> and
+<code class="docutils literal notranslate"><span class="pre">wavelengths</span></code> arguments to calculate.</p></li>
 </ul>
 </dd>
 </dl>
@@ -205,7 +221,8 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="crispy.spectral.intensity_ratio">
 <span class="sig-prename descclassname"><span class="pre">crispy.spectral.</span></span><span class="sig-name descname"><span class="pre">intensity_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">I_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I_2</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/spectral.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.spectral.intensity_ratio" title="Permalink to this definition"></a></dt>
-<dd><p>A function that calculates the intensity ratio of two previously integrated intensities.</p>
+<dd><p>A function that calculates the intensity ratio of two previously integrated
+intensities.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -223,10 +240,13 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="crispy.spectral.interp_fine">
 <span class="sig-prename descclassname"><span class="pre">crispy.spectral.</span></span><span class="sig-name descname"><span class="pre">interp_fine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">101</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/spectral.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.spectral.interp_fine" title="Permalink to this definition"></a></dt>
-<dd><p>Interpolates the spectral line onto a finer grid for more accurate calculations for the wing properties.</p>
+<dd><p>Interpolates the spectral line onto a finer grid for more accurate
+calculations for the wing properties.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>spec_line</strong> (<em>tuple</em><em> [</em><em>numpy.ndarray</em><em>]</em>) – The spectral line to be interpolated onto a finer grid. This is a tuple of the intensities and the wavelengths in the order (wavelengths, intensities).</p>
+<dd class="field-odd"><p><strong>spec_line</strong> (<em>tuple</em><em> [</em><em>numpy.ndarray</em><em>]</em>) – The spectral line to be interpolated onto a finer grid. This is a tuple
+of the intensities and the wavelengths in the order (wavelengths,
+intensities).</p>
 </dd>
 </dl>
 </dd></dl>
@@ -241,7 +261,8 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>l</strong> (<em>float</em>) – The rest wavelength of the transition.</p></li>
-<li><p><strong>del_l</strong> (<em>float</em><em>, </em><em>optional</em>) – The difference between the observed wavelength and the rest wavelength of the transition.</p></li>
+<li><p><strong>del_l</strong> (<em>float</em><em>, </em><em>optional</em>) – The difference between the observed wavelength and the rest wavelength
+of the transition.</p></li>
 </ul>
 </dd>
 </dl>

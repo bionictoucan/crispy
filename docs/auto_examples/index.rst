@@ -34,27 +34,6 @@ See some simple examples for using crispy.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Example of Inversion Data in crispy">
-
-.. only:: html
-
- .. figure:: /auto_examples/images/thumb/sphx_glr_plot_InversionWrapperUsage_thumb.png
-     :alt: Example of Inversion Data in crispy
-
-     :ref:`sphx_glr_auto_examples_plot_InversionWrapperUsage.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/plot_InversionWrapperUsage
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Examples Using the Main Data Wrappers from crispy">
 
 .. only:: html
@@ -73,6 +52,48 @@ See some simple examples for using crispy.
    :hidden:
 
    /auto_examples/plot_DataWrapperUsage
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The example seeks to test most combination of plot arguments as a smoke test to catch likely bu...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_plot_CoordChecks_thumb.png
+     :alt: Basic coordinate testing
+
+     :ref:`sphx_glr_auto_examples_plot_CoordChecks.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/plot_CoordChecks
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The example seeks to test most combination of plot arguments as a smoke test to catch likely bu...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_plot_Permutations_thumb.png
+     :alt: Non-exhaustive plotting sanity checks
+
+     :ref:`sphx_glr_auto_examples_plot_Permutations.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/plot_Permutations
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>

@@ -40,7 +40,7 @@ given either as a `FITS file
 <https://zarr.readthedocs.io/en/stable/>`_ or an object dictionary (see
 :ref:`utils`).
 
-.. GENERATED FROM PYTHON SOURCE LINES 22-28
+.. GENERATED FROM PYTHON SOURCE LINES 22-29
 
 .. code-block:: default
 
@@ -48,6 +48,7 @@ given either as a `FITS file
     from crispy import CRISP
     import matplotlib.pyplot as plt
     import warnings
+
     warnings.filterwarnings("ignore")
 
 
@@ -57,12 +58,12 @@ given either as a `FITS file
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 29-31
+.. GENERATED FROM PYTHON SOURCE LINES 30-32
 
 The only argument we need now to create our data object is the path to the
 file:
 
-.. GENERATED FROM PYTHON SOURCE LINES 31-34
+.. GENERATED FROM PYTHON SOURCE LINES 32-35
 
 .. code-block:: default
 
@@ -76,13 +77,13 @@ file:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 35-38
+.. GENERATED FROM PYTHON SOURCE LINES 36-39
 
 Our example object ``c_ex`` is now a ``CRISP`` object containing this
 observation. We can get details of the following observation doing the
 following
 
-.. GENERATED FROM PYTHON SOURCE LINES 38-41
+.. GENERATED FROM PYTHON SOURCE LINES 39-42
 
 .. code-block:: default
 
@@ -106,14 +107,16 @@ following
 
             Observed: H I 6563
             Centre wavelength [Å]: 6564.58
-            Wavelengths sampled: 15
+            Wavelengths sampled: 15 ([6563.18399967 6563.38399971 6563.58399976 6563.78399981 6563.98399986
+     6564.1839999  6564.38399995 6564.584      6564.78400005 6564.9840001
+     6565.18400014 6565.38400019 6565.58400024 6565.78400029 6565.98400033] Angstrom)
             Pointing [arcsec] (HPLN, HPLT): (-730.032, -313.398)
             Shape: [15, 1398, 1473]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 42-47
+.. GENERATED FROM PYTHON SOURCE LINES 43-48
 
 All data objects in crispy can be indexed in a similar manner to `numpy arrays
 <https://numpy.org/doc/stable/reference/arrays.indexing.html>`_. For example,
@@ -121,12 +124,12 @@ our data above is sampled at 15 different wavelengths, say we only wanted to
 work with the imaging data from the fourth wavelength then we could create a
 new object as such:
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-50
+.. GENERATED FROM PYTHON SOURCE LINES 48-51
 
 .. code-block:: default
 
 
-    c_sub = c_ex[3] # remember Python indexing starts at 0!
+    c_sub = c_ex[3]  # remember Python indexing starts at 0!
 
 
 
@@ -135,25 +138,26 @@ new object as such:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 51-55
+.. GENERATED FROM PYTHON SOURCE LINES 52-56
 
 And this ``c_sub`` object will contain the data for only the fourth wavelength
 in our original data. This kind of slicing is useful as the whole object is
 sliced rather than just the ``.data`` property allowing us to keep everything
 together.
 
-.. GENERATED FROM PYTHON SOURCE LINES 57-59
+.. GENERATED FROM PYTHON SOURCE LINES 58-60
 
 This is also how the plotting methods work, they expect a slice of the object
 otherwise an error will be thrown. For example,
 
-.. GENERATED FROM PYTHON SOURCE LINES 59-61
+.. GENERATED FROM PYTHON SOURCE LINES 60-63
 
 .. code-block:: default
 
 
     c_sub.intensity_map()
     plt.show()
+
 
 
 .. image-sg:: /auto_examples/images/sphx_glr_plot_GettingStarted_001.png
@@ -168,7 +172,7 @@ otherwise an error will be thrown. For example,
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.086 seconds)
+   **Total running time of the script:** ( 0 minutes  2.778 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_GettingStarted.py:

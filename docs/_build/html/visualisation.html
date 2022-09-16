@@ -100,16 +100,22 @@
 <dt class="sig sig-object py" id="crispy.visualisation.ImageViewer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">crispy.visualisation.</span></span><span class="sig-name descname"><span class="pre">ImageViewer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.ImageViewer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>This visualiser only views the images for data, not the spectra. For use when interested only in imaging data. Includes sliders to change the wavelength of the observation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>str</em><em> or </em><em>list</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISP" title="crispy.crisp.CRISP"><em>CRISP</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPSequence" title="crispy.crisp.CRISPSequence"><em>CRISPSequence</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonU" title="crispy.crisp.CRISPNonU"><em>CRISPNonU</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonUSequence" title="crispy.crisp.CRISPNonUSequence"><em>CRISPNonUSequence</em></a>) – The data to explore, this can be either one or two spectral lines (support for more than two can be added if required). This is the only required argument to view the data.</p></li>
-<li><p><strong>wcs</strong> (<em>astropy.wcs.WCS</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.</p></li>
-<li><p><strong>uncertainty</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The uncertainty in the intensity values of the data. Default is None.</p></li>
-<li><p><strong>mask</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A mask to be used on the data. Default is None.</p></li>
-<li><p><strong>nonu</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not the spectral axis is non-uniform. Default is False.</p></li>
-</ul>
+<p>This visualiser only views the images for data, not the spectra. For use
+when interested only in imaging data. Includes sliders to change the
+wavelength of the observation.</p>
+<dl class="simple">
+<dt>data<span class="classifier">str or list or CRISP or CRISPSequence or CRISPNonU or CRISPNonUSequence</span></dt><dd><p>The data to explore, this can be either one or two spectral lines
+(support for more than two can be added if required). This is the only
+required argument to view the data.</p>
+</dd>
+<dt>wcs<span class="classifier">astropy.wcs.WCS or None, optional</span></dt><dd><p>A prescribed world coordinate system. If None, the world coordinate
+system is derived from the data. Default is None.</p>
+</dd>
+<dt>uncertainty<span class="classifier">numpy.ndarray or None, optional</span></dt><dd><p>The uncertainty in the intensity values of the data. Default is None.</p>
+</dd>
+<dt>mask<span class="classifier">numpy.ndarray or None, optional</span></dt><dd><p>A mask to be used on the data. Default is None.</p>
+</dd>
+<dt>nonu<span class="classifier">bool, optional</span></dt><dd><p>Whether or not the spectral axis is non-uniform. Default is False.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -122,25 +128,61 @@
 <dt class="sig sig-object py" id="crispy.visualisation.SpectralViewer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">crispy.visualisation.</span></span><span class="sig-name descname"><span class="pre">SpectralViewer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.SpectralViewer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Imaging spectroscopic viewer. SpectralViewer should be used when one wants to click on points of an image and have the spectrum displayed for that point. This works <strong>exclusively</strong> in Jupyter notebook but can be a nice data exploration tool. This viewer utilises the data structures defined in <cite>crispy.crisp</cite> and has many variable options.</p>
+<p>Imaging spectroscopic viewer. SpectralViewer should be used when one wants
+to click on points of an image and have the spectrum displayed for that
+point. This works <strong>exclusively</strong> in Jupyter notebook but can be a nice data
+exploration tool. This viewer utilises the data structures defined in
+<cite>crispy.crisp</cite> and has many variable options.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>str</em><em> or </em><em>list</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISP" title="crispy.crisp.CRISP"><em>CRISP</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPSequence" title="crispy.crisp.CRISPSequence"><em>CRISPSequence</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonU" title="crispy.crisp.CRISPNonU"><em>CRISPNonU</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonUSequence" title="crispy.crisp.CRISPNonUSequence"><em>CRISPNonUSequence</em></a>) – The data to explore, this can be either one or two spectral lines (support for more than two can be added if required). This is the only required argument to view the data.</p></li>
-<li><p><strong>wcs</strong> (<em>astropy.wcs.WCS</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.</p></li>
+<li><p><strong>data</strong> (<em>str</em><em> or </em><em>list</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISP" title="crispy.crisp.CRISP"><em>CRISP</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPSequence" title="crispy.crisp.CRISPSequence"><em>CRISPSequence</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonU" title="crispy.crisp.CRISPNonU"><em>CRISPNonU</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonUSequence" title="crispy.crisp.CRISPNonUSequence"><em>CRISPNonUSequence</em></a>) – The data to explore, this can be either one or two spectral lines
+(support for more than two can be added if required). This is the only
+required argument to view the data.</p></li>
+<li><p><strong>wcs</strong> (<em>astropy.wcs.WCS</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A prescribed world coordinate system. If None, the world coordinate
+system is derived from the data. Default is None.</p></li>
 <li><p><strong>uncertainty</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The uncertainty in the intensity values of the data. Default is None.</p></li>
 <li><p><strong>mask</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A mask to be used on the data. Default is None.</p></li>
 <li><p><strong>nonu</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not the spectral axis is non-uniform. Default is False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Variables</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>coords</strong> – The coordinates selected to produce spectra.</p></li>
-<li><p><strong>px_coords</strong> – The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.</p></li>
-<li><p><strong>shape_type</strong> – The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.</p></li>
-</ul>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.SpectralViewer.coords">
+<span class="sig-name descname"><span class="pre">coords</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.SpectralViewer.coords" title="Permalink to this definition"></a></dt>
+<dd><p>The coordinates selected to produce spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[tuple]</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.SpectralViewer.px_coords">
+<span class="sig-name descname"><span class="pre">px_coords</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.SpectralViewer.px_coords" title="Permalink to this definition"></a></dt>
+<dd><p>The coordinates selected to produce spectra in pixel space. This is
+important for indexing the data later to get the correct spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[tuple]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.SpectralViewer.shape_type">
+<span class="sig-name descname"><span class="pre">shape_type</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.SpectralViewer.shape_type" title="Permalink to this definition"></a></dt>
+<dd><p>The spectra can be selected for a single point or for a box with
+specified dimensions with top-left corner where the user clicks. This
+attribute tells the user which point is described by which shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -151,26 +193,62 @@
 <dt class="sig sig-object py" id="crispy.visualisation.SpectralTimeViewer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">crispy.visualisation.</span></span><span class="sig-name descname"><span class="pre">SpectralTimeViewer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.SpectralTimeViewer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Imaging spectroscopic viewer. SpectralTimeViewer should be used when one wants to click on points of an image and have the spectrum displayed for that point and the time series for a certain time range of observations. This works <strong>exclusively</strong> in Jupyter notebook but can be a nice data exploration tool. This viewer utilises the data structures defined in <cite>crispy.crisp</cite> and has many variable options.</p>
+<p>Imaging spectroscopic viewer. SpectralTimeViewer should be used when one
+wants to click on points of an image and have the spectrum displayed for
+that point and the time series for a certain time range of observations.
+This works <strong>exclusively</strong> in Jupyter notebook but can be a nice data
+exploration tool. This viewer utilises the data structures defined in
+<cite>crispy.crisp</cite> and has many variable options.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data1</strong> (<em>list</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPSequence" title="crispy.crisp.CRISPSequence"><em>CRISPSequence</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonUSequence" title="crispy.crisp.CRISPNonUSequence"><em>CRISPNonUSequence</em></a>) – The data to explore, this is one spectral line. This is the only required argument to view the data.</p></li>
+<li><p><strong>data1</strong> (<em>list</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPSequence" title="crispy.crisp.CRISPSequence"><em>CRISPSequence</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonUSequence" title="crispy.crisp.CRISPNonUSequence"><em>CRISPNonUSequence</em></a>) – The data to explore, this is one spectral line. This is the only
+required argument to view the data.</p></li>
 <li><p><strong>data2</strong> (<em>list</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPSequence" title="crispy.crisp.CRISPSequence"><em>CRISPSequence</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonUSequence" title="crispy.crisp.CRISPNonUSequence"><em>CRISPNonUSequence</em></a>) – If there is a second set of data to explore.</p></li>
-<li><p><strong>wcs</strong> (<em>astropy.wcs.WCS</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.</p></li>
+<li><p><strong>wcs</strong> (<em>astropy.wcs.WCS</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A prescribed world coordinate system. If None, the world coordinate
+system is derived from the data. Default is None.</p></li>
 <li><p><strong>uncertainty</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The uncertainty in the intensity values of the data. Default is None.</p></li>
 <li><p><strong>mask</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A mask to be used on the data. Default is None.</p></li>
 <li><p><strong>nonu</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not the spectral axis is non-uniform. Default is False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Variables</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>coords</strong> – The coordinates selected to produce spectra.</p></li>
-<li><p><strong>px_coords</strong> – The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.</p></li>
-<li><p><strong>shape_type</strong> – The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.</p></li>
-</ul>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.SpectralTimeViewer.coords">
+<span class="sig-name descname"><span class="pre">coords</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.SpectralTimeViewer.coords" title="Permalink to this definition"></a></dt>
+<dd><p>The coordinates selected to produce spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[tuple]</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.SpectralTimeViewer.px_coords">
+<span class="sig-name descname"><span class="pre">px_coords</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.SpectralTimeViewer.px_coords" title="Permalink to this definition"></a></dt>
+<dd><p>The coordinates selected to produce spectra in pixel space. This is
+important for indexing the data later to get the correct spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[tuple]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.SpectralTimeViewer.shape_type">
+<span class="sig-name descname"><span class="pre">shape_type</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.SpectralTimeViewer.shape_type" title="Permalink to this definition"></a></dt>
+<dd><p>The spectra can be selected for a single point or for a box with
+specified dimensions with top-left corner where the user clicks. This
+attribute tells the user which point is described by which shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>shape_type: list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -181,25 +259,60 @@
 <dt class="sig sig-object py" id="crispy.visualisation.PolarimetricViewer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">crispy.visualisation.</span></span><span class="sig-name descname"><span class="pre">PolarimetricViewer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.PolarimetricViewer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>This class defines the visualisation tool for exploring narrowband imaging spectropolarimetric data. This currently is only developed to look at one spectral line at a time. The functionality is similar to the <code class="docutils literal notranslate"><span class="pre">SpectralViewer</span></code> defines above but with an added Stokes parameter that can be changed.</p>
+<p>This class defines the visualisation tool for exploring narrowband imaging
+spectropolarimetric data. This currently is only developed to look at one
+spectral line at a time. The functionality is similar to the
+<code class="docutils literal notranslate"><span class="pre">SpectralViewer</span></code> defines above but with an added Stokes parameter that can
+be changed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>str</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISP" title="crispy.crisp.CRISP"><em>CRISP</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonU" title="crispy.crisp.CRISPNonU"><em>CRISPNonU</em></a>) – The data to explore, this is one spectral line. This is the only required argument to view the data.</p></li>
-<li><p><strong>wcs</strong> (<em>astropy.wcs.WCS</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.</p></li>
+<li><p><strong>data</strong> (<em>str</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISP" title="crispy.crisp.CRISP"><em>CRISP</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonU" title="crispy.crisp.CRISPNonU"><em>CRISPNonU</em></a>) – The data to explore, this is one spectral line. This is the only
+required argument to view the data.</p></li>
+<li><p><strong>wcs</strong> (<em>astropy.wcs.WCS</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A prescribed world coordinate system. If None, the world coordinate
+system is derived from the data. Default is None.</p></li>
 <li><p><strong>uncertainty</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The uncertainty in the intensity values of the data. Default is None.</p></li>
 <li><p><strong>mask</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A mask to be used on the data. Default is None.</p></li>
 <li><p><strong>nonu</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not the spectral axis is non-uniform. Default is False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Variables</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>coords</strong> – The coordinates selected to produce spectra.</p></li>
-<li><p><strong>px_coords</strong> – The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.</p></li>
-<li><p><strong>shape_type</strong> – The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.</p></li>
-</ul>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.PolarimetricViewer.coords">
+<span class="sig-name descname"><span class="pre">coords</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.PolarimetricViewer.coords" title="Permalink to this definition"></a></dt>
+<dd><p>The coordinates selected to produce spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[tuple]</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.PolarimetricViewer.px_coords">
+<span class="sig-name descname"><span class="pre">px_coords</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.PolarimetricViewer.px_coords" title="Permalink to this definition"></a></dt>
+<dd><p>The coordinates selected to produce spectra in pixel space. This is
+important for indexing the data later to get the correct spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[tuple]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.PolarimetricViewer.shape_type">
+<span class="sig-name descname"><span class="pre">shape_type</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.PolarimetricViewer.shape_type" title="Permalink to this definition"></a></dt>
+<dd><p>The spectra can be selected for a single point or for a box with
+specified dimensions with top-left corner where the user clicks. This
+attribute tells the user which point is described by which shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -210,25 +323,60 @@
 <dt class="sig sig-object py" id="crispy.visualisation.PolarimetricTimeViewer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">crispy.visualisation.</span></span><span class="sig-name descname"><span class="pre">PolarimetricTimeViewer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.PolarimetricTimeViewer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>This class defines the visualisation tool for exploring a time series narrowband imaging spectropolarimetric data. This currently is only developed to look at one spectral line at a time. The functionality is similar to the <code class="docutils literal notranslate"><span class="pre">SpectralTimeViewer</span></code> defines above but with an added Stokes parameter that can be changed.</p>
+<p>This class defines the visualisation tool for exploring a time series
+narrowband imaging spectropolarimetric data. This currently is only
+developed to look at one spectral line at a time. The functionality is
+similar to the <code class="docutils literal notranslate"><span class="pre">SpectralTimeViewer</span></code> defines above but with an added Stokes
+parameter that can be changed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>str</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPSequence" title="crispy.crisp.CRISPSequence"><em>CRISPSequence</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonUSequence" title="crispy.crisp.CRISPNonUSequence"><em>CRISPNonUSequence</em></a>) – The data to explore, this is one spectral line. This is the only required argument to view the data.</p></li>
-<li><p><strong>wcs</strong> (<em>astropy.wcs.WCS</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A prescribed world coordinate system. If None, the world coordinate system is derived from the data. Default is None.</p></li>
+<li><p><strong>data</strong> (<em>str</em><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPSequence" title="crispy.crisp.CRISPSequence"><em>CRISPSequence</em></a><em> or </em><a class="reference internal" href="datastructs.html#crispy.crisp.CRISPNonUSequence" title="crispy.crisp.CRISPNonUSequence"><em>CRISPNonUSequence</em></a>) – The data to explore, this is one spectral line. This is the only
+required argument to view the data.</p></li>
+<li><p><strong>wcs</strong> (<em>astropy.wcs.WCS</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A prescribed world coordinate system. If None, the world coordinate
+system is derived from the data. Default is None.</p></li>
 <li><p><strong>uncertainty</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The uncertainty in the intensity values of the data. Default is None.</p></li>
 <li><p><strong>mask</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A mask to be used on the data. Default is None.</p></li>
 <li><p><strong>nonu</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not the spectral axis is non-uniform. Default is False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Variables</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>coords</strong> – The coordinates selected to produce spectra.</p></li>
-<li><p><strong>px_coords</strong> – The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.</p></li>
-<li><p><strong>shape_type</strong> – The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.</p></li>
-</ul>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.PolarimetricTimeViewer.coords">
+<span class="sig-name descname"><span class="pre">coords</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.PolarimetricTimeViewer.coords" title="Permalink to this definition"></a></dt>
+<dd><p>The coordinates selected to produce spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[tuple]</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.PolarimetricTimeViewer.px_coords">
+<span class="sig-name descname"><span class="pre">px_coords</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.PolarimetricTimeViewer.px_coords" title="Permalink to this definition"></a></dt>
+<dd><p>The coordinates selected to produce spectra in pixel space. This is
+important for indexing the data later to get the correct spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[tuple]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.PolarimetricTimeViewer.shape_type">
+<span class="sig-name descname"><span class="pre">shape_type</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.PolarimetricTimeViewer.shape_type" title="Permalink to this definition"></a></dt>
+<dd><p>The spectra can be selected for a single point or for a box with
+specified dimensions with top-left corner where the user clicks. This
+attribute tells the user which point is described by which shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -239,16 +387,18 @@
 <dt class="sig sig-object py" id="crispy.visualisation.WidebandViewer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">crispy.visualisation.</span></span><span class="sig-name descname"><span class="pre">WidebandViewer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.WidebandViewer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Wideband image viewer. This visualisation tool is useful for exploring the time series evolution of the wideband images.</p>
+<p>Wideband image viewer. This visualisation tool is useful for exploring the
+time series evolution of the wideband images.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>files</strong> (<a class="reference internal" href="datastructs.html#crispy.crisp.CRISPWidebandSequence" title="crispy.crisp.CRISPWidebandSequence"><em>CRISPWidebandSequence</em></a><em> or </em><em>list</em>) – The files to explore the time series for.</p>
-</dd>
-<dt class="field-even">Variables</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>coords</strong> – The coordinates selected to produce spectra.</p></li>
-<li><p><strong>px_coords</strong> – The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.</p></li>
-<li><p><strong>shape_type</strong> – The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.</p></li>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>files</strong> (<a class="reference internal" href="datastructs.html#crispy.crisp.CRISPWidebandSequence" title="crispy.crisp.CRISPWidebandSequence"><em>CRISPWidebandSequence</em></a><em> or </em><em>list</em>) – The files to explore the time series for.</p></li>
+<li><p><strong>coords</strong> (<em>list</em><em>[</em><em>tuple</em><em>]</em>) – The coordinates selected to produce spectra.</p></li>
+<li><p><strong>px_coords</strong> (<em>list</em><em>[</em><em>tuple</em><em>]</em>) – The coordinates selected to produce spectra in pixel space. This is
+important for indexing the data later to get the correct spectra.</p></li>
+<li><p><strong>shape_type</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – The spectra can be selected for a single point or for a box with
+specified dimensions with top-left corner where the user clicks. This
+attribute tells the user which point is described by which shape.</p></li>
 </ul>
 </dd>
 </dl>
@@ -262,25 +412,64 @@
 <dt class="sig sig-object py" id="crispy.visualisation.AtmosViewer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">crispy.visualisation.</span></span><span class="sig-name descname"><span class="pre">AtmosViewer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.AtmosViewer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>This visualisation tool is for the investigation of atmospheric parameters found via inversion techniques. This makes use of the <code class="docutils literal notranslate"><span class="pre">Inversion</span></code> class. This assumes that there are three atmospheric parameters in the inversion: electron number density, electron temperature and bulk line-of-sight velocity. These are the estimated quantities by RADYNVERSION.</p>
+<p>This visualisation tool is for the investigation of atmospheric parameters
+found via inversion techniques. This makes use of the <code class="docutils literal notranslate"><span class="pre">Inversion</span></code> class.
+This assumes that there are three atmospheric parameters in the inversion:
+electron number density, electron temperature and bulk line-of-sight
+velocity. These are the estimated quantities by RADYNVERSION.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> (<em>str</em><em> or </em><a class="reference internal" href="inversions.html#crispy.inversions.Inversion" title="crispy.inversions.Inversion"><em>Inversion</em></a>) – The inversion file to be used.</p></li>
-<li><p><strong>z</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The physical height grid of the estimated atmospheric parameters in megametres. Can only be None if filename is already an <code class="docutils literal notranslate"><span class="pre">Inversion</span></code> instance. Default is None. (N.B. the RADYNVERSION height grid is available from <code class="docutils literal notranslate"><span class="pre">crispy.radynversion.utils</span></code>).</p></li>
-<li><p><strong>wcs</strong> (<em>astropy.wcs.WCS</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The world coordinate system that the inversion parameters are defined by. Can be None only if filename is already an <code class="docutils literal notranslate"><span class="pre">Inversion</span></code> instance. Default is None.</p></li>
+<li><p><strong>z</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The physical height grid of the estimated atmospheric parameters in
+megametres. Can only be None if filename is already an <code class="docutils literal notranslate"><span class="pre">Inversion</span></code>
+instance. Default is None. (N.B. the RADYNVERSION height grid is
+available from <code class="docutils literal notranslate"><span class="pre">crispy.radynversion.utils</span></code>).</p></li>
+<li><p><strong>wcs</strong> (<em>astropy.wcs.WCS</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The world coordinate system that the inversion parameters are defined
+by. Can be None only if filename is already an <code class="docutils literal notranslate"><span class="pre">Inversion</span></code> instance.
+Default is None.</p></li>
 <li><p><strong>header</strong> (<em>dict</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The additional header information from the observations. Default is None.</p></li>
-<li><p><strong>eb</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to plot the errorbars on the parameter profiles. Default is False.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Variables</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>coords</strong> – The coordinates selected to produce spectra.</p></li>
-<li><p><strong>px_coords</strong> – The coordinates selected to produce spectra in pixel space. This is important for indexing the data later to get the correct spectra.</p></li>
-<li><p><strong>shape_type</strong> – The spectra can be selected for a single point or for a box with specified dimensions with top-left corner where the user clicks. This attribute tells the user which point is described by which shape.</p></li>
+<li><p><strong>eb</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to plot the errorbars on the parameter profiles. Default
+is False.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.AtmosViewer.coords">
+<span class="sig-name descname"><span class="pre">coords</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.AtmosViewer.coords" title="Permalink to this definition"></a></dt>
+<dd><p>The coordinates selected to produce spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[tuple]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.AtmosViewer.px_coords">
+<span class="sig-name descname"><span class="pre">px_coords</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.AtmosViewer.px_coords" title="Permalink to this definition"></a></dt>
+<dd><p>The coordinates selected to produce spectra in pixel space. This is
+important for indexing the data later to get the correct spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[tuple]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crispy.visualisation.AtmosViewer.shape_type">
+<span class="sig-name descname"><span class="pre">shape_type</span></span><a class="reference external" href="https://github.com/bionictoucan/crispy/blob/main/crispy/visualisation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crispy.visualisation.AtmosViewer.shape_type" title="Permalink to this definition"></a></dt>
+<dd><p>The spectra can be selected for a single point or for a box with
+specified dimensions with top-left corner where the user clicks. This
+attribute tells the user which point is described by which shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
