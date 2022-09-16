@@ -16,7 +16,9 @@ jobs:
           python-version: '3.8'
 
       - name: Build HTML
-        uses: ammaraskar/sphinx-action@0.4
+        uses: |
+          cd docs
+          make html
         with:
           pre-build-command: "apt-get update -y && apt-get install -y python3-dev build-essential"
       - name: Upload artifacts
